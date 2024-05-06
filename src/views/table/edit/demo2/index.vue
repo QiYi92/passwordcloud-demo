@@ -6,11 +6,6 @@ const { editMap, columns, dataList, onEdit, onSave, onCancel } = useColumns();
 
 <template>
   <div class="flex">
-    <el-scrollbar>
-      <code>
-        <pre class="w-[400px]"> {{ dataList }}</pre>
-      </code>
-    </el-scrollbar>
     <pure-table
       row-key="id"
       align-whole="center"

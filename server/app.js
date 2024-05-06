@@ -39,7 +39,7 @@ connection.connect(error => {
     });
   });
 
-  // 获取项目列表
+  // 获取项目表
   app.get("/api/projects", (req, res) => {
     connection.query("SELECT * FROM project_table", (error, results) => {
       console.log("Error:", error); // 输出错误信息
@@ -50,6 +50,25 @@ connection.connect(error => {
         res.json(results);
       }
     });
+  });
+  // 项目表更新项目数据
+  app.put("/api/projects/:id", (req, res) => {
+    const { id } = req.params;
+    const { project_name, project_room, project_money } = req.body;
+    const sql = `UPDATE project_table SET project_name = ?, project_room = ?, project_money = ? WHERE project_id = ?`;
+    connection.query(
+      sql,
+      [project_name, project_room, project_money, id],
+      (error, results) => {
+        if (error) {
+          console.log("Error updating data:", error);
+          res.status(500).send("Error updating data in database");
+        } else {
+          console.log("Updated data:", results);
+          res.send("Data updated successfully");
+        }
+      }
+    );
   });
 });
 
