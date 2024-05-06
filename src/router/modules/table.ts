@@ -6,7 +6,7 @@ export default {
   redirect: "/table/high",
   meta: {
     icon: "ri:table-line",
-    title: "表格菜单",
+    title: "项目表格",
     rank: table
   },
   children: [
@@ -23,7 +23,25 @@ export default {
       name: "PureTableEdit",
       component: () => import("@/views/table/edit.vue"),
       meta: {
-        title: "表格编辑",
+        title: "项目管理",
+        extraIcon: "IF-pure-iconfont-new svg"
+      }
+    },
+    {
+      path: "/table/edit2",
+      name: "PureTableEdit2",
+      component: () => import("@/views/table/edit2.vue"),
+      meta: {
+        title: "项目合同管理",
+        extraIcon: "IF-pure-iconfont-new svg"
+      }
+    },
+    {
+      path: "/table/edit3",
+      name: "PureTableEdit3",
+      component: () => import("@/views/table/edit3.vue"),
+      meta: {
+        title: "项目支付管理",
         extraIcon: "IF-pure-iconfont-new svg"
       }
     }

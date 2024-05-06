@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { list } from "./edit/list";
+import { list } from "./edit2/list";
 
 defineOptions({
   name: "PureTableEdit"

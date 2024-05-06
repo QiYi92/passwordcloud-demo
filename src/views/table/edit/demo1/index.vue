@@ -1,58 +1,91 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { useColumns } from "./columns";
-import Empty from "../empty.svg?component";
-import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import AddFill from "@iconify-icons/ep/plus";
-import Delete from "@iconify-icons/ep/delete";
+import NewDialogForm from "./NewDialog.vue";
+import EditDialog from "@/views/table/edit/demo1/EditDialog.vue";
+import DeleteDialog from "@/views/table/edit/demo1/DeleteDialog.vue";
+import NewDialog from "@/views/table/edit/demo1/NewDialog.vue";
 
-const { columns, dataList, onAdd, onDel } = useColumns();
+const tableRef = ref();
+const selectedRow = ref(null); // 响应式变量存储选中的行数据
+
+const {
+  loading,
+  columns,
+  dataList,
+  pagination,
+  loadingConfig,
+  adaptiveConfig,
+  onSizeChange,
+  onCurrentChange,
+  searchField,
+  searchQuery,
+  showMouseMenu,
+  editDialogVisible,
+  editRowData,
+  deleteDialogVisible,
+  deleteProjectId,
+  fetchData
+} = useColumns();
 </script>
 
 <template>
-  <div class="flex">
-    <el-scrollbar height="540px">
-      <code>
-        <pre class="w-[400px]"> {{ dataList }}</pre>
-      </code>
-    </el-scrollbar>
+  <div>
+    <!-- 搜索控件区域 -->
+    <div class="search-controls mb-4">
+      <!-- mb-4 为 margin-bottom 的样式，用于添加一些间距 -->
+      <el-select
+        v-model="searchField"
+        placeholder="选择搜索字段"
+        style="width: 200px; margin-right: 10px"
+      >
+        <el-option label="项目ID" value="project_id" />
+        <el-option label="项目名称" value="project_name" />
+        <el-option label="项目科室" value="project_room" />
+      </el-select>
+      <el-input
+        v-model="searchQuery"
+        placeholder="输入搜索内容"
+        style="width: 300px; margin-right: 10px"
+      />
+      <!-- 添加新数据的按钮 -->
+      <NewDialog @data-updated="fetchData" />
+    </div>
     <pure-table
-      row-key="id"
-      align-whole="center"
-      :header-cell-style="{
-        background: 'var(--el-fill-color-light)',
-        color: 'var(--el-text-color-primary)'
-      }"
-      :data="dataList"
+      ref="tableRef"
+      border
+      adaptive
+      :adaptiveConfig="adaptiveConfig"
+      row-key="project_id"
+      alignWhole="center"
+      showOverflowTooltip
+      :loading="loading"
+      :loading-config="loadingConfig"
+      :data="
+        dataList.slice(
+          (pagination.currentPage - 1) * pagination.pageSize,
+          pagination.currentPage * pagination.pageSize
+        )
+      "
       :columns="columns"
-    >
-      <template #empty>
-        <Empty fill="var(--el-svg-monochrome-grey)" class="m-auto" />
-      </template>
-      <template #append>
-        <el-button
-          plain
-          class="w-full my-2"
-          :icon="useRenderIcon(AddFill)"
-          @click="onAdd"
-        >
-          添加一行数据
-        </el-button>
-      </template>
-      <template #operation="{ row }">
-        <el-button
-          class="reset-margin"
-          link
-          type="primary"
-          :icon="useRenderIcon(Delete)"
-          @click="onDel(row)"
-        />
-      </template>
-    </pure-table>
+      :pagination="pagination"
+      @page-size-change="onSizeChange"
+      @page-current-change="onCurrentChange"
+      @row-contextmenu="showMouseMenu"
+    />
+    <!-- 添加数据更新按钮 -->
+    <EditDialog
+      :visible="editDialogVisible"
+      :initialData="editRowData"
+      @update:visible="editDialogVisible = $event"
+      @data-updated="fetchData"
+    />
+    <!-- 其他内容 -->
+    <DeleteDialog
+      :visible="deleteDialogVisible"
+      :projectId="deleteProjectId"
+      @update:visible="deleteDialogVisible = $event"
+      @deleted="fetchData"
+    />
   </div>
 </template>
-
-<style scoped>
-:deep(.el-table__inner-wrapper::before) {
-  height: 0;
-}
-</style>

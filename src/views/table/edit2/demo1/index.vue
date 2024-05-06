@@ -1,11 +1,40 @@
 <script setup lang="ts">
 import { useColumns } from "./columns";
 
-const { editMap, columns, dataList, onEdit, onSave, onCancel } = useColumns();
+const {
+  editMap,
+  columns,
+  dataList,
+  onEdit,
+  onSave,
+  onCancel,
+  searchField,
+  searchQuery
+} = useColumns();
 </script>
 
 <template>
-  <div class="flex">
+  <div class="flex flex-col">
+    <!-- 搜索控件区域 -->
+    <div class="search-controls mb-4">
+      <!-- mb-4 为 margin-bottom 的样式，用于添加一些间距 -->
+      <el-select
+        v-model="searchField"
+        placeholder="选择搜索字段"
+        style="width: 200px; margin-right: 10px"
+      >
+        <el-option label="合同ID" value="contract_id" />
+        <el-option label="项目ID" value="project_id" />
+        <el-option label="合同乙方" value="contract_member" />
+      </el-select>
+      <el-input
+        v-model="searchQuery"
+        placeholder="输入搜索内容"
+        style="width: 300px"
+      />
+    </div>
+
+    <!-- 表格区域 -->
     <pure-table
       row-key="id"
       align-whole="center"

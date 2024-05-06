@@ -1,87 +1,220 @@
-import { ref } from "vue";
-import { options } from "../data";
+import type {
+  LoadingConfig,
+  AdaptiveConfig,
+  PaginationProps
+} from "@pureadmin/table";
+import { ref, onMounted, reactive, watch } from "vue";
+
+import { delay, clone } from "@pureadmin/utils";
+import axios from "axios";
+import { ProjectStateOptions } from "@/views/table/edit/data";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { message } from "@/utils/message"; // 适当调整路径
+import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
 
 export function useColumns() {
   const dataList = ref([]);
+  const loading = ref(true);
+  const searchField = ref("project_id");
+  const searchQuery = ref("");
+  const editRowData = ref(null);
+  const deleteProjectId = ref(null);
+  const editDialogVisible = ref(false);
+  const deleteDialogVisible = ref(false);
+
+  // 创建一个帮助函数来将 project_type 的值转换为对应的标签
+  const getProjectTypeLabel = value => {
+    const option = ProjectStateOptions.find(opt => opt.value === value);
+    return option ? option.label : "未知"; // 如果找不到对应的选项，返回"未知"
+  };
 
   const columns: TableColumnList = [
     {
-      label: "姓名",
-      prop: "name",
-      cellRenderer: ({ row }) => <el-input v-model={row.name} />
+      label: "项目ID",
+      prop: "project_id"
     },
     {
-      label: "性别",
-      prop: "sex",
-      cellRenderer: ({ row }) => (
-        <el-switch
-          v-model={row.sex}
-          inline-prompt
-          active-value={0}
-          inactive-value={1}
-          active-text="男"
-          inactive-text="女"
-        />
-      )
+      label: "项目名称",
+      prop: "project_name"
     },
     {
-      label: "爱好",
-      prop: "hobby",
-      cellRenderer: ({ row }) => (
-        <el-select v-model={row.hobby} clearable placeholder="请选择爱好">
-          {options.map(item => {
-            return (
-              <el-option
-                key={item.value}
-                label={item.label}
-                value={item.value}
-              />
-            );
-          })}
-        </el-select>
-      )
+      label: "责任科室",
+      prop: "project_room"
     },
     {
-      label: "日期",
-      prop: "date",
-      cellRenderer: ({ row }) => (
-        <el-date-picker
-          v-model={row.date}
-          type="date"
-          format="YYYY/MM/DD"
-          value-format="YYYY-MM-DD"
-          placeholder="请选择日期"
-        />
-      ),
-      minWidth: 110
+      label: "项目批复资金",
+      prop: "project_money"
     },
     {
-      label: "操作",
-      fixed: "right",
-      width: 90,
-      slot: "operation"
+      label: "项目类型",
+      prop: "project_type"
+    },
+    {
+      label: "项目备注",
+      prop: "project_remark"
     }
   ];
 
-  function onAdd() {
-    dataList.value.push({
-      id: dataList.value.length + 1,
-      name: "",
-      sex: 0,
-      hobby: "",
-      date: ""
+  /** 分页配置 */
+  const pagination = reactive<PaginationProps>({
+    pageSize: 20,
+    currentPage: 1,
+    pageSizes: [20, 40, 60],
+    total: 0,
+    align: "right",
+    background: true,
+    small: false
+  });
+  /** 右键编辑菜单配置*/
+  const menuOptions = {
+    menuList: [
+      {
+        label: ({ project_id }) => `项目ID为：${project_id}`,
+        disabled: true
+      },
+      {
+        label: "修改",
+        tips: "Edit",
+        fn: async row => {
+          editRowData.value = row; // 设置当前行数据
+          editDialogVisible.value = true; // 打开编辑对话框
+        }
+      },
+      {
+        label: "删除",
+        tips: "Delete",
+        fn: row => {
+          deleteProjectId.value = row.project_id;
+          deleteDialogVisible.value = true;
+        }
+      }
+    ]
+  };
+
+  /** 加载动画配置 */
+  const loadingConfig = reactive<LoadingConfig>({
+    text: "正在加载第一页...",
+    viewBox: "-10, -10, 50, 50",
+    spinner: `
+        <path class="path" d="
+          M 30 15
+          L 28 17
+          M 25.61 25.61
+          A 15 15, 0, 0, 1, 15 30
+          A 15 15, 0, 1, 1, 27.99 7.5
+          L 15 15
+        " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
+      `
+    // svg: "",
+    // background: rgba()
+  });
+
+  /** 撑满内容区自适应高度相关配置 */
+  const adaptiveConfig: AdaptiveConfig = {
+    /** 表格距离页面底部的偏移量，默认值为 `96` */
+    offsetBottom: 110
+    /** 是否固定表头，默认值为 `true`（如果不想固定表头，fixHeader设置为false并且表格要设置table-layout="auto"） */
+    // fixHeader: true
+    /** 页面 `resize` 时的防抖时间，默认值为 `60` ms */
+    // timeout: 60
+    /** 表头的 `z-index`，默认值为 `100` */
+    // zIndex: 100
+  };
+
+  function showMouseMenu(row, column, event) {
+    event.preventDefault();
+    const { x, y } = event;
+    CustomMouseMenu({
+      el: event.currentTarget,
+      params: row,
+      menuWrapperCss: {
+        background: "var(--el-bg-color)"
+      },
+      menuItemCss: {
+        labelColor: "var(--el-text-color)",
+        hoverLabelColor: "var(--el-color-primary)",
+        hoverTipsColor: "var(--el-color-primary)"
+      },
+      ...menuOptions
+    }).show(x, y);
+  }
+
+  function onSizeChange(val) {
+    console.log("onSizeChange", val);
+  }
+
+  function onCurrentChange(val) {
+    loadingConfig.text = `正在加载第${val}页...`;
+    loading.value = true;
+    delay(600).then(() => {
+      loading.value = false;
     });
   }
 
-  function onDel(row) {
-    const index = dataList.value.indexOf(row);
-    if (index !== -1) dataList.value.splice(index, 1);
+  // 定义一个函数用于重新获取数据
+  async function fetchData() {
+    console.log("开始获取数据..."); // 日志输出，表示开始数据获取
+    loading.value = true;
+    try {
+      const response = await axios.get("http://localhost:3000/api/projects");
+      console.log("数据成功获取:", response.data); // 日志输出获取到的数据
+      dataList.value = response.data.map((item, index) => ({
+        ...item,
+        id: item.project_id || index, // 使用 project_id 或索引作为唯一ID
+        project_type: getProjectTypeLabel(item.project_type)
+      }));
+      pagination.total = dataList.value.length;
+    } catch (error) {
+      console.error("获取数据时发生错误:", error); // 日志输出错误信息
+    } finally {
+      loading.value = false;
+      console.log("数据获取完成。"); // 日志输出，表示数据获取流程结束
+    }
   }
+  // 搜索数据的函数
+  const selectData = async () => {
+    loading.value = true;
+    try {
+      const response = await axios.get("http://localhost:3000/api/projects");
+      dataList.value = clone(response.data, true).filter(item =>
+        (item[searchField.value] || "")
+          .toString()
+          .toLowerCase()
+          .includes(searchQuery.value.toLowerCase())
+      );
+      pagination.total = dataList.value.length;
+    } catch (error) {
+      console.error("Failed to select data:", error);
+    } finally {
+      loading.value = false;
+    }
+  };
+  // 监听搜索字段和查询字符串的变化
+  watch([searchField, searchQuery], selectData, { deep: true });
+  // 组件挂载时执行
+  onMounted(async () => {
+    await fetchData();
+    if (searchField.value && searchQuery.value) {
+      await selectData(); // 只有当搜索字段和查询字符串都已设置时才执行
+    }
+  });
 
   return {
+    loading,
     columns,
     dataList,
-    onAdd,
-    onDel
+    pagination,
+    loadingConfig,
+    adaptiveConfig,
+    onSizeChange,
+    onCurrentChange,
+    searchField,
+    searchQuery,
+    showMouseMenu,
+    editDialogVisible,
+    editRowData,
+    deleteProjectId,
+    deleteDialogVisible,
+    fetchData
   };
 }

@@ -1,23 +1,46 @@
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import axios from "axios";
 import { clone, delObjectProperty } from "@pureadmin/utils";
 
 export function useColumns() {
   const editMap = ref({});
   const dataList = ref([]);
+  const searchField = ref("contract_id"); // 默认搜索字段
+  const searchQuery = ref("");
 
   const fetchData = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/projects");
-      dataList.value = clone(response.data, true);
+      const response = await axios.get("http://localhost:3000/api/contracts");
+      dataList.value = clone(response.data, true).filter(item =>
+        (item[searchField.value] || "") // 使用空字符串作为默认值
+          .toString()
+          .toLowerCase()
+          .includes(searchQuery.value.toLowerCase())
+      );
     } catch (error) {
       console.error("Failed to fetch data:", error);
     }
   };
   onMounted(fetchData);
+  watch([searchField, searchQuery], fetchData, { deep: true });
 
   const columns: TableColumnList = [
     // 定义表格列的配置
+    {
+      label: "合同id", // 列的标题
+      prop: "contract_id", // 对应数据对象的属性名
+      cellRenderer: (
+        { row, index } // 自定义该列的单元格渲染函数
+      ) => (
+        <>
+          {editMap.value[index]?.editable ? ( // 如果当前行处于编辑状态
+            <el-input v-model={row.contract_id} /> // 渲染一个输入框,双向绑定该行的姓名数据
+          ) : (
+            <p>{row.contract_id}</p> // 否则渲染一个段落,显示姓名数据
+          )}
+        </>
+      )
+    },
     {
       label: "项目id", // 列的标题
       prop: "project_id", // 对应数据对象的属性名
@@ -34,46 +57,31 @@ export function useColumns() {
       )
     },
     {
-      label: "项目名称", // 列的标题
-      prop: "project_name", // 对应数据对象的属性名
+      label: "合同乙方", // 列的标题
+      prop: "contract_member", // 对应数据对象的属性名
       cellRenderer: (
         { row, index } // 自定义该列的单元格渲染函数
       ) => (
         <>
           {editMap.value[index]?.editable ? ( // 如果当前行处于编辑状态
-            <el-input v-model={row.project_name} /> // 渲染一个输入框,双向绑定该行的姓名数据
+            <el-input v-model={row.contract_member} /> // 渲染一个输入框,双向绑定该行的姓名数据
           ) : (
-            <p>{row.project_name}</p> // 否则渲染一个段落,显示姓名数据
+            <p>{row.contract_member}</p> // 否则渲染一个段落,显示姓名数据
           )}
         </>
       )
     },
     {
-      label: "项目科室", // 列的标题
-      prop: "project_room", // 对应数据对象的属性名
+      label: "合同金额", // 列的标题
+      prop: "contract_money", // 对应数据对象的属性名
       cellRenderer: (
         { row, index } // 自定义该列的单元格渲染函数
       ) => (
         <>
           {editMap.value[index]?.editable ? ( // 如果当前行处于编辑状态
-            <el-input v-model={row.project_room} /> // 渲染一个输入框,双向绑定该行的姓名数据
+            <el-input v-model={row.contract_money} /> // 渲染一个输入框,双向绑定该行的姓名数据
           ) : (
-            <p>{row.project_room}</p> // 否则渲染一个段落,显示姓名数据
-          )}
-        </>
-      )
-    },
-    {
-      label: "项目批复资金", // 列的标题
-      prop: "project_money", // 对应数据对象的属性名
-      cellRenderer: (
-        { row, index } // 自定义该列的单元格渲染函数
-      ) => (
-        <>
-          {editMap.value[index]?.editable ? ( // 如果当前行处于编辑状态
-            <el-input v-model={row.project_money} /> // 渲染一个输入框,双向绑定该行的姓名数据
-          ) : (
-            <p>{row.project_money}</p> // 否则渲染一个段落,显示姓名数据
+            <p>{row.contract_money}</p> // 否则渲染一个段落,显示姓名数据
           )}
         </>
       )
@@ -168,7 +176,7 @@ export function useColumns() {
   function onSave(index) {
     const row = dataList.value[index];
     axios
-      .put(`http://localhost:3000/api/projects/${row.project_id}`, row)
+      .put(`http://localhost:3000/api/contracts/${row.contract_id}`, row)
       .then(response => {
         console.log("更新成功", response.data);
         editMap.value[index].editable = false; // 将该行标记为不可编辑状态
@@ -193,6 +201,8 @@ export function useColumns() {
     dataList,
     onEdit,
     onSave,
-    onCancel
+    onCancel,
+    searchField,
+    searchQuery
   };
 }
