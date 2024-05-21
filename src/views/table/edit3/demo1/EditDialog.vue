@@ -22,7 +22,9 @@ const contractOptions = ref([]);
 // 异步函数加载合同名称数据
 const loadContractNames = async () => {
   try {
-    const { data } = await axios.get("http://localhost:3000/api/contracts");
+    const { data } = await axios.get(
+      import.meta.env.VITE_APP_SERVER + "/api/contracts"
+    );
     contractOptions.value = data.map(contract => ({
       label: contract.contract_name,
       value: contract.contract_name
@@ -69,7 +71,7 @@ const handleSubmit = async () => {
   }
   try {
     const response = await axios.put(
-      `http://localhost:3000/api/payments/${values.value.pay_id}`,
+      import.meta.env.VITE_APP_SERVER + `/api/payments/${values.value.pay_id}`,
       values.value
     );
     console.log(response.data);

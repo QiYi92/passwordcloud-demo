@@ -8,7 +8,7 @@ import { ref, onMounted, reactive, watch } from "vue";
 import { delay, clone } from "@pureadmin/utils";
 import axios from "axios";
 import { ProjectStateOptions } from "@/views/table/edit/data";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 import { message } from "@/utils/message"; // 适当调整路径
 import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
 
@@ -156,7 +156,10 @@ export function useColumns() {
     console.log("开始获取数据..."); // 日志输出，表示开始数据获取
     loading.value = true;
     try {
-      const response = await axios.get("http://localhost:3000/api/projects");
+      const response = await axios.get(
+        import.meta.env.VITE_APP_SERVER + "/api/projects"
+      );
+      console.log("环境变量：", import.meta.env);
       console.log("数据成功获取:", response.data); // 日志输出获取到的数据
       dataList.value = response.data.map((item, index) => ({
         ...item,
@@ -175,7 +178,9 @@ export function useColumns() {
   const selectData = async () => {
     loading.value = true;
     try {
-      const response = await axios.get("http://localhost:3000/api/projects");
+      const response = await axios.get(
+        import.meta.env.VITE_APP_SERVER + "/api/projects"
+      );
       dataList.value = clone(response.data, true).filter(item =>
         (item[searchField.value] || "")
           .toString()

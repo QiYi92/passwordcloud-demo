@@ -95,7 +95,9 @@ export function useColumns() {
   onMounted(async () => {
     loading.value = true;
     try {
-      const response = await axios.get("http://localhost:3000/api/projects");
+      const response = await axios.get(
+        import.meta.env.VITE_APP_SERVER + "/api/projects"
+      );
       dataList.value = response.data.map((item, index) => ({
         id: index, // 从后端获取的数据通常已经包含了唯一ID，这里的映射可能不需要
         ...item

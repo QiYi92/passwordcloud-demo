@@ -14,7 +14,9 @@ const projectOptions = ref([]);
 // 异步函数加载项目名称数据
 const loadProjectNames = async () => {
   try {
-    const { data } = await axios.get("http://localhost:3000/api/projects");
+    const { data } = await axios.get(
+      import.meta.env.VITE_APP_SERVER + "/api/projects"
+    );
     projectOptions.value = data.map(project => ({
       label: project.project_name,
       value: project.project_name
@@ -107,7 +109,7 @@ const handleOpen = () => {
 const handleSubmit = async () => {
   try {
     const response = await axios.post(
-      "http://localhost:3000/api/contracts",
+      import.meta.env.VITE_APP_SERVER + "/api/contracts",
       values.value
     );
     console.log(response.data);

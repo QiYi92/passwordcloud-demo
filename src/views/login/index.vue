@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import axios from "axios";
 import Motion from "./utils/motion";
 import { useRouter } from "vue-router";
 import { message } from "@/utils/message";
@@ -21,6 +22,7 @@ import User from "@iconify-icons/ri/user-3-fill";
 defineOptions({
   name: "Login"
 });
+
 const router = useRouter();
 const loading = ref(false);
 const ruleFormRef = ref<FormInstance>();
@@ -33,9 +35,43 @@ dataThemeChange();
 const { title } = useNav();
 
 const ruleForm = reactive({
-  username: "admin",
-  password: "admin123"
+  username: "",
+  password: "",
+  captcha: ""
 });
+
+const captchaSrc = ref("/api/captcha"); // 初始化验证码的 URL
+
+const refreshCaptcha = () => {
+  captchaSrc.value = `${import.meta.env.VITE_APP_SERVER}/api/captcha?${Date.now()}`;
+};
+
+onMounted(() => {
+  refreshCaptcha(); // 页面加载时刷新验证码
+});
+
+const handleLoginSuccess = async () => {
+  try {
+    const routerInstance = await initRouter(); // 初始化路由
+    console.log("Router instance after init:", routerInstance);
+    const topMenu = getTopMenu(true); // 获取顶部菜单
+    console.log("Top menu path:", topMenu?.path);
+    if (topMenu && topMenu.path) {
+      router.push(topMenu.path); // 跳转到顶部菜单路径
+      message("登录成功", { type: "success" });
+    } else {
+      message("登录失败: 无法获取导航路径", { type: "error" });
+    }
+  } catch (error) {
+    console.error("Login success handling error:", error);
+    message("登录失败: 路由初始化错误", { type: "error" });
+  }
+};
+
+const handleLoginError = (errorMessage: string) => {
+  message("登录失败: " + errorMessage, { type: "error" });
+  refreshCaptcha(); // 登录失败时刷新验证码
+};
 
 const onLogin = async (formEl: FormInstance | undefined) => {
   loading.value = true;
@@ -47,7 +83,7 @@ const onLogin = async (formEl: FormInstance | undefined) => {
           username: ruleForm.username,
           password: ruleForm.password
         })
-        .then(res => {
+        .then((res: { success: boolean; errorMessage?: string }) => {
           if (res.success) {
             initRouter().then(() => {
               const menu = getTopMenu(true);
@@ -59,7 +95,7 @@ const onLogin = async (formEl: FormInstance | undefined) => {
               }
             });
           } else {
-            message("登录失败: " + res.message, { type: "error" });
+            message("登录失败: " + res.errorMessage, { type: "error" });
           }
         });
     } else {
@@ -68,38 +104,15 @@ const onLogin = async (formEl: FormInstance | undefined) => {
   });
 };
 
-// const onLogin = async (formEl: FormInstance | undefined) => {
-//   loading.value = true;
-//   if (!formEl) return;
-//   await formEl.validate((valid, fields) => {
-//     if (valid) {
-//       useUserStoreHook()
-//         .loginByUsername({ username: ruleForm.username, password: "admin123" })
-//         .then(res => {
-//           if (res.success) {
-//             // 获取后端路由
-//             initRouter().then(() => {
-//               router.push(getTopMenu(true).path);
-//               message("登录成功", { type: "success" });
-//             });
-//           }
-//         });
-//     } else {
-//       loading.value = false;
-//       return fields;
-//     }
-//   });
-// };
-
-/** 使用公共函数，避免`removeEventListener`失效 */
-function onkeypress({ code }: KeyboardEvent) {
+const onkeypress = ({ code }: KeyboardEvent) => {
   if (code === "Enter") {
     onLogin(ruleFormRef.value);
   }
-}
+};
 
 onMounted(() => {
   window.document.addEventListener("keypress", onkeypress);
+  refreshCaptcha(); // 页面加载时刷新验证码
 });
 
 onBeforeUnmount(() => {
@@ -111,7 +124,6 @@ onBeforeUnmount(() => {
   <div class="select-none">
     <img :src="bg" class="wave" />
     <div class="flex-c absolute right-5 top-3">
-      <!-- 主题 -->
       <el-switch
         v-model="dataTheme"
         inline-prompt
@@ -130,7 +142,6 @@ onBeforeUnmount(() => {
           <Motion>
             <h2 class="outline-none">{{ title }}</h2>
           </Motion>
-
           <el-form
             ref="ruleFormRef"
             :model="ruleForm"
@@ -140,11 +151,7 @@ onBeforeUnmount(() => {
             <Motion :delay="100">
               <el-form-item
                 :rules="[
-                  {
-                    required: true,
-                    message: '请输入账号',
-                    trigger: 'blur'
-                  }
+                  { required: true, message: '请输入账号', trigger: 'blur' }
                 ]"
                 prop="username"
               >
@@ -156,7 +163,6 @@ onBeforeUnmount(() => {
                 />
               </el-form-item>
             </Motion>
-
             <Motion :delay="150">
               <el-form-item prop="password">
                 <el-input
@@ -168,7 +174,26 @@ onBeforeUnmount(() => {
                 />
               </el-form-item>
             </Motion>
-
+            <Motion :delay="200">
+              <el-form-item
+                :rules="[
+                  { required: true, message: '请输入校验码', trigger: 'blur' }
+                ]"
+                prop="captcha"
+              >
+                <el-input
+                  v-model="ruleForm.captcha"
+                  clearable
+                  placeholder="校验码"
+                />
+                <img
+                  :src="captchaSrc"
+                  class="captcha-img"
+                  alt="验证码"
+                  @click="refreshCaptcha"
+                />
+              </el-form-item>
+            </Motion>
             <Motion :delay="250">
               <el-button
                 class="w-full mt-4"
@@ -189,10 +214,11 @@ onBeforeUnmount(() => {
 
 <style scoped>
 @import url("@/style/login.css");
-</style>
 
-<style lang="scss" scoped>
-:deep(.el-input-group__append, .el-input-group__prepend) {
-  padding: 0;
+.captcha-img {
+  width: 100px;
+  height: 40px;
+  margin-left: 10px;
+  cursor: pointer;
 }
 </style>

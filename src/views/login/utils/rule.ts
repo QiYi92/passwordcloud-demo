@@ -6,7 +6,7 @@ export const REGEXP_PWD =
   /^(?![0-9]+$)(?![a-z]+$)(?![A-Z]+$)(?!([^(0-9a-zA-Z)]|[()])+$)(?!^.*[\u4E00-\u9FA5].*$)([^(0-9a-zA-Z)]|[()]|[a-z]|[A-Z]|[0-9]){8,18}$/;
 
 /** 登录校验 */
-const loginRules = reactive(<FormRules>{
+const loginRules = reactive<FormRules>({
   password: [
     {
       validator: (rule, value, callback) => {
@@ -20,6 +20,18 @@ const loginRules = reactive(<FormRules>{
           callback();
         }
       },
+      trigger: "blur"
+    }
+  ],
+  captcha: [
+    {
+      required: true,
+      message: "请输入校验码",
+      trigger: "blur"
+    },
+    {
+      pattern: /^[a-zA-Z0-9]{4}$/,
+      message: "校验码应为4位字母或数字",
       trigger: "blur"
     }
   ]

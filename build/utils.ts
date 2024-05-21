@@ -48,9 +48,25 @@ const __APP_INFO__ = {
 };
 
 /** 处理环境变量 */
-const warpperEnv = (envConf: Recordable): ViteEnv => {
+const warpperEnv = (
+  envConf: Recordable
+): {
+  VITE_PORT: number;
+  VITE_HIDE_HOME: string;
+  VITE_COMPRESSION: string;
+  VITE_PUBLIC_PATH: string;
+  VITE_CDN: boolean;
+  VITE_ROUTER_HISTORY: string;
+} => {
   // 默认值
-  const ret: ViteEnv = {
+  const ret: {
+    VITE_PORT: number;
+    VITE_HIDE_HOME: string;
+    VITE_COMPRESSION: string;
+    VITE_PUBLIC_PATH: string;
+    VITE_CDN: boolean;
+    VITE_ROUTER_HISTORY: string;
+  } = {
     VITE_PORT: 8848,
     VITE_PUBLIC_PATH: "",
     VITE_ROUTER_HISTORY: "",

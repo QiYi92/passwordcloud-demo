@@ -37,7 +37,7 @@ const confirmDelete = async () => {
   console.log(`Deleting payments with ID: ${props.payId}`); // 打印 ID 检查
   try {
     const response = await axios.delete(
-      `http://localhost:3000/api/payments/${props.payId}`
+      import.meta.env.VITE_APP_SERVER + `/api/payments/${props.payId}`
     );
     if (response.status === 200 || response.status === 204) {
       emit("deleted"); // 发出已删除的事件
