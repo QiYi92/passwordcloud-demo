@@ -1,24 +1,46 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { noticesData } from "./data";
 import NoticeList from "./noticeList.vue";
 import Bell from "@iconify-icons/ep/bell";
+import { TabItem } from "@/layout/components/notice/data";
 
 const noticesNum = ref(0);
-const notices = ref(noticesData);
-const activeKey = ref(noticesData[0].key);
+const notices = ref<TabItem[]>([]);
+const activeKey = ref<string>("");
 
-notices.value.map(v => (noticesNum.value += v.list.length));
+// 初始化一个空的TabItem数组
+notices.value = [
+  {
+    key: "1",
+    name: "通知",
+    list: []
+  },
+  {
+    key: "2",
+    name: "消息",
+    list: []
+  },
+  {
+    key: "3",
+    name: "待办",
+    list: []
+  }
+];
+
+activeKey.value = notices.value[0].key;
 </script>
 
 <template>
   <el-dropdown trigger="click" placement="bottom-end">
     <span class="dropdown-badge navbar-bg-hover select-none">
-      <el-badge :value="noticesNum" :max="99">
+      <el-badge v-if="noticesNum > 0" :value="noticesNum" :max="99">
         <span class="header-notice-icon">
           <IconifyIconOffline :icon="Bell" />
         </span>
       </el-badge>
+      <span v-else class="header-notice-icon">
+        <IconifyIconOffline :icon="Bell" />
+      </span>
     </span>
     <template #dropdown>
       <el-dropdown-menu>
@@ -29,7 +51,7 @@ notices.value.map(v => (noticesNum.value += v.list.length));
           :style="{ width: notices.length === 0 ? '200px' : '330px' }"
         >
           <el-empty
-            v-if="notices.length === 0"
+            v-if="notices.every(item => item.list.length === 0)"
             description="暂无消息"
             :image-size="60"
           />

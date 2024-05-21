@@ -81,10 +81,24 @@ function isOneOfArray(a: Array<string>, b: Array<string>) {
     : true;
 }
 
+/** 安全解析JSON字符串 */
+function safeParseJSON(item: string | null) {
+  try {
+    return item ? JSON.parse(item) : null;
+  } catch (error) {
+    console.error("Failed to parse JSON:", error);
+    return null;
+  }
+}
+
 /** 从localStorage里取出当前登陆用户的角色roles，过滤无权限的菜单 */
 function filterNoPermissionTree(data: RouteComponent[]) {
-  const currentRoles =
-    storageLocal().getItem<DataInfo<number>>(userKey)?.roles ?? [];
+  const storedRoles = storageLocal().getItem<DataInfo<number>>(userKey)?.roles;
+  console.log("Stored Roles:", storedRoles); // 添加日志以调试
+  const currentRoles = Array.isArray(storedRoles)
+    ? storedRoles
+    : safeParseJSON(storedRoles) ?? [];
+  console.log("Current Roles:", currentRoles); // 添加日志以调试
   const newTree = cloneDeep(data).filter((v: any) =>
     isOneOfArray(v.meta?.roles, currentRoles)
   );
@@ -186,17 +200,19 @@ function initRouter() {
   if (getConfig()?.CachingAsyncRoutes) {
     // 开启动态路由缓存本地localStorage
     const key = "async-routes";
-    const asyncRouteList = storageLocal().getItem(key) as any;
+    const asyncRouteList = safeParseJSON(storageLocal().getItem(key)) as any;
     if (asyncRouteList && asyncRouteList?.length > 0) {
       return new Promise(resolve => {
+        console.log("使用缓存的动态路由"); // 调试日志
         handleAsyncRoutes(asyncRouteList);
         resolve(router);
       });
     } else {
       return new Promise(resolve => {
         getAsyncRoutes().then(({ data }) => {
+          console.log("获取动态路由数据：", data); // 调试日志
           handleAsyncRoutes(cloneDeep(data));
-          storageLocal().setItem(key, data);
+          storageLocal().setItem(key, JSON.stringify(data));
           resolve(router);
         });
       });
@@ -204,6 +220,7 @@ function initRouter() {
   } else {
     return new Promise(resolve => {
       getAsyncRoutes().then(({ data }) => {
+        console.log("获取动态路由数据：", data); // 调试日志
         handleAsyncRoutes(cloneDeep(data));
         resolve(router);
       });
@@ -362,7 +379,10 @@ function hasAuth(value: string | Array<string>): boolean {
 /** 获取所有菜单中的第一个菜单（顶级菜单）*/
 function getTopMenu(tag = false): menuType {
   const topMenu = usePermissionStoreHook().wholeMenus[0]?.children[0];
-  tag && useMultiTagsStoreHook().handleTags("push", topMenu);
+  console.log("顶级菜单路径：", topMenu?.path); // 调试日志
+  if (tag && topMenu) {
+    useMultiTagsStoreHook().handleTags("push", topMenu);
+  }
   return topMenu;
 }
 

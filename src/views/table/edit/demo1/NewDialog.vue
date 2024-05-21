@@ -75,7 +75,7 @@ const handleOpen = () => {
 const handleSubmit = async () => {
   try {
     const response = await axios.post(
-      "http://localhost:3000/api/projects",
+      import.meta.env.VITE_APP_SERVER + "/api/projects",
       values.value
     );
     console.log(response.data);

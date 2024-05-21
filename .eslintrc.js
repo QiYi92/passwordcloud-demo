@@ -51,7 +51,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ["*.ts", "*.vue"],
+      files: ["*.ts", "*.tsx", "*.vue"],
       rules: {
         "no-undef": "off"
       }
@@ -77,9 +77,9 @@ module.exports = {
     "vue/require-default-prop": "off",
     "vue/require-explicit-emits": "off",
     "vue/multi-word-component-names": "off",
-    "@typescript-eslint/no-explicit-any": "off", // any
+    "@typescript-eslint/no-explicit-any": "off",
     "no-debugger": "off",
-    "@typescript-eslint/explicit-module-boundary-types": "off", // setup()
+    "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-empty-function": "off",

@@ -87,7 +87,8 @@ const handleSubmit = async () => {
   }
   try {
     const response = await axios.put(
-      `http://localhost:3000/api/projects/${values.value.project_id}`,
+      import.meta.env.VITE_APP_SERVER +
+        `/api/projects/${values.value.project_id}`,
       values.value
     );
     console.log(response.data);

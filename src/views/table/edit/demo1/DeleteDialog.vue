@@ -37,7 +37,7 @@ const confirmDelete = async () => {
   console.log(`Deleting project with ID: ${props.projectId}`); // 打印 ID 检查
   try {
     const response = await axios.delete(
-      `http://localhost:3000/api/projects/${props.projectId}`
+      import.meta.env.VITE_APP_SERVER + `/api/projects/${props.projectId}`
     );
     if (response.status === 200 || response.status === 204) {
       emit("deleted"); // 发出已删除的事件
