@@ -1,0 +1,155 @@
+<script setup lang="ts">
+/* eslint-disable */
+import {
+  ref,
+  defineProps,
+  watchEffect,
+  defineEmits,
+  onMounted,
+  computed
+} from "vue";
+import axios from "axios";
+import "plus-pro-components/es/components/dialog-form/style/css";
+import {
+  type PlusColumn,
+  type FieldValues,
+  PlusDialogForm
+} from "plus-pro-components";
+// 响应式变量，存储项目名称选项
+const projectOptions = ref([]);
+
+// 异步函数加载项目名称数据
+const loadProjectNames = async () => {
+  try {
+    const { data } = await axios.get("http://localhost:3000/api/projects");
+    projectOptions.value = data.map(project => ({
+      label: project.project_name,
+      value: project.project_name
+    }));
+  } catch (error) {
+    console.error("Failed to load project names:", error);
+  }
+};
+// 初始化组件时加载项目名称数据
+onMounted(loadProjectNames);
+// 使用computed确保类型匹配
+const computedProjectOptions = computed(() => projectOptions.value);
+
+// 从父组件接收的初始数据和可见性状态
+const props = defineProps({
+  initialData: Object,
+  visible: Boolean
+});
+// 发射事件到父组件的方法
+const emit = defineEmits(["update:visible", "data-updated"]);
+// 本地表单值的响应式状态
+const values = ref<FieldValues>({});
+const localVisible = ref(false);
+// 监视props.visible变化来更新本地显示状态
+watchEffect(() => {
+  localVisible.value = props.visible;
+  if (props.initialData) {
+    values.value = { ...props.initialData };
+  }
+});
+// 提交表单的事件处理函数
+const handleSubmit = async () => {
+  if (!values.value.contract_id) {
+    console.error("No contract ID provided for updating.");
+    return;
+  }
+  try {
+    const response = await axios.put(
+      `http://localhost:3000/api/contracts/${values.value.contract_id}`,
+      values.value
+    );
+    console.log(response.data);
+    emit("update:visible", false);
+    emit("data-updated"); // 新增事件，通知数据已更新
+    alert("项目更新成功！");
+  } catch (error) {
+    console.error("Failed to update contract:", error);
+    alert("项目更新失败！");
+  }
+};
+
+// 列的定义
+const columns: PlusColumn[] = [
+  {
+    label: "合同名称",
+    width: 120,
+    prop: "contract_name",
+    valueType: "copy"
+  },
+  {
+    label: "项目名称",
+    width: 120,
+    prop: "project_name",
+    valueType: "select",
+    options: computedProjectOptions // 动态绑定选项
+  },
+  {
+    label: "合同乙方",
+    width: 120,
+    prop: "contract_member",
+    valueType: "copy"
+  },
+  {
+    label: "合同类型",
+    width: 120,
+    prop: "contract_type",
+    valueType: "select",
+    options: [
+      {
+        label: "暂定",
+        value: "0",
+        color: "yellow"
+      },
+      {
+        label: "设计合同",
+        value: "1",
+        color: "blue"
+      },
+      {
+        label: "指标合同",
+        value: "2",
+        color: "blue"
+      },
+      {
+        label: "监理合同",
+        value: "3",
+        color: "blue"
+      }
+    ]
+  },
+  {
+    label: "合同金额",
+    prop: "contract_money",
+    valueType: "input-number",
+    fieldProps: { precision: 2, step: 100 }
+  },
+  {
+    label: "备注",
+    prop: "contract_remark",
+    valueType: "textarea",
+    fieldProps: {
+      maxlength: 10,
+      showWordLimit: true,
+      autosize: { minRows: 2, maxRows: 4 }
+    }
+  }
+];
+</script>
+
+<template>
+  <PlusDialogForm
+    v-model:visible="localVisible"
+    v-model="values"
+    :form="{ columns }"
+    title="编辑合同数据"
+    confirm-text="更新"
+    cancel-text="取消"
+    @confirm="handleSubmit"
+    @update:visible="emit('update:visible', $event)"
+  />
+</template>

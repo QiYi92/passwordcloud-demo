@@ -1,20 +1,35 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { useColumns } from "./columns";
+import EditDialog from "@/views/table/edit3/demo1/EditDialog.vue";
+import DeleteDialog from "@/views/table/edit3/demo1/DeleteDialog.vue";
+import NewDialog from "@/views/table/edit3/demo1/NewDialog.vue";
+
+const tableRef = ref();
+const selectedRow = ref(null); // 响应式变量存储选中的行数据
 
 const {
-  editMap,
+  loading,
   columns,
   dataList,
-  onEdit,
-  onSave,
-  onCancel,
+  pagination,
+  loadingConfig,
+  adaptiveConfig,
+  onSizeChange,
+  onCurrentChange,
   searchField,
-  searchQuery
+  searchQuery,
+  showMouseMenu,
+  editDialogVisible,
+  editRowData,
+  deleteDialogVisible,
+  deletePaymentId,
+  fetchData
 } = useColumns();
 </script>
 
 <template>
-  <div class="flex flex-col">
+  <div>
     <!-- 搜索控件区域 -->
     <div class="search-controls mb-4">
       <!-- mb-4 为 margin-bottom 的样式，用于添加一些间距 -->
@@ -23,53 +38,58 @@ const {
         placeholder="选择搜索字段"
         style="width: 200px; margin-right: 10px"
       >
-        <el-option label="支付ID" value="pay_id" />
-        <el-option label="合同ID" value="contract_id" />
+        <el-option label="支付项ID" value="pay_id" />
+        <el-option label="支付名称" value="pay_name" />
+        <el-option label="合同名称" value="contract_name" />
+        <el-option label="支付类型" value="pay_type" />
         <el-option label="支付金额" value="pay_money" />
-        <el-option label="支付日期" value="pay_time" />
+        <el-option label="支付时间" value="pay_time" />
+        <el-option label="支付状态" value="pay_state" />
+        <el-option label="支付备注" value="pay_remark" />
       </el-select>
       <el-input
         v-model="searchQuery"
         placeholder="输入搜索内容"
-        style="width: 300px"
+        style="width: 300px; margin-right: 10px"
       />
+      <!-- 添加新数据的按钮 -->
+      <NewDialog @data-updated="fetchData" />
     </div>
-
-    <!-- 表格区域 -->
     <pure-table
-      row-key="id"
-      align-whole="center"
-      :header-cell-style="{
-        background: 'var(--el-fill-color-light)',
-        color: 'var(--el-text-color-primary)'
-      }"
-      :data="dataList"
+      ref="tableRef"
+      border
+      adaptive
+      :adaptiveConfig="adaptiveConfig"
+      row-key="pay_id"
+      alignWhole="center"
+      showOverflowTooltip
+      :loading="loading"
+      :loading-config="loadingConfig"
+      :data="
+        dataList.slice(
+          (pagination.currentPage - 1) * pagination.pageSize,
+          pagination.currentPage * pagination.pageSize
+        )
+      "
       :columns="columns"
-    >
-      <template #operation="{ row, index }">
-        <el-button
-          v-if="!editMap[index]?.editable"
-          class="reset-margin"
-          link
-          type="primary"
-          @click="onEdit(row, index)"
-        >
-          修改
-        </el-button>
-        <div v-else>
-          <el-button
-            class="reset-margin"
-            link
-            type="primary"
-            @click="onSave(index)"
-          >
-            保存
-          </el-button>
-          <el-button class="reset-margin" link @click="onCancel(index)">
-            取消
-          </el-button>
-        </div>
-      </template>
-    </pure-table>
+      :pagination="pagination"
+      @page-size-change="onSizeChange"
+      @page-current-change="onCurrentChange"
+      @row-contextmenu="showMouseMenu"
+    />
+    <!-- 添加数据更新按钮 -->
+    <EditDialog
+      :visible="editDialogVisible"
+      :initialData="editRowData"
+      @update:visible="editDialogVisible = $event"
+      @data-updated="fetchData"
+    />
+    <!-- 其他内容 -->
+    <DeleteDialog
+      :visible="deleteDialogVisible"
+      :payId="deletePaymentId"
+      @update:visible="deleteDialogVisible = $event"
+      @deleted="fetchData"
+    />
   </div>
 </template>

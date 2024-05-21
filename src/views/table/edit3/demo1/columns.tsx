@@ -1,248 +1,239 @@
-import { ref, onMounted, watch } from "vue";
+import type {
+  LoadingConfig,
+  AdaptiveConfig,
+  PaginationProps
+} from "@pureadmin/table";
+import { ref, onMounted, reactive, watch } from "vue";
+
+import { delay, clone } from "@pureadmin/utils";
 import axios from "axios";
-import { clone, delObjectProperty } from "@pureadmin/utils";
-import { payStateOptions } from "@/views/table/edit3/data";
+import {
+  PaymentTypeOptions,
+  PaymentStateOptions
+} from "@/views/table/edit3/data";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { message } from "@/utils/message"; // 适当调整路径
+import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
+import dayjs from "dayjs";
 
 export function useColumns() {
-  const editMap = ref({});
   const dataList = ref([]);
-  const searchField = ref("pay_id"); // 默认搜索字段
+  const loading = ref(true);
+  const searchField = ref("pay_id");
   const searchQuery = ref("");
+  const editRowData = ref(null);
+  const deletePaymentId = ref(null);
+  const editDialogVisible = ref(false);
+  const deleteDialogVisible = ref(false);
 
-  const fetchData = async () => {
+  // 创建一个帮助函数来将【支付类型】的值转换为对应的标签
+  const getPaymentTypeLabel = value => {
+    const StateOption = PaymentTypeOptions.find(opt => opt.value === value);
+    return StateOption ? StateOption.label : "未知"; // 如果找不到对应的选项，返回"未知"
+  };
+  // 创建一个帮助函数来将【支付状态】的值转换为对应的标签
+  const getPaymentStateLabel = value => {
+    const TypeOption = PaymentStateOptions.find(opt => opt.value === value);
+    return TypeOption ? TypeOption.label : "未知";
+  };
+
+  const columns: TableColumnList = [
+    {
+      label: "支付项ID",
+      prop: "pay_id"
+    },
+    {
+      label: "支付项名称",
+      prop: "pay_name"
+    },
+    {
+      label: "合同名称",
+      prop: "contract_name"
+    },
+    {
+      label: "支付类型",
+      prop: "pay_type"
+    },
+    {
+      label: "支付金额",
+      prop: "pay_money"
+    },
+    {
+      label: "支付时间",
+      prop: "pay_time",
+      formatter: row => dayjs(row.pay_time).format("YYYY年MM月DD日")
+    },
+    {
+      label: "支付状态",
+      prop: "pay_state"
+    },
+    {
+      label: "支付备注",
+      prop: "pay_remark"
+    }
+  ];
+
+  /** 分页配置 */
+  const pagination = reactive<PaginationProps>({
+    pageSize: 20,
+    currentPage: 1,
+    pageSizes: [20, 40, 60],
+    total: 0,
+    align: "right",
+    background: true,
+    small: false
+  });
+  /** 右键编辑菜单配置*/
+  const menuOptions = {
+    menuList: [
+      {
+        label: ({ pay_id }) => `项目ID为：${pay_id}`,
+        disabled: true
+      },
+      {
+        label: "修改",
+        tips: "Edit",
+        fn: async row => {
+          editRowData.value = row; // 设置当前行数据
+          editDialogVisible.value = true; // 打开编辑对话框
+        }
+      },
+      {
+        label: "删除",
+        tips: "Delete",
+        fn: row => {
+          deletePaymentId.value = row.pay_id;
+          deleteDialogVisible.value = true;
+        }
+      }
+    ]
+  };
+
+  /** 加载动画配置 */
+  const loadingConfig = reactive<LoadingConfig>({
+    text: "正在加载第一页...",
+    viewBox: "-10, -10, 50, 50",
+    spinner: `
+        <path class="path" d="
+          M 30 15
+          L 28 17
+          M 25.61 25.61
+          A 15 15, 0, 0, 1, 15 30
+          A 15 15, 0, 1, 1, 27.99 7.5
+          L 15 15
+        " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
+      `
+    // svg: "",
+    // background: rgba()
+  });
+
+  /** 撑满内容区自适应高度相关配置 */
+  const adaptiveConfig: AdaptiveConfig = {
+    /** 表格距离页面底部的偏移量，默认值为 `96` */
+    offsetBottom: 110
+    /** 是否固定表头，默认值为 `true`（如果不想固定表头，fixHeader设置为false并且表格要设置table-layout="auto"） */
+    // fixHeader: true
+    /** 页面 `resize` 时的防抖时间，默认值为 `60` ms */
+    // timeout: 60
+    /** 表头的 `z-index`，默认值为 `100` */
+    // zIndex: 100
+  };
+
+  function showMouseMenu(row, column, event) {
+    event.preventDefault();
+    const { x, y } = event;
+    CustomMouseMenu({
+      el: event.currentTarget,
+      params: row,
+      menuWrapperCss: {
+        background: "var(--el-bg-color)"
+      },
+      menuItemCss: {
+        labelColor: "var(--el-text-color)",
+        hoverLabelColor: "var(--el-color-primary)",
+        hoverTipsColor: "var(--el-color-primary)"
+      },
+      ...menuOptions
+    }).show(x, y);
+  }
+
+  function onSizeChange(val) {
+    console.log("onSizeChange", val);
+  }
+
+  function onCurrentChange(val) {
+    loadingConfig.text = `正在加载第${val}页...`;
+    loading.value = true;
+    delay(600).then(() => {
+      loading.value = false;
+    });
+  }
+
+  // 定义一个函数用于重新获取数据
+  async function fetchData() {
+    console.log("开始获取数据..."); // 日志输出，表示开始数据获取
+    loading.value = true;
+    try {
+      const response = await axios.get("http://localhost:3000/api/payments");
+      console.log("数据成功获取:", response.data); // 日志输出获取到的数据
+      dataList.value = response.data.map((item, index) => ({
+        ...item,
+        id: item.pay_id || index, // 使用 pay_id 或索引作为唯一ID
+        pay_type: getPaymentTypeLabel(item.pay_type), // 支付类型
+        pay_state: getPaymentStateLabel(item.pay_state) //支付状态
+      }));
+      pagination.total = dataList.value.length;
+    } catch (error) {
+      console.error("获取数据时发生错误:", error); // 日志输出错误信息
+    } finally {
+      loading.value = false;
+      console.log("数据获取完成。"); // 日志输出，表示数据获取流程结束
+    }
+  }
+  // 搜索数据的函数
+  const selectData = async () => {
+    loading.value = true;
     try {
       const response = await axios.get("http://localhost:3000/api/payments");
       dataList.value = clone(response.data, true).filter(item =>
-        (item[searchField.value] || "") // 使用空字符串作为默认值
+        (item[searchField.value] || "")
           .toString()
           .toLowerCase()
           .includes(searchQuery.value.toLowerCase())
       );
+      pagination.total = dataList.value.length;
     } catch (error) {
-      console.error("Failed to fetch data:", error);
+      console.error("Failed to select data:", error);
+    } finally {
+      loading.value = false;
     }
   };
-  onMounted(fetchData);
-  watch([searchField, searchQuery], fetchData, { deep: true });
-
-  const columns: TableColumnList = [
-    // 定义表格列的配置
-    {
-      label: "支付id", // 列的标题
-      prop: "pay_id", // 对应数据对象的属性名
-      cellRenderer: (
-        { row, index } // 自定义该列的单元格渲染函数
-      ) => (
-        <>
-          {editMap.value[index]?.editable ? ( // 如果当前行处于编辑状态
-            <el-input v-model={row.pay_id} /> // 渲染一个输入框,双向绑定该行的姓名数据
-          ) : (
-            <p>{row.pay_id}</p> // 否则渲染一个段落,显示姓名数据
-          )}
-        </>
-      )
-    },
-    {
-      label: "合同id", // 列的标题
-      prop: "contract_id", // 对应数据对象的属性名
-      cellRenderer: (
-        { row, index } // 自定义该列的单元格渲染函数
-      ) => (
-        <>
-          {editMap.value[index]?.editable ? ( // 如果当前行处于编辑状态
-            <el-input v-model={row.contract_id} /> // 渲染一个输入框,双向绑定该行的姓名数据
-          ) : (
-            <p>{row.contract_id}</p> // 否则渲染一个段落,显示姓名数据
-          )}
-        </>
-      )
-    },
-    {
-      label: "支付金额", // 列的标题
-      prop: "pay_money", // 对应数据对象的属性名
-      cellRenderer: (
-        { row, index } // 自定义该列的单元格渲染函数
-      ) => (
-        <>
-          {editMap.value[index]?.editable ? ( // 如果当前行处于编辑状态
-            <el-input v-model={row.pay_money} /> // 渲染一个输入框,双向绑定该行的姓名数据
-          ) : (
-            <p>{row.pay_money}</p> // 否则渲染一个段落,显示姓名数据
-          )}
-        </>
-      )
-    },
-    {
-      label: "支付日期", // 列的标题
-      prop: "pay_time", // 对应数据对象的属性名
-      cellRenderer: (
-        { row, index } // 自定义该列的单元格渲染函数
-      ) => (
-        <>
-          {editMap.value[index]?.editable ? ( // 如果当前行处于编辑状态
-            <el-date-picker
-              v-model={row.pay_time} // 双向绑定该行的日期数据
-              type="date" // 日期选择器类型为日期
-              format="YYYY/MM/DD" // 显示格式为 YYYY/MM/DD
-              value-format="YYYY-MM-DD" // 存储格式为 YYYY-MM-DD
-              placeholder="请选择日期" // 占位符
-            />
-          ) : (
-            <p>{row.pay_time}</p> // 否则渲染一个段落,显示日期数据
-          )}
-        </>
-      ),
-      minWidth: 110 // 该列的最小宽度为 110 像素
-    },
-    {
-      label: "支付状态",
-      prop: "pay_state",
-      cellRenderer: ({ row, index }) => (
-        <>
-          {editMap.value[index]?.editable ? (
-            <el-select
-              v-model={row.pay_state}
-              clearable
-              placeholder="选择状态"
-              onChange={newVal => console.log(`支付状态变更为: ${newVal}`)} // 添加的onChange事件处理器
-            >
-              {payStateOptions.map(option => (
-                <el-option
-                  key={option.value}
-                  label={option.label}
-                  value={option.value}
-                />
-              ))}
-            </el-select>
-          ) : (
-            <el-tag type="primary">
-              {payStateOptions.find(opt => opt.value === row.pay_state)
-                ?.label || "未知"}
-            </el-tag>
-          )}
-        </>
-      )
-    },
-    // {
-    //   label: "性别",
-    //   prop: "sex",
-    //   cellRenderer: (
-    //     { row, index } // 自定义该列的单元格渲染函数
-    //   ) => (
-    //     <>
-    //       {editMap.value[index]?.editable ? ( // 如果当前行处于编辑状态
-    //         <el-switch
-    //           v-model={row.sex} // 双向绑定该行的性别数据
-    //           inline-prompt
-    //           active-value={0} // 0 代表男性
-    //           inactive-value={1} // 1 代表女性
-    //           active-text="男" // 激活状态(0)显示"男"
-    //           inactive-text="女" // 非激活状态(1)显示"女"
-    //         />
-    //       ) : (
-    //         <p>{row.sex === 0 ? "男" : "女"}</p> // 如果性别为 0,显示"男",否则显示"女"
-    //       )}
-    //     </>
-    //   )
-    // },
-    // {
-    //   label: "爱好", // 列的标题
-    //   prop: "hobby", // 对应数据对象的属性名
-    //   cellRenderer: (
-    //     { row, index } // 自定义该列的单元格渲染函数
-    //   ) => (
-    //     <>
-    //       {editMap.value[index]?.editable ? ( // 如果当前行处于编辑状态
-    //         // 渲染一个选择框,双向绑定该行的爱好数据
-    //         <el-select v-model={row.hobby} clearable placeholder="请选择爱好">
-    //           {options.map(item => {
-    //             // 遍历选项数据
-    //             return (
-    //               <el-option
-    //                 key={item.value} // 选项的唯一键值
-    //                 label={item.label} // 选项的显示标签
-    //                 value={item.value} // 选项的值
-    //               />
-    //             );
-    //           })}
-    //         </el-select>
-    //       ) : (
-    //         // 如果不是编辑状态,显示一个主题标签
-    //         // 找到对应的选项标签
-    //         <el-tag type="primary">
-    //           {options.filter(opt => opt.value == row.hobby)[0]?.label}
-    //         </el-tag>
-    //       )}
-    //     </>
-    //   )
-    // },
-    // {
-    //   label: "日期", // 列的标题
-    //   prop: "date", // 对应数据对象的属性名
-    //   cellRenderer: (
-    //     { row, index } // 自定义该列的单元格渲染函数
-    //   ) => (
-    //     <>
-    //       {editMap.value[index]?.editable ? ( // 如果当前行处于编辑状态
-    //         <el-date-picker
-    //           v-model={row.date} // 双向绑定该行的日期数据
-    //           type="date" // 日期选择器类型为日期
-    //           format="YYYY/MM/DD" // 显示格式为 YYYY/MM/DD
-    //           value-format="YYYY-MM-DD" // 存储格式为 YYYY-MM-DD
-    //           placeholder="请选择日期" // 占位符
-    //         />
-    //       ) : (
-    //         <p>{row.date}</p> // 否则渲染一个段落,显示日期数据
-    //       )}
-    //     </>
-    //   ),
-    //   minWidth: 110 // 该列的最小宽度为 110 像素
-    // },
-    {
-      label: "操作", // 列的标题
-      fixed: "right", // 该列固定在右侧
-      slot: "operation" // 该列使用插槽渲染
+  // 监听搜索字段和查询字符串的变化
+  watch([searchField, searchQuery], selectData, { deep: true });
+  // 组件挂载时执行
+  onMounted(async () => {
+    await fetchData();
+    if (searchField.value && searchQuery.value) {
+      await selectData(); // 只有当搜索字段和查询字符串都已设置时才执行
     }
-  ];
-
-  function onEdit(row, index) {
-    // 编辑该行数据的函数
-    editMap.value[index] = Object.assign({ ...row, editable: true }); // 将该行数据标记为可编辑状态
-  }
-
-  function onSave(index) {
-    const row = dataList.value[index];
-    // 确保 pay_state 是字符串类型
-    row.pay_state = String(row.pay_state);
-
-    console.log("Sending data to server:", row); // 打印即将发送的数据
-
-    axios
-      .put(`http://localhost:3000/api/payments/${row.pay_id}`, row)
-      .then(response => {
-        console.log("更新成功", response.data);
-        editMap.value[index].editable = false;
-        dataList.value[index] = { ...row };
-      })
-      .catch(error => {
-        console.error("数据更新失败:", error);
-      });
-  }
-
-  function onCancel(index) {
-    // 取消编辑的函数
-    editMap.value[index].editable = false; // 将该行标记为不可编辑状态
-    dataList.value[index] = delObjectProperty(editMap.value[index], "editable"); // 从编辑数据中删除 editable 属性,还原到原始数据
-  }
+  });
 
   return {
-    editMap,
+    loading,
     columns,
     dataList,
-    onEdit,
-    onSave,
-    onCancel,
+    pagination,
+    loadingConfig,
+    adaptiveConfig,
+    onSizeChange,
+    onCurrentChange,
     searchField,
-    searchQuery
+    searchQuery,
+    showMouseMenu,
+    editDialogVisible,
+    editRowData,
+    deletePaymentId,
+    deleteDialogVisible,
+    fetchData
   };
 }

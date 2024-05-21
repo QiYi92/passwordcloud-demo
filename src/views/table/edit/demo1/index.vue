@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useColumns } from "./columns";
-import NewDialogForm from "./NewDialog.vue";
 import EditDialog from "@/views/table/edit/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/table/edit/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/table/edit/demo1/NewDialog.vue";
@@ -42,6 +41,8 @@ const {
         <el-option label="项目ID" value="project_id" />
         <el-option label="项目名称" value="project_name" />
         <el-option label="项目科室" value="project_room" />
+        <el-option label="项目类型" value="project_type" />
+        <el-option label="项目备注" value="project_remark" />
       </el-select>
       <el-input
         v-model="searchQuery"

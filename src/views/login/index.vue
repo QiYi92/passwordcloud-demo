@@ -40,25 +40,56 @@ const ruleForm = reactive({
 const onLogin = async (formEl: FormInstance | undefined) => {
   loading.value = true;
   if (!formEl) return;
-  await formEl.validate((valid, fields) => {
+  await formEl.validate(async valid => {
     if (valid) {
       useUserStoreHook()
-        .loginByUsername({ username: ruleForm.username, password: "admin123" })
+        .loginByUsername({
+          username: ruleForm.username,
+          password: ruleForm.password
+        })
         .then(res => {
           if (res.success) {
-            // 获取后端路由
             initRouter().then(() => {
-              router.push(getTopMenu(true).path);
-              message("登录成功", { type: "success" });
+              const menu = getTopMenu(true);
+              if (menu && menu.path) {
+                router.push(menu.path);
+                message("登录成功", { type: "success" });
+              } else {
+                message("登录失败: 无法获取导航路径", { type: "error" });
+              }
             });
+          } else {
+            message("登录失败: " + res.message, { type: "error" });
           }
         });
     } else {
       loading.value = false;
-      return fields;
     }
   });
 };
+
+// const onLogin = async (formEl: FormInstance | undefined) => {
+//   loading.value = true;
+//   if (!formEl) return;
+//   await formEl.validate((valid, fields) => {
+//     if (valid) {
+//       useUserStoreHook()
+//         .loginByUsername({ username: ruleForm.username, password: "admin123" })
+//         .then(res => {
+//           if (res.success) {
+//             // 获取后端路由
+//             initRouter().then(() => {
+//               router.push(getTopMenu(true).path);
+//               message("登录成功", { type: "success" });
+//             });
+//           }
+//         });
+//     } else {
+//       loading.value = false;
+//       return fields;
+//     }
+//   });
+// };
 
 /** 使用公共函数，避免`removeEventListener`失效 */
 function onkeypress({ code }: KeyboardEvent) {

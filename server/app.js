@@ -2,7 +2,26 @@
 import express from "express";
 import mysql from "mysql2";
 import cors from "cors";
-
+import {
+  addProject,
+  deleteProject,
+  getAllProjects,
+  updateProject
+} from "./project/projectController.js";
+import {
+  getAllContract,
+  addContract,
+  updateContract,
+  deleteContract
+} from "./contract/contractController.js";
+import {
+  getAllPayments,
+  addPayment,
+  updatePayment,
+  deletePayment
+} from "./pay/payController.js";
+import smCrypto from "sm-crypto";
+const { sm3 } = smCrypto;
 const app = express();
 const port = 3000;
 
@@ -39,13 +58,35 @@ connection.connect(error => {
     });
   });
 
+  app.post("/api/login", (req, res) => {
+    const { username, password } = req.body;
+    const encryptedPassword = sm3(password);
+    console.log(`Received password: ${password}`);
+    console.log(`Encrypted password: ${encryptedPassword}`);
+
+    connection.query(
+      "SELECT * FROM user WHERE username = ? AND password = ?",
+      [username, encryptedPassword],
+      (error, results) => {
+        if (error) {
+          console.error("Database error:", error);
+          res.status(500).send({ success: false, message: "数据库错误" });
+        } else if (results.length > 0) {
+          console.log("Login successful for:", username);
+          res.send({ success: true, message: "登录成功" });
+        } else {
+          console.log("Login failed for:", username);
+          res.status(401).send({ success: false, message: "用户名或密码错误" });
+        }
+      }
+    );
+  });
+
   // 获取项目表
   app.get("/api/projects", (req, res) => {
-    connection.query("SELECT * FROM project_table", (error, results) => {
-      console.log("Error:", error); // 输出错误信息
-      console.log("Data:", results); // 输出查询结果
+    getAllProjects((error, results) => {
       if (error) {
-        res.status(500).send("Error fetching data from database");
+        res.status(error.status).send(error.message);
       } else {
         res.json(results);
       }
@@ -53,187 +94,121 @@ connection.connect(error => {
   });
   // 项目表更新项目数据
   app.put("/api/projects/:id", (req, res) => {
-    const { id } = req.params;
-    const {
-      project_name,
-      project_room,
-      project_money,
-      project_type,
-      project_remark
-    } = req.body;
-
-    // 更新 SQL 语句以包含新字段
-    const sql = `UPDATE project_table SET project_name = ?, project_room = ?, project_money = ?, project_type = ?, project_remark = ? WHERE project_id = ?`;
-
-    connection.query(
-      sql,
-      [
-        project_name,
-        project_room,
-        project_money,
-        project_type,
-        project_remark,
-        id
-      ],
-      (error, results) => {
-        if (error) {
-          console.error("Error updating data:", error);
-          res
-            .status(500)
-            .send("Error updating data in database: " + error.message);
-        } else {
-          console.log("Updated data:", results);
-          res.send("Data updated successfully");
-        }
+    updateProject(req.params.id, req.body, (error, response) => {
+      if (error) {
+        res.status(error.status).send(error.message);
+      } else {
+        res.send(response.message);
       }
-    );
+    });
   });
-
-  //
   // 项目表添加新数据
   app.post("/api/projects", (req, res) => {
-    const {
-      project_name,
-      project_room,
-      project_money,
-      project_type,
-      project_remark
-    } = req.body;
-    const sql = `INSERT INTO project_table (project_name, project_room, project_money, project_type, project_remark) VALUES (?, ?, ?, ?, ?)`;
-    connection.query(
-      sql,
-      [project_name, project_room, project_money, project_type, project_remark],
-      (error, results) => {
-        if (error) {
-          console.error("Error inserting data:", error);
-          res
-            .status(500)
-            .send("Error inserting data into database: " + error.message);
-        } else {
-          console.log("Data inserted successfully:", results);
-          res.status(201).send("Data inserted successfully");
-        }
+    addProject(req.body, (error, response) => {
+      if (error) {
+        res.status(error.status).send(error.message);
+      } else {
+        res.status(201).send(response.message);
       }
-    );
+    });
   });
   // 项目表删除数据
   app.delete("/api/projects/:id", (req, res) => {
-    const { id } = req.params;
-    const sql = "DELETE FROM project_table WHERE project_id = ?";
-    connection.query(sql, [id], (error, results) => {
+    deleteProject(req.params.id, (error, response) => {
       if (error) {
-        console.error("Error deleting project:", error);
-        res
-          .status(500)
-          .send("Error deleting project from database: " + error.message);
+        res.status(error.status).send(error.message);
       } else {
-        console.log("Deleted data:", results);
-        if (results.affectedRows === 0) {
-          res.status(404).send("Project not found or already deleted");
-        } else {
-          res.send("Project deleted successfully");
-        }
+        res.send(response.message);
       }
     });
   });
 
   // 获取合同表
   app.get("/api/contracts", (req, res) => {
-    connection.query("SELECT * FROM contract_table", (error, results) => {
-      console.log("Error:", error); // 输出错误信息
-      console.log("Data:", results); // 输出查询结果
+    getAllContract((error, results) => {
       if (error) {
-        res.status(500).send("Error fetching data from database");
+        res.status(error.status).send(error.message);
       } else {
         res.json(results);
       }
     });
   });
-  // 合同表更新项目数据
+
+  // 更新合同数据
   app.put("/api/contracts/:id", (req, res) => {
-    const { id } = req.params;
-    const {
-      project_id,
-      contract_member: contract_member,
-      contract_money
-    } = req.body;
-    const sql = `UPDATE contract_table SET project_id = ?, contract_member = ?, contract_money = ? WHERE contract_id = ?`;
-    connection.query(
-      sql,
-      [project_id, contract_member, contract_money, id],
-      (error, results) => {
-        if (error) {
-          console.log("Error updating data:", error);
-          res.status(500).send("Error updating data in database");
-        } else {
-          console.log("Updated data:", results);
-          res.send("Data updated successfully");
-        }
+    updateContract(req.params.id, req.body, (error, response) => {
+      if (error) {
+        res.status(error.status).send(error.message);
+      } else {
+        res.send(response.message);
       }
-    );
+    });
   });
-  // 获取项目表的单个项目的详细信息
-  app.get("/api/projects/:id", (req, res) => {
-    const { id } = req.params;
-    connection.query(
-      "SELECT * FROM project_table WHERE project_id = ?",
-      [id],
-      (error, results) => {
-        if (error) {
-          console.error("Error fetching project:", error);
-          res.status(500).send("Error fetching project data from database");
-        } else {
-          if (results.length > 0) {
-            res.json(results[0]); // 发送单个项目数据
-          } else {
-            res.status(404).send("Project not found");
-          }
-        }
+
+  // 添加新合同数据
+  app.post("/api/contracts", (req, res) => {
+    addContract(req.body, (error, response) => {
+      if (error) {
+        res.status(error.status).send(error.message);
+      } else {
+        res.status(201).send(response.message);
       }
-    );
+    });
+  });
+
+  // 删除合同数据
+  app.delete("/api/contracts/:id", (req, res) => {
+    deleteContract(req.params.id, (error, response) => {
+      if (error) {
+        res.status(error.status).send(error.message);
+      } else {
+        res.send(response.message);
+      }
+    });
   });
 
   // 获取支付表
   app.get("/api/payments", (req, res) => {
-    connection.query("SELECT * FROM pay_table", (error, results) => {
-      console.log("Error:", error); // 输出错误信息
-      console.log("Data:", results); // 输出查询结果
+    getAllPayments((error, results) => {
       if (error) {
-        res.status(500).send("Error fetching data from database");
+        res.status(error.status).send(error.message);
       } else {
         res.json(results);
       }
     });
   });
-  // 支付表更新项目数据
 
+  // 更新支付数据
   app.put("/api/payments/:id", (req, res) => {
-    const { id } = req.params;
-    const { contract_id, pay_money, pay_time, pay_state } = req.body;
-
-    console.log("Received update for:", id);
-    console.log("New pay_state:", pay_state);
-
-    const sql = `UPDATE pay_table SET contract_id = ?, pay_money = ?, pay_time = ?, pay_state = ? WHERE pay_id = ?`;
-    connection.query(
-      sql,
-      [contract_id, pay_money, pay_time, pay_state, id],
-      (error, results) => {
-        if (error) {
-          console.error("Error updating payment data:", error);
-          res
-            .status(500)
-            .send("Error updating payment data in database: " + error.message);
-        } else {
-          console.log("Update results:", results);
-          if (results.affectedRows === 0) {
-            res.status(404).send("No payment found with that ID.");
-          } else {
-            res.send("Payment data updated successfully");
-          }
-        }
+    updatePayment(req.params.id, req.body, (error, response) => {
+      if (error) {
+        res.status(error.status).send(error.message);
+      } else {
+        res.send(response.message);
       }
-    );
+    });
+  });
+
+  // 添加新支付数据
+  app.post("/api/payments", (req, res) => {
+    addPayment(req.body, (error, response) => {
+      if (error) {
+        res.status(error.status).send(error.message);
+      } else {
+        res.status(201).send(response.message);
+      }
+    });
+  });
+
+  // 删除支付数据
+  app.delete("/api/payments/:id", (req, res) => {
+    deletePayment(req.params.id, (error, response) => {
+      if (error) {
+        res.status(error.status).send(error.message);
+      } else {
+        res.send(response.message);
+      }
+    });
   });
 });
 
