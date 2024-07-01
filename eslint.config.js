@@ -64,13 +64,7 @@ export default defineFlatConfig([
       ...configPrettier.rules,
       ...pluginPrettier.configs.recommended.rules,
       "no-debugger": "off",
-      "no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_"
-        }
-      ],
+      "no-unused-vars": "off", // 全局禁用 no-unused-vars 规则
       "prettier/prettier": [
         "error",
         {
@@ -110,7 +104,7 @@ export default defineFlatConfig([
         { allowBitwiseExpressions: true }
       ],
       "@typescript-eslint/no-unused-vars": [
-        "error",
+        "off", // 针对 ts/tsx 文件禁用 no-unused-vars 规则
         {
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_"
@@ -123,7 +117,8 @@ export default defineFlatConfig([
     rules: {
       "eslint-comments/no-unlimited-disable": "off",
       "import/no-duplicates": "off",
-      "unused-imports/no-unused-vars": "off"
+      "unused-imports/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off" // 针对 d.ts 文件禁用 no-unused-vars 规则
     }
   },
   {
@@ -164,7 +159,7 @@ export default defineFlatConfig([
       ...pluginVue.configs["vue3-essential"].rules,
       ...pluginVue.configs["vue3-recommended"].rules,
       "no-undef": "off",
-      "no-unused-vars": "off",
+      "no-unused-vars": "off", // 针对 vue 文件禁用 no-unused-vars 规则
       "vue/no-v-html": "off",
       "vue/require-default-prop": "off",
       "vue/require-explicit-emits": "off",
@@ -181,7 +176,8 @@ export default defineFlatConfig([
           svg: "always",
           math: "always"
         }
-      ]
+      ],
+      "vue/no-unused-vars": "off" // 针对 Vue 文件禁用 no-unused-vars 规则
     }
   }
 ]);
