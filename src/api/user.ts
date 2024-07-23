@@ -1,6 +1,7 @@
 import { http } from "@/utils/http";
 
 export type UserResult = {
+  message: string;
   success: boolean;
   data: {
     /** 用户名 */

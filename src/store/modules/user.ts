@@ -41,38 +41,54 @@ export const useUserStore = defineStore({
     /** 登入 */
     async loginByUsername(data) {
       return new Promise<UserResult>((resolve, reject) => {
+        // 调用 getLogin 接口，传入用户数据
         getLogin(data)
           .then(data => {
+            // 如果数据存在
             if (data) {
+              // 设置 token
               setToken(data.data);
+              // 解析并返回数据
               resolve(data);
             }
           })
           .catch(error => {
+            // 如果接口调用失败，拒绝并返回错误
             reject(error);
           });
       });
     },
     /** 前端登出（不调用接口） */
     logOut() {
+      // 清空用户名
       this.username = "";
+      // 清空角色数组
       this.roles = [];
+      // 移除 token
       removeToken();
+      // 重置多标签状态
       useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);
+      // 重置路由
       resetRouter();
+      // 跳转到登录页面
       router.push("/login");
     },
     /** 刷新`token` */
     async handRefreshToken(data) {
       return new Promise<RefreshTokenResult>((resolve, reject) => {
+        // 调用 refreshTokenApi 接口，传入数据
         refreshTokenApi(data)
           .then(data => {
+            // 如果数据存在
             if (data) {
+              // 设置新的 token
               setToken(data.data);
+              // 解析并返回数据
               resolve(data);
             }
           })
           .catch(error => {
+            // 如果接口调用失败，拒绝并返回错误
             reject(error);
           });
       });

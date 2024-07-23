@@ -92,18 +92,14 @@ function safeParseJSON(item: string | null) {
 }
 
 /** 从localStorage里取出当前登陆用户的角色roles，过滤无权限的菜单 */
-function filterNoPermissionTree(data: RouteComponent[]) {
-  const storedRoles = storageLocal().getItem<DataInfo<number>>(userKey)?.roles;
-  console.log("Stored Roles:", storedRoles); // 添加日志以调试
-  const currentRoles = Array.isArray(storedRoles)
-    ? storedRoles
-    : safeParseJSON(storedRoles) ?? [];
-  console.log("Current Roles:", currentRoles); // 添加日志以调试
+function filterNoPermissionTree(data: RouteComponent[], roles: string[]) {
+  // 修改函数签名，增加 roles 参数
   const newTree = cloneDeep(data).filter((v: any) =>
-    isOneOfArray(v.meta?.roles, currentRoles)
+    isOneOfArray(v.meta?.roles, roles)
   );
   newTree.forEach(
-    (v: any) => v.children && (v.children = filterNoPermissionTree(v.children))
+    (v: any) =>
+      v.children && (v.children = filterNoPermissionTree(v.children, roles))
   );
   return filterChildrenTree(newTree);
 }
@@ -164,32 +160,35 @@ function addPathMatch() {
 }
 
 /** 处理动态路由（后端返回的路由） */
-function handleAsyncRoutes(routeList) {
+function handleAsyncRoutes(routeList, roles) {
+  // 修改函数签名，增加 roles 参数
   if (routeList.length === 0) {
     usePermissionStoreHook().handleWholeMenus(routeList);
   } else {
-    formatFlatteningRoutes(addAsyncRoutes(routeList)).map(
-      (v: RouteRecordRaw) => {
-        // 防止重复添加路由
-        if (
-          router.options.routes[0].children.findIndex(
-            value => value.path === v.path
-          ) !== -1
-        ) {
-          return;
-        } else {
-          // 切记将路由push到routes后还需要使用addRoute，这样路由才能正常跳转
-          router.options.routes[0].children.push(v);
-          // 最终路由进行升序
-          ascending(router.options.routes[0].children);
-          if (!router.hasRoute(v?.name)) router.addRoute(v);
-          const flattenRouters: any = router
-            .getRoutes()
-            .find(n => n.path === "/");
-          router.addRoute(flattenRouters);
-        }
+    const filteredRoutes = filterNoPermissionTree(routeList, roles); // 根据 roles 过滤路由
+    const flattenedRoutes = formatFlatteningRoutes(
+      addAsyncRoutes(filteredRoutes)
+    ); // 确保传递有效的数组
+    flattenedRoutes.map((v: RouteRecordRaw) => {
+      // 防止重复添加路由
+      if (
+        router.options.routes[0].children.findIndex(
+          value => value.path === v.path
+        ) !== -1
+      ) {
+        return;
+      } else {
+        // 切记将路由push到routes后还需要使用addRoute，这样路由才能正常跳转
+        router.options.routes[0].children.push(v);
+        // 最终路由进行升序
+        ascending(router.options.routes[0].children);
+        if (!router.hasRoute(v?.name)) router.addRoute(v);
+        const flattenRouters: any = router
+          .getRoutes()
+          .find(n => n.path === "/");
+        router.addRoute(flattenRouters);
       }
-    );
+    });
     usePermissionStoreHook().handleWholeMenus(routeList);
   }
   addPathMatch();
@@ -197,35 +196,17 @@ function handleAsyncRoutes(routeList) {
 
 /** 初始化路由（`new Promise` 写法防止在异步请求中造成无限循环）*/
 function initRouter() {
-  if (getConfig()?.CachingAsyncRoutes) {
-    // 开启动态路由缓存本地localStorage
-    const key = "async-routes";
-    const asyncRouteList = safeParseJSON(storageLocal().getItem(key)) as any;
-    if (asyncRouteList && asyncRouteList?.length > 0) {
-      return new Promise(resolve => {
-        console.log("使用缓存的动态路由"); // 调试日志
-        handleAsyncRoutes(asyncRouteList);
-        resolve(router);
-      });
-    } else {
-      return new Promise(resolve => {
-        getAsyncRoutes().then(({ data }) => {
-          console.log("获取动态路由数据：", data); // 调试日志
-          handleAsyncRoutes(cloneDeep(data));
-          storageLocal().setItem(key, JSON.stringify(data));
-          resolve(router);
-        });
-      });
-    }
-  } else {
-    return new Promise(resolve => {
-      getAsyncRoutes().then(({ data }) => {
-        console.log("获取动态路由数据：", data); // 调试日志
-        handleAsyncRoutes(cloneDeep(data));
-        resolve(router);
-      });
-    });
-  }
+  return getAsyncRoutes().then(({ data }) => {
+    console.log("获取动态路由数据：", data); // 调试日志
+    const storedRoles = (storageLocal().getItem(userKey) as DataInfo<number>)
+      ?.roles;
+    console.log("Stored Roles:", storedRoles); // 调试日志
+    const currentRoles = Array.isArray(storedRoles) ? storedRoles : [];
+    console.log("Current Roles:", currentRoles); // 调试日志
+
+    handleAsyncRoutes(data, currentRoles); // 修改此处，确保传递 currentRoles
+    return router;
+  });
 }
 
 /**
@@ -234,6 +215,7 @@ function initRouter() {
  * @returns 返回处理后的一维路由
  */
 function formatFlatteningRoutes(routesList: RouteRecordRaw[]) {
+  if (!Array.isArray(routesList)) return [];
   if (routesList.length === 0) return routesList;
   let hierarchyList = buildHierarchyTree(routesList);
   for (let i = 0; i < hierarchyList.length; i++) {
@@ -309,7 +291,7 @@ function handleAliveRoute({ name }: ToRouteType, mode?: string) {
 
 /** 过滤后端传来的动态路由 重新生成规范路由 */
 function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
-  if (!arrRoutes || !arrRoutes.length) return;
+  if (!arrRoutes || !arrRoutes.length) return [];
   const modulesRoutesKeys = Object.keys(modulesRoutes);
   arrRoutes.forEach((v: RouteRecordRaw) => {
     // 将backstage属性加入meta，标识此路由为后端返回路由
