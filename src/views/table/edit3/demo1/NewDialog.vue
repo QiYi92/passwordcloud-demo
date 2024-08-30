@@ -34,12 +34,14 @@ const computedContractOptions = computed(() => contractOptions.value);
 const columns: PlusColumn[] = [
   {
     label: "支付项名称",
+    labelWidth: 100,
     width: 120,
     prop: "pay_name",
     valueType: "copy"
   },
   {
     label: "合同名称",
+    labelWidth: 100,
     width: 120,
     prop: "contract_name",
     valueType: "select",
@@ -48,6 +50,7 @@ const columns: PlusColumn[] = [
   {
     label: "支付项类型",
     width: 120,
+    labelWidth: 100,
     prop: "pay_type",
     valueType: "select",
     options: [
@@ -70,17 +73,20 @@ const columns: PlusColumn[] = [
   },
   {
     label: "支付金额",
+    labelWidth: 100,
     prop: "pay_money",
     valueType: "input-number",
     fieldProps: { precision: 2, step: 100 }
   },
   {
     label: "支付时间",
+    labelWidth: 100,
     prop: "pay_time",
     valueType: "date-picker"
   },
   {
     label: "支付状态",
+    labelWidth: 100,
     width: 120,
     prop: "pay_state",
     valueType: "select",
@@ -104,12 +110,13 @@ const columns: PlusColumn[] = [
   },
   {
     label: "备注",
+    labelWidth: 100,
     prop: "pay_remark",
     valueType: "textarea",
     fieldProps: {
-      maxlength: 10,
+      maxlength: 500,
       showWordLimit: true,
-      autosize: { minRows: 2, maxRows: 4 }
+      autosize: { minRows: 2, maxRows: 10 }
     }
   }
 ];

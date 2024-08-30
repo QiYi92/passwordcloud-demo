@@ -1,22 +1,24 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
 import axios from "axios";
-import EditDialog from "./EditDialog.vue";
-import NewDialog from "./NewDialog.vue";
-import DeleteDialog from "./DeleteDialog.vue";
+import EditDialog from "./EditDialog.vue"; // 引入编辑对话框组件
+import NewDialog from "./NewDialog.vue"; // 引入新增对话框组件
+import DeleteDialog from "./DeleteDialog.vue"; // 引入删除对话框组件
 import { TypeOptions, LevelOptions, CompletionOptions } from "./data"; // 引入数据文件
-import dayjs from "dayjs";
+import dayjs from "dayjs"; // 引入日期处理库
 
-const tableData = ref([]);
-const filteredData = ref([]);
-const editDialogVisible = ref(false);
-const deleteDialogVisible = ref(false);
-const currentEditData = ref({});
-const currentDeleteId = ref(null);
-const searchField = ref(""); /* 新增部分 */
-const searchQuery = ref(""); /* 新增部分 */
-const loading = ref(false); /* 新增部分 */
+// 定义响应式变量
+const tableData = ref([]); // 表格数据
+const filteredData = ref([]); // 过滤后的数据
+const editDialogVisible = ref(false); // 编辑对话框是否可见
+const deleteDialogVisible = ref(false); // 删除对话框是否可见
+const currentEditData = ref({}); // 当前编辑的数据
+const currentDeleteId = ref(null); // 当前删除的数据ID
+const searchField = ref(""); // 搜索字段
+const searchQuery = ref(""); // 搜索关键词
+const loading = ref(false); // 加载状态
 
+// 定义组件属性及其默认值
 const props = withDefaults(
   defineProps<{
     height?: string;
@@ -26,6 +28,7 @@ const props = withDefaults(
   }
 );
 
+// 定义表格列配置
 const columns = [
   {
     label: "ID",
@@ -64,7 +67,7 @@ const columns = [
     width: "300"
   },
   {
-    label: "是否完成",
+    label: "完成状态",
     prop: "completion",
     width: "150",
     formatter: row =>
@@ -80,21 +83,23 @@ const columns = [
     label: "时间",
     prop: "time",
     width: "200",
-    formatter: row => dayjs(row.time).format("YYYY年MM月DD日")
+    formatter: row => dayjs(row.time).format("YYYY年MM月DD日") // 格式化显示时间
   },
   {
     label: "操作",
     width: "150",
     fixed: "right",
-    slot: "operation"
+    slot: "operation" // 操作列
   }
 ];
 
+// 处理删除操作
 async function handleDelete(row) {
   currentDeleteId.value = row.id;
   deleteDialogVisible.value = true;
 }
 
+// 确认删除操作
 async function confirmDelete() {
   try {
     await axios.delete(
@@ -113,11 +118,13 @@ async function confirmDelete() {
   }
 }
 
+// 处理编辑操作
 function handleEdit(row) {
   currentEditData.value = { ...row };
   editDialogVisible.value = true;
 }
 
+// 获取数据
 function fetchData() {
   axios
     .get(`${import.meta.env.VITE_APP_SERVER}/api/issues`)
@@ -130,7 +137,7 @@ function fetchData() {
     });
 }
 
-/* 新增部分：搜索数据的函数 */
+// 新增部分：搜索数据的函数
 const selectData = async () => {
   loading.value = true;
   try {
@@ -147,9 +154,10 @@ const selectData = async () => {
   }
 };
 
-/* 新增部分：监听搜索字段和查询字符串的变化 */
+// 新增部分：监听搜索字段和查询字符串的变化
 watch([searchField, searchQuery], selectData, { deep: true });
 
+// 组件挂载时获取数据
 onMounted(fetchData);
 </script>
 
@@ -179,6 +187,7 @@ onMounted(fetchData);
     <NewDialog @data-updated="fetchData" />
   </div>
 
+  <!-- 表格显示区域 -->
   <pure-table :data="filteredData" :columns="columns" :height="props.height">
     <template #operation="{ row }">
       <el-button link type="primary" size="small" @click="handleDelete(row)">
@@ -190,12 +199,14 @@ onMounted(fetchData);
     </template>
   </pure-table>
 
+  <!-- 编辑对话框 -->
   <EditDialog
     :visible="editDialogVisible"
     :initialData="currentEditData"
     @update:visible="editDialogVisible = $event"
     @data-updated="fetchData"
   />
+  <!-- 删除对话框 -->
   <DeleteDialog
     :id="currentDeleteId"
     :visible="deleteDialogVisible"

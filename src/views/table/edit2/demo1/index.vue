@@ -26,6 +26,16 @@ const {
   deleteContractId,
   fetchData
 } = useColumns();
+
+const handleDelete = row => {
+  deleteContractId.value = row.contract_id;
+  deleteDialogVisible.value = true;
+};
+
+const handleEdit = row => {
+  editRowData.value = row;
+  editDialogVisible.value = true;
+};
 </script>
 
 <template>
@@ -53,28 +63,46 @@ const {
       <!-- 添加新数据的按钮 -->
       <NewDialog @data-updated="fetchData" />
     </div>
-    <pure-table
-      ref="tableRef"
-      border
-      adaptive
-      :adaptiveConfig="adaptiveConfig"
-      row-key="contract_id"
-      alignWhole="center"
-      showOverflowTooltip
-      :loading="loading"
-      :loading-config="loadingConfig"
-      :data="
-        dataList.slice(
-          (pagination.currentPage - 1) * pagination.pageSize,
-          pagination.currentPage * pagination.pageSize
-        )
-      "
-      :columns="columns"
-      :pagination="pagination"
-      @page-size-change="onSizeChange"
-      @page-current-change="onCurrentChange"
-      @row-contextmenu="showMouseMenu"
-    />
+    <div style="overflow-x: auto">
+      <pure-table
+        ref="tableRef"
+        border
+        adaptive
+        :adaptiveConfig="adaptiveConfig"
+        row-key="contract_id"
+        alignWhole="center"
+        showOverflowTooltip
+        :loading="loading"
+        :loading-config="loadingConfig"
+        :data="
+          dataList.slice(
+            (pagination.currentPage - 1) * pagination.pageSize,
+            pagination.currentPage * pagination.pageSize
+          )
+        "
+        :columns="columns"
+        :pagination="pagination"
+        style="min-width: 120px"
+        @page-size-change="onSizeChange"
+        @page-current-change="onCurrentChange"
+        @row-contextmenu="showMouseMenu"
+      >
+        <!-- 定义操作列的内容 -->
+        <template #operation="{ row }">
+          <el-button link type="primary" size="small" @click="handleEdit(row)">
+            修改
+          </el-button>
+          <el-button
+            link
+            type="primary"
+            size="small"
+            @click="handleDelete(row)"
+          >
+            删除
+          </el-button>
+        </template>
+      </pure-table>
+    </div>
     <!-- 添加数据更新按钮 -->
     <EditDialog
       :visible="editDialogVisible"

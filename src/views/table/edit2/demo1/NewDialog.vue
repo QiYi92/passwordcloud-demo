@@ -33,12 +33,14 @@ const computedProjectOptions = computed(() => projectOptions.value);
 const columns: PlusColumn[] = [
   {
     label: "合同名称",
+    labelWidth: 100,
     width: 120,
     prop: "contract_name",
     valueType: "copy"
   },
   {
     label: "项目名称",
+    labelWidth: 100,
     width: 120,
     prop: "project_name",
     valueType: "select",
@@ -46,18 +48,20 @@ const columns: PlusColumn[] = [
   },
   {
     label: "合同乙方",
+    labelWidth: 100,
     width: 120,
     prop: "contract_member",
     valueType: "copy"
   },
   {
     label: "合同类型",
+    labelWidth: 100,
     width: 120,
     prop: "contract_type",
     valueType: "select",
     options: [
       {
-        label: "暂定",
+        label: "其他",
         value: "0",
         color: "yellow"
       },
@@ -67,31 +71,43 @@ const columns: PlusColumn[] = [
         color: "blue"
       },
       {
-        label: "指标合同",
+        label: "监理合同",
         value: "2",
         color: "blue"
       },
       {
-        label: "监理合同",
+        label: "第三方测评合同",
         value: "3",
+        color: "blue"
+      },
+      {
+        label: "施工合同",
+        value: "4",
+        color: "blue"
+      },
+      {
+        label: "竣工结算合同",
+        value: "5",
         color: "blue"
       }
     ]
   },
   {
     label: "合同金额",
+    labelWidth: 100,
     prop: "contract_money",
     valueType: "input-number",
     fieldProps: { precision: 2, step: 100 }
   },
   {
     label: "备注",
+    labelWidth: 100,
     prop: "contract_remark",
     valueType: "textarea",
     fieldProps: {
-      maxlength: 10,
+      maxlength: 500,
       showWordLimit: true,
-      autosize: { minRows: 2, maxRows: 4 }
+      autosize: { minRows: 2, maxRows: 10 }
     }
   }
 ];

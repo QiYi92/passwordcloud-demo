@@ -14,8 +14,11 @@ const LevelOptions = [
 ];
 
 const CompletionOptions = [
-  { value: "0", label: "否" },
-  { value: "1", label: "是" }
+  { value: "0", label: "待接收" },
+  { value: "1", label: "已接收" },
+  { value: "2", label: "已完成" },
+  { value: "3", label: "不理解需求" },
+  { value: "4", label: "开发中" }
 ];
 
 export { TypeOptions, LevelOptions, CompletionOptions };

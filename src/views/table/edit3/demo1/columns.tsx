@@ -55,7 +55,7 @@ export function useColumns() {
       prop: "pay_type"
     },
     {
-      label: "支付金额",
+      label: "支付金额（元）",
       prop: "pay_money"
     },
     {
@@ -70,6 +70,12 @@ export function useColumns() {
     {
       label: "支付备注",
       prop: "pay_remark"
+    },
+    {
+      label: "操作",
+      width: "150",
+      fixed: "right",
+      slot: "operation" // 指定操作列的插槽
     }
   ];
 

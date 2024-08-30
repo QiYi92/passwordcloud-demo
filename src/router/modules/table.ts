@@ -23,8 +23,7 @@ export default {
       name: "PureTableEdit",
       component: () => import("@/views/table/edit.vue"),
       meta: {
-        title: "项目管理",
-        extraIcon: "IF-pure-iconfont-new svg"
+        title: "项目管理"
       }
     },
     {
@@ -32,8 +31,7 @@ export default {
       name: "PureTableEdit2",
       component: () => import("@/views/table/edit2.vue"),
       meta: {
-        title: "项目合同管理",
-        extraIcon: "IF-pure-iconfont-new svg"
+        title: "项目合同管理"
       }
     },
     {
@@ -41,8 +39,7 @@ export default {
       name: "PureTableEdit3",
       component: () => import("@/views/table/edit3.vue"),
       meta: {
-        title: "项目支付管理",
-        extraIcon: "IF-pure-iconfont-new svg"
+        title: "项目支付管理"
       }
     }
   ]

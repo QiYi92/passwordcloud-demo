@@ -50,12 +50,18 @@ export function useColumns() {
       prop: "contract_type"
     },
     {
-      label: "合同金额",
+      label: "合同金额（元）",
       prop: "contract_money"
     },
     {
       label: "合同备注",
       prop: "contract_remark"
+    },
+    {
+      label: "操作",
+      width: "150",
+      fixed: "right",
+      slot: "operation"
     }
   ];
 

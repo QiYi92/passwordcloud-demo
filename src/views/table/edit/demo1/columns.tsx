@@ -7,10 +7,15 @@ import { ref, onMounted, reactive, watch } from "vue";
 
 import { delay, clone } from "@pureadmin/utils";
 import axios from "axios";
-import { ProjectStateOptions } from "@/views/table/edit/data";
+import {
+  ProjectRoomOptions,
+  ProjectStateOptions,
+  ProjectTypeOptions
+} from "@/views/table/edit/data";
 
 import { message } from "@/utils/message"; // 适当调整路径
-import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
+import { CustomMouseMenu } from "@howdyjs/mouse-menu";
+import dayjs from "dayjs"; // 添加新依赖
 
 export function useColumns() {
   const dataList = ref([]);
@@ -24,6 +29,15 @@ export function useColumns() {
 
   // 创建一个帮助函数来将 project_type 的值转换为对应的标签
   const getProjectTypeLabel = value => {
+    const option = ProjectTypeOptions.find(opt => opt.value === value);
+    return option ? option.label : "未知"; // 如果找不到对应的选项，返回"未知"
+  };
+
+  const getProjectRoomLabel = value => {
+    const option = ProjectRoomOptions.find(opt => opt.value === value);
+    return option ? option.label : "未知"; // 如果找不到对应的选项，返回"未知"
+  };
+  const getProjectStateLabel = value => {
     const option = ProjectStateOptions.find(opt => opt.value === value);
     return option ? option.label : "未知"; // 如果找不到对应的选项，返回"未知"
   };
@@ -42,16 +56,39 @@ export function useColumns() {
       prop: "project_room"
     },
     {
-      label: "项目批复资金",
+      label: "项目总投资（元）",
       prop: "project_money"
+    },
+    {
+      label: "计划总投资（元）",
+      prop: "project_money_plan"
+    },
+    {
+      label: "项目状态",
+      prop: "project_state"
+    },
+    {
+      label: "项目负责人",
+      prop: "project_head"
     },
     {
       label: "项目类型",
       prop: "project_type"
     },
     {
+      label: "项目时间（年份）",
+      prop: "project_time",
+      formatter: row => dayjs(row.project_time).format("YYYY年")
+    },
+    {
       label: "项目备注",
       prop: "project_remark"
+    },
+    {
+      label: "操作",
+      width: "150",
+      fixed: "right",
+      slot: "operation"
     }
   ];
 
@@ -164,7 +201,9 @@ export function useColumns() {
       dataList.value = response.data.map((item, index) => ({
         ...item,
         id: item.project_id || index, // 使用 project_id 或索引作为唯一ID
-        project_type: getProjectTypeLabel(item.project_type)
+        project_type: getProjectTypeLabel(item.project_type), //项目类型
+        project_room: getProjectRoomLabel(item.project_room), //项目科室
+        project_state: getProjectStateLabel(item.project_state) //项目状态
       }));
       pagination.total = dataList.value.length;
     } catch (error) {

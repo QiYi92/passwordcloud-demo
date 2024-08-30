@@ -48,13 +48,16 @@ const columns: PlusColumn[] = [
     }
   },
   {
-    label: "是否完成",
+    label: "完成状态",
     prop: "completion",
     width: "120",
     valueType: "select",
     options: [
-      { label: "否", value: "0" },
-      { label: "是", value: "1" }
+      { value: "0", label: "待接收" },
+      { value: "1", label: "已接收" },
+      { value: "2", label: "已完成" },
+      { value: "3", label: "不理解需求" },
+      { value: "4", label: "开发中" }
     ]
   },
   {
@@ -85,6 +88,12 @@ const handleOpen = () => {
   resetForm(); // 每次打开对话框时重置表单数据
   // 设置默认时间为当天
   values.value.time = dayjs().format("YYYY-MM-DD");
+  // 设置默认的类型为“BUG提交”
+  values.value.type = "0";
+  // 设置默认的权重等级为“常规”
+  values.value.level = "0"; // 对应“常规”
+  // 设置默认的完成状态为“待接收”
+  values.value.completion = "0"; // 对应“待接收”
   visible.value = true;
 };
 
