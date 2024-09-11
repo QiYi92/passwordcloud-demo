@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useColumns } from "./columns";
-import EditDialog from "@/views/table/edit3/demo1/EditDialog.vue";
-import DeleteDialog from "@/views/table/edit3/demo1/DeleteDialog.vue";
-import NewDialog from "@/views/table/edit3/demo1/NewDialog.vue";
+import EditDialog from "@/views/table/edit4/demo1/EditDialog.vue";
+import DeleteDialog from "@/views/table/edit4/demo1/DeleteDialog.vue";
+import NewDialog from "@/views/table/edit4/demo1/NewDialog.vue";
 
 const {
   loading,
@@ -20,7 +20,7 @@ const {
   editDialogVisible,
   editRowData,
   deleteDialogVisible,
-  deletePaymentId,
+  deletePassId, // 修改变量名
   fetchData
 } = useColumns();
 
@@ -30,7 +30,7 @@ const handleEdit = row => {
 };
 
 const handleDelete = row => {
-  deletePaymentId.value = row.pay_id;
+  deletePassId.value = row.pass_id; // 修改为 pass_id
   deleteDialogVisible.value = true;
 };
 </script>
@@ -44,13 +44,11 @@ const handleDelete = row => {
         placeholder="选择搜索字段"
         style="width: 200px; margin-right: 10px"
       >
-        <el-option label="支付ID" value="pay_id" />
-        <el-option label="支付项名称" value="pay_name" />
-        <el-option label="合同名称" value="contract_name" />
-        <el-option label="支付类型" value="pay_type" />
-        <el-option label="支付时间" value="pay_time" />
-        <el-option label="支付状态" value="pay_state" />
-        <el-option label="支付备注" value="pay_remark" />
+        <el-option label="资金下达ID" value="pass_id" />
+        <el-option label="项目名称" value="project_name" />
+        <el-option label="资金类型" value="money_type" />
+        <el-option label="下达时间" value="pass_time" />
+        <el-option label="备注" value="pass_remark" />
       </el-select>
       <el-input
         v-model="searchQuery"
@@ -67,7 +65,7 @@ const handleDelete = row => {
         border
         adaptive
         :adaptiveConfig="adaptiveConfig"
-        row-key="pay_id"
+        row-key="pass_id"
         alignWhole="center"
         showOverflowTooltip
         :loading="loading"
@@ -111,7 +109,7 @@ const handleDelete = row => {
     />
     <DeleteDialog
       :visible="deleteDialogVisible"
-      :payId="deletePaymentId"
+      :passId="deletePassId"
       @update:visible="deleteDialogVisible = $event"
       @deleted="fetchData"
     />

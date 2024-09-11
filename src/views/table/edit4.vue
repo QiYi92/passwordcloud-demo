@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { list } from "./virtual/list";
+import { list } from "./edit4/list";
 
 defineOptions({
-  name: "VxeTable"
+  name: "PureTableEdit"
 });
 
 const selected = ref(0);
@@ -15,28 +15,6 @@ function tabClick({ index }) {
 
 <template>
   <el-card shadow="never">
-    <template #header>
-      <div class="card-header">
-        <span class="font-medium">
-          虚拟滚动采用
-          <el-link
-            href="https://vxetable.cn/#/table/scroll/scroll"
-            target="_blank"
-            style="margin: 0 4px 5px; font-size: 16px"
-          >
-            vxe-table
-          </el-link>
-        </span>
-      </div>
-      <el-link
-        class="mt-2"
-        href="https://github.com/pure-admin/vue-pure-admin/blob/main/src/views/table/virtual"
-        target="_blank"
-      >
-        代码位置 src/views/table/virtual
-      </el-link>
-    </template>
-
     <el-tabs @tab-click="tabClick">
       <template v-for="(item, index) of list" :key="item.key">
         <el-tab-pane :lazy="true">
@@ -60,6 +38,14 @@ function tabClick({ index }) {
 <style scoped>
 :deep(.el-tabs__nav-wrap)::after {
   height: 1px;
+}
+
+:deep(.el-tabs__header) {
+  margin-top: 10px;
+}
+
+:deep(.el-alert__title) {
+  font-size: 15px;
 }
 
 :deep(.el-tabs__nav-next),
