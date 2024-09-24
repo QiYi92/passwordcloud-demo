@@ -4,6 +4,7 @@ import axios from "axios";
 import EditDialog from "./EditDialog.vue"; // 引入编辑对话框组件
 import NewDialog from "./NewDialog.vue"; // 引入新增对话框组件
 import DeleteDialog from "./DeleteDialog.vue"; // 引入删除对话框组件
+import ShowDialog from "./ShowDialog.vue"; // 引入预览对话框组件
 import { TypeOptions, LevelOptions, CompletionOptions } from "./data"; // 引入数据文件
 import dayjs from "dayjs"; // 引入日期处理库
 
@@ -12,8 +13,10 @@ const tableData = ref([]); // 表格数据
 const filteredData = ref([]); // 过滤后的数据
 const editDialogVisible = ref(false); // 编辑对话框是否可见
 const deleteDialogVisible = ref(false); // 删除对话框是否可见
+const showDialogVisible = ref(false); // 预览对话框是否可见
 const currentEditData = ref({}); // 当前编辑的数据
 const currentDeleteId = ref(null); // 当前删除的数据ID
+const currentPreviewData = ref({}); // 当前预览的数据
 const searchField = ref(""); // 搜索字段
 const searchQuery = ref(""); // 搜索关键词
 const loading = ref(false); // 加载状态
@@ -86,8 +89,13 @@ const columns = [
     formatter: row => dayjs(row.time).format("YYYY年MM月DD日") // 格式化显示时间
   },
   {
+    label: "问题附件",
+    prop: "issues_files",
+    width: "200"
+  },
+  {
     label: "操作",
-    width: "150",
+    width: "200",
     fixed: "right",
     slot: "operation" // 操作列
   }
@@ -122,6 +130,12 @@ async function confirmDelete() {
 function handleEdit(row) {
   currentEditData.value = { ...row };
   editDialogVisible.value = true;
+}
+
+// 处理预览操作
+function handlePreview(row) {
+  currentPreviewData.value = { ...row };
+  showDialogVisible.value = true;
 }
 
 // 获取数据
@@ -190,11 +204,14 @@ onMounted(fetchData);
   <!-- 表格显示区域 -->
   <pure-table :data="filteredData" :columns="columns" :height="props.height">
     <template #operation="{ row }">
-      <el-button link type="primary" size="small" @click="handleDelete(row)">
-        删除
-      </el-button>
       <el-button link type="primary" size="small" @click="handleEdit(row)">
         修改
+      </el-button>
+      <el-button link type="primary" size="small" @click="handlePreview(row)">
+        预览
+      </el-button>
+      <el-button link type="primary" size="small" @click="handleDelete(row)">
+        删除
       </el-button>
     </template>
   </pure-table>
@@ -206,6 +223,7 @@ onMounted(fetchData);
     @update:visible="editDialogVisible = $event"
     @data-updated="fetchData"
   />
+
   <!-- 删除对话框 -->
   <DeleteDialog
     :id="currentDeleteId"
@@ -213,4 +231,18 @@ onMounted(fetchData);
     @update:visible="deleteDialogVisible = $event"
     @deleted="confirmDelete"
   />
+
+  <!-- 预览对话框 -->
+  <ShowDialog
+    :visible="showDialogVisible"
+    :data="currentPreviewData"
+    @update:visible="showDialogVisible = $event"
+  />
 </template>
+
+<style scoped>
+.search-controls {
+  display: flex;
+  align-items: center;
+}
+</style>

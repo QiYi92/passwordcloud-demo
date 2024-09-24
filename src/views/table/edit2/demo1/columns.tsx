@@ -190,12 +190,17 @@ export function useColumns() {
       const response = await axios.get(
         import.meta.env.VITE_APP_SERVER + "/api/contracts"
       );
-      dataList.value = clone(response.data, true).filter(item =>
-        (item[searchField.value] || "")
-          .toString()
-          .toLowerCase()
-          .includes(searchQuery.value.toLowerCase())
-      );
+      dataList.value = clone(response.data, true)
+        .filter(item =>
+          (item[searchField.value] || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchQuery.value.toLowerCase())
+        )
+        .map(item => ({
+          ...item,
+          contract_type: getContractTypeLabel(item.contract_type) //重新映射项目状态
+        }));
       pagination.total = dataList.value.length;
     } catch (error) {
       console.error("Failed to select data:", error);

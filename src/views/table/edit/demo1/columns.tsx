@@ -56,11 +56,11 @@ export function useColumns() {
       prop: "project_room"
     },
     {
-      label: "项目总投资（元）",
+      label: "项目立项总投资（万元）",
       prop: "project_money"
     },
     {
-      label: "计划总投资（元）",
+      label: "计划总投资（万元）",
       prop: "project_money_plan"
     },
     {
@@ -76,9 +76,9 @@ export function useColumns() {
       prop: "project_type"
     },
     {
-      label: "项目时间（年份）",
+      label: "项目立项完成时间",
       prop: "project_time",
-      formatter: row => dayjs(row.project_time).format("YYYY年")
+      formatter: row => dayjs(row.project_time).format("YYYY年MM月DD日")
     },
     {
       label: "项目备注",
@@ -220,12 +220,20 @@ export function useColumns() {
       const response = await axios.get(
         import.meta.env.VITE_APP_SERVER + "/api/projects"
       );
-      dataList.value = clone(response.data, true).filter(item =>
-        (item[searchField.value] || "")
-          .toString()
-          .toLowerCase()
-          .includes(searchQuery.value.toLowerCase())
-      );
+      // 对筛选后的数据重新进行映射操作
+      dataList.value = clone(response.data, true)
+        .filter(item =>
+          (item[searchField.value] || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchQuery.value.toLowerCase())
+        )
+        .map(item => ({
+          ...item,
+          project_type: getProjectTypeLabel(item.project_type), //重新映射项目类型
+          project_room: getProjectRoomLabel(item.project_room), //重新映射项目科室
+          project_state: getProjectStateLabel(item.project_state) //重新映射项目状态
+        }));
       pagination.total = dataList.value.length;
     } catch (error) {
       console.error("Failed to select data:", error);

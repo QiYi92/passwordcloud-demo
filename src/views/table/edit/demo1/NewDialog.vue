@@ -52,7 +52,7 @@ const columns: PlusColumn[] = [
     ]
   },
   {
-    label: "项目总投资（元）",
+    label: "项目立项总投资（万元）",
     labelWidth: 150,
     width: 120,
     prop: "project_money",
@@ -60,7 +60,7 @@ const columns: PlusColumn[] = [
     fieldProps: { precision: 2, step: 100 }
   },
   {
-    label: "计划总投资（元）",
+    label: "计划总投资（万元）",
     labelWidth: 150,
     width: 120,
     prop: "project_money_plan",
@@ -118,13 +118,10 @@ const columns: PlusColumn[] = [
     ]
   },
   {
-    label: "项目时间（年份）",
+    label: "项目立项完成时间",
     labelWidth: 150,
     prop: "project_time",
-    valueType: "date-picker",
-    fieldProps: {
-      type: "year" // 设置为只选择年份
-    }
+    valueType: "date-picker"
   },
   {
     label: "备注",

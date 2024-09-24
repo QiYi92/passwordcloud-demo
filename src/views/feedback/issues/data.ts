@@ -2,7 +2,8 @@ const TypeOptions = [
   { value: "0", label: "BUG提交" },
   { value: "1", label: "新需求" },
   { value: "2", label: "功能完善" },
-  { value: "3", label: "其他" }
+  { value: "3", label: "其他" },
+  { value: "4", label: "设想中" }
 ];
 
 const LevelOptions = [

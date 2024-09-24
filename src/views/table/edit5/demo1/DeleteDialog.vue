@@ -9,7 +9,6 @@
     @confirm="confirmDelete"
     @update:visible="emit('update:visible', $event)"
   >
-    <!-- 使用插槽显示自定义内容 -->
     <template #default>
       <div>确定要删除催款项ID为 {{ promptId }} 的记录吗?</div>
     </template>
@@ -38,21 +37,61 @@ watchEffect(() => {
 
 // 确认删除的处理函数
 const confirmDelete = async () => {
-  console.log(`Deleting prompt with ID: ${props.promptId}`); // 打印 ID 检查
   try {
+    console.log(`正在删除催款项，ID: ${props.promptId}`); // 输出当前删除的 ID
+
+    // Step 1: 获取该 ID 关联的文件列表
+    const fileResponse = await axios.get(
+      `${import.meta.env.VITE_APP_SERVER}/api/prompts/files/${props.promptId}/prompt_files`
+    );
+    const files = fileResponse.data.files || [];
+    console.log("关联的文件列表:", files);
+
+    // Step 2: 删除所有关联文件
+    for (const file of files) {
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_APP_SERVER}/api/prompts/deleteFile`,
+          { path: file.url }
+        );
+        console.log(`成功删除文件: ${file.name}`);
+      } catch (error) {
+        console.error(`删除文件失败: ${file.name}`, error);
+      }
+    }
+
+    // Step 3: 删除催款项记录
     const response = await axios.delete(
       `${import.meta.env.VITE_APP_SERVER}/api/prompts/${props.promptId}`
     );
+
+    console.log("服务器返回的响应:", response); // 调试输出服务器响应
+
     if (response.status === 200 || response.status === 204) {
-      emit("deleted"); // 发出已删除的事件
+      // 如果删除成功，发出事件并关闭对话框
+      console.log(`成功删除催款项，ID: ${props.promptId}`);
+      emit("deleted"); // 通知父组件删除成功
       emit("update:visible", false);
       alert("催款项删除成功");
     } else {
+      console.error("未预期的响应状态码:", response.status);
       alert("删除失败");
     }
   } catch (error) {
-    console.error("删除失败:", error);
-    alert("删除失败");
+    // 如果返回 404，假定记录已经删除并处理界面更新
+    if (error.response && error.response.status === 404) {
+      console.warn(`未找到 ID: ${props.promptId} 的催款项，假设它已经被删除。`);
+      emit("deleted"); // 通知父组件删除操作
+      emit("update:visible", false);
+      alert("催款项已删除");
+    } else {
+      console.error("删除催款项失败:", error);
+      console.error(
+        "错误响应数据:",
+        error.response ? error.response.data : "无响应数据"
+      );
+      alert("删除失败！");
+    }
   }
 };
 
