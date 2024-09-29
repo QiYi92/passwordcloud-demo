@@ -288,7 +288,7 @@ const columns: PlusColumn[] = [
     options: computedContractOptions
   },
   {
-    label: "催款金额",
+    label: "催款金额（万元）",
     labelWidth: 100,
     prop: "prompt_money",
     valueType: "input-number",

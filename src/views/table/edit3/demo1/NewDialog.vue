@@ -72,7 +72,7 @@ const columns: PlusColumn[] = [
     ]
   },
   {
-    label: "支付金额",
+    label: "支付金额（万元）",
     labelWidth: 100,
     prop: "pay_money",
     valueType: "input-number",

@@ -1,11 +1,18 @@
 // import { $t } from "@/plugins/i18n";
 import { table } from "@/router/enums";
+import table_icon from "@iconify-icons/ri/layout-grid-fill";
+import show_icon from "@iconify-icons/ri/layout-grid-line";
+import show1_icon from "@iconify-icons/ri/layout-bottom-2-line";
+import show2_icon from "@iconify-icons/ri/list-radio";
+import show3_icon from "@iconify-icons/ri/list-check-3";
+import show4_icon from "@iconify-icons/ri/money-cny-box-line";
+import show5_icon from "@iconify-icons/ri/pages-line";
 
 export default {
   path: "/table",
   redirect: "/table/high",
   meta: {
-    icon: "ep:menu",
+    icon: table_icon,
     title: "项目表格",
     rank: table
   },
@@ -16,7 +23,7 @@ export default {
       component: () => import("@/views/table/high.vue"),
       meta: {
         title: "表格总览",
-        icon: "ep:grid"
+        icon: show_icon
       }
     },
     {
@@ -25,7 +32,7 @@ export default {
       component: () => import("@/views/table/edit.vue"),
       meta: {
         title: "项目管理",
-        icon: "ep:files"
+        icon: show1_icon
       }
     },
     {
@@ -34,7 +41,7 @@ export default {
       component: () => import("@/views/table/edit2.vue"),
       meta: {
         title: "项目合同管理",
-        icon: "ep:tickets"
+        icon: show2_icon
       }
     },
     {
@@ -43,7 +50,7 @@ export default {
       component: () => import("@/views/table/edit3.vue"),
       meta: {
         title: "项目支付管理",
-        icon: "ep:postcard"
+        icon: show3_icon
       }
     },
     {
@@ -52,7 +59,7 @@ export default {
       component: () => import("@/views/table/edit4.vue"),
       meta: {
         title: "项目资金下达情况管理",
-        icon: "ep:document"
+        icon: show4_icon
       }
     },
     {
@@ -61,7 +68,7 @@ export default {
       component: () => import("@/views/table/edit5.vue"),
       meta: {
         title: "合同催款登记管理",
-        icon: "ep:document"
+        icon: show5_icon
       }
     }
   ]

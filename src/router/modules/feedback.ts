@@ -1,10 +1,10 @@
 // import { $t } from "@/plugins/i18n";
 import { feedback } from "@/router/enums";
-
+import info_icon from "@iconify-icons/ri/file-info-fill";
 export default {
   path: "/feedback/issues",
   meta: {
-    icon: "ep:info-filled",
+    icon: info_icon,
     title: "需求",
     rank: feedback
   },
@@ -15,7 +15,7 @@ export default {
       component: () => import("@/views/feedback/index_issues.vue"),
       meta: {
         title: "需求&问题反馈",
-        icon: "ep:info-filled"
+        icon: info_icon
       }
     }
   ]

@@ -1,4 +1,5 @@
 import { table } from "@/router/enums";
+import home_icon from "@iconify-icons/ri/home-8-fill";
 
 const { VITE_HIDE_HOME } = import.meta.env;
 const Layout = () => import("@/layout/index.vue");
@@ -9,7 +10,7 @@ export default {
   component: Layout,
   redirect: "/welcome",
   meta: {
-    icon: "ep:home-filled",
+    icon: home_icon,
     title: "首页",
     rank: table
   },

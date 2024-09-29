@@ -1,6 +1,8 @@
 const home = 0,
   table = 1,
-  feedback = 2,
-  system = 3;
+  onsite = 2,
+  expert = 3,
+  feedback = 4,
+  system = 5;
 
-export { home, table, feedback, system };
+export { home, table, onsite, expert, feedback, system };

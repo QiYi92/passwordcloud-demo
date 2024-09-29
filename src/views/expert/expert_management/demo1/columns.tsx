@@ -7,65 +7,57 @@ import { ref, onMounted, reactive, watch } from "vue";
 
 import { delay, clone } from "@pureadmin/utils";
 import axios from "axios";
+// import {
+//   FundsTypeOptions // 使用新的资金类型选项
+// } from "@/views/expert/expert_management/data"; // 确保路径正确
+
 import { message } from "@/utils/message"; // 适当调整路径
 import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
 import dayjs from "dayjs";
-import { FilesTypeOptions } from "@/views/table/edit5/data"; // 引入 FilesTypeOptions
 
 export function useColumns() {
   const dataList = ref([]);
   const loading = ref(true);
-  const searchField = ref("prompt_id"); // 修改为 prompt_id
+  const searchField = ref("expert_id");
   const searchQuery = ref("");
   const editRowData = ref(null);
-  const deletePromptId = ref(null); // 修改变量名以反映 prompt
+  const deleteExpertId = ref(null); // 修改变量名以反映expert
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
+  // const getFundsTypeLabel = value => {
+  //   const TypeOption = FundsTypeOptions.find(opt => opt.value === value);
+  //   return TypeOption ? TypeOption.label : "未知"; // 如果找不到对应的选项，返回"未知"
+  // };
+
   const columns: TableColumnList = [
     {
-      label: "催款项ID",
-      prop: "prompt_id"
+      label: "专家ID",
+      prop: "expert_id"
     },
     {
-      label: "催款项名称",
-      prop: "prompt_name"
+      label: "姓名",
+      prop: "name"
     },
     {
-      label: "对应项目",
-      prop: "project_name"
+      label: "专业",
+      prop: "expertise_area"
     },
     {
-      label: "对应合同",
-      prop: "contract_name"
+      label: "职称",
+      prop: "title"
     },
     {
-      label: "催款金额（万元）",
-      prop: "prompt_money"
+      label: "联系方式",
+      prop: "contact_info"
     },
     {
-      label: "登记时间",
-      prop: "prompt_time",
-      formatter: row => dayjs(row.prompt_time).format("YYYY年MM月DD日") // 修改为 prompt_time
+      label: "工作单位",
+      prop: "work_unit"
     },
     {
       label: "备注",
-      prop: "prompt_remark"
-    },
-    {
-      label: "处理情况记录",
-      prop: "prompt_record"
-    },
-    {
-      label: "催款函件",
-      prop: "prompt_files",
-      formatter: row => {
-        // 映射数字类型的 0 为 "无附件"
-        return row.prompt_files === 0 || row.prompt_files === "0"
-          ? FilesTypeOptions.find(option => option.value === "0")?.label ||
-              "无附件"
-          : row.prompt_files;
-      }
+      prop: "remarks"
     },
     {
       label: "操作",
@@ -90,7 +82,7 @@ export function useColumns() {
   const menuOptions = {
     menuList: [
       {
-        label: ({ prompt_id }) => `项目ID为：${prompt_id}`,
+        label: ({ expert_id }) => `专家ID为：${expert_id}`,
         disabled: true
       },
       {
@@ -105,7 +97,7 @@ export function useColumns() {
         label: "删除",
         tips: "Delete",
         fn: row => {
-          deletePromptId.value = row.prompt_id; // 使用 prompt_id
+          deleteExpertId.value = row.expert_id; // 使用 expert_id
           deleteDialogVisible.value = true;
         }
       }
@@ -169,12 +161,13 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/prompts" // 修改为 prompts 的 API 路径
+        import.meta.env.VITE_APP_SERVER + "/api/experts" // 修改为新的API路径
       );
       console.log("数据成功获取:", response.data); // 日志输出获取到的数据
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.prompt_id || index // 使用 prompt_id 或索引作为唯一ID
+        id: item.expert_id || index // 使用 expert_id 或索引作为唯一ID
+        // expertise_area: getFundsTypeLabel(item.expertise_area) // 专业类型
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -190,7 +183,7 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/prompts" // 修改为 prompts 的 API 路径
+        import.meta.env.VITE_APP_SERVER + "/api/experts" // 修改为新的API路径
       );
       dataList.value = clone(response.data, true).filter(item =>
         (item[searchField.value] || "")
@@ -231,7 +224,7 @@ export function useColumns() {
     showMouseMenu,
     editDialogVisible,
     editRowData,
-    deletePromptId,
+    deleteExpertId,
     deleteDialogVisible,
     fetchData
   };

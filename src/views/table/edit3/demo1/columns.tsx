@@ -55,7 +55,7 @@ export function useColumns() {
       prop: "pay_type"
     },
     {
-      label: "支付金额（元）",
+      label: "支付金额（万元）",
       prop: "pay_money"
     },
     {
