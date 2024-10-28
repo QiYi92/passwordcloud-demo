@@ -1,4 +1,3 @@
-// onsite/columns.tsx
 import type {
   LoadingConfig,
   AdaptiveConfig,
@@ -10,7 +9,11 @@ import axios from "axios";
 import { message } from "@/utils/message"; // 适当调整路径
 import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
 import dayjs from "dayjs";
-import { FilesTypeOptions } from "@/views/onsite/onsite_management/data"; // 引入 FilesTypeOptions
+import {
+  FilesTypeOptions,
+  OnsiteTypeOptions
+} from "@/views/onsite/onsite_management/data";
+import { FundsTypeOptions } from "@/views/table/edit4/data"; // 引入 FilesTypeOptions
 
 export function useColumns() {
   const dataList = ref([]);
@@ -21,6 +24,12 @@ export function useColumns() {
   const deleteOnsiteId = ref(null);
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
+
+  // 创建一个帮助函数来将【资金类型】的值转换为对应的标签
+  const getOnsiteTypeLabel = value => {
+    const TypeOption = OnsiteTypeOptions.find(opt => opt.value === value);
+    return TypeOption ? TypeOption.label : "未知"; // 如果找不到对应的选项，返回"未知"
+  };
 
   const columns: TableColumnList = [
     {
@@ -44,8 +53,12 @@ export function useColumns() {
       prop: "contact_info"
     },
     {
-      label: "驻场事由",
-      prop: "onSite_reason"
+      label: "驻场项目",
+      prop: "onSite_project"
+    },
+    {
+      label: "实施项目业务",
+      prop: "onSite_work"
     },
     {
       label: "办公室位置",
@@ -54,7 +67,7 @@ export function useColumns() {
     {
       label: "驻场时间",
       prop: "onSite_time",
-      formatter: row => dayjs(row.onSite_time).format("YYYY年MM月DD日")
+      formatter: row => row.onSite_time
     },
     {
       label: "备注",
@@ -172,7 +185,8 @@ export function useColumns() {
       console.log("数据成功获取:", response.data);
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.personnel_id || index // 使用 personnel_id 或索引作为唯一ID
+        id: item.personnel_id || index, // 使用 personnel_id 或索引作为唯一ID
+        type: getOnsiteTypeLabel(item.type)
       }));
       pagination.total = dataList.value.length;
     } catch (error) {

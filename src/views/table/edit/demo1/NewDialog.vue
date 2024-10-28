@@ -48,6 +48,11 @@ const columns: PlusColumn[] = [
         label: "电子政务科",
         value: "4",
         color: "blue"
+      },
+      {
+        label: "资源科",
+        value: "5",
+        color: "blue"
       }
     ]
   },

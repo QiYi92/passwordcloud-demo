@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="localVisible"
-    title="预览催款项数据"
+    title="预览驻场数据"
     width="80%"
     @close="handleClose"
   >
@@ -70,14 +70,15 @@ const localVisible = ref(false);
 // 格式化后的数据，用于显示在表格中
 const formattedData = ref<Array<{ field: string; value: any }>>([]);
 
-// 字段名称汉化映射表
+// 字段名称汉化映射表，更新为最新字段
 const fieldMap = {
   personnel_id: "驻场人员ID",
   name: "姓名",
   company: "公司",
   type: "类型",
   contact_info: "联系方式",
-  onSite_reason: "驻场事由",
+  onSite_project: "驻场项目",
+  onSite_work: "实施项目业务",
   onSite_time: "驻场时间",
   remarks: "备注",
   location: "办公室位置",

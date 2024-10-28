@@ -72,14 +72,6 @@ const beforeUpload = file => {
 };
 
 const handleSubmit = async () => {
-  if (!values.value.onSite_time) {
-    values.value.onSite_time = dayjs().format("YYYY-MM-DD");
-  } else {
-    values.value.onSite_time = dayjs(values.value.onSite_time as string).format(
-      "YYYY-MM-DD"
-    );
-  }
-
   // 处理相关文件
   if (uploadedFiles.value.length > 0) {
     values.value.related_files = uploadedFiles.value
@@ -117,6 +109,7 @@ const handleRemoveFile = file => {
   }
 };
 
+// 更新字段：新增 onSite_project 和 onSite_work，删除 onSite_reason
 const columns: PlusColumn[] = [
   {
     label: "姓名",
@@ -131,7 +124,24 @@ const columns: PlusColumn[] = [
   {
     label: "类型",
     prop: "type",
-    valueType: "input"
+    valueType: "select",
+    options: [
+      {
+        label: "暂定",
+        value: "0",
+        color: "yellow"
+      },
+      {
+        label: "项目专职类",
+        value: "1",
+        color: "blue"
+      },
+      {
+        label: "混合办公类",
+        value: "2",
+        color: "blue"
+      }
+    ]
   },
   {
     label: "联系方式",
@@ -139,14 +149,24 @@ const columns: PlusColumn[] = [
     valueType: "input"
   },
   {
-    label: "驻场事由",
-    prop: "onSite_reason",
+    label: "驻场项目",
+    prop: "onSite_project",
     valueType: "input"
+  },
+  {
+    label: "实施项目业务",
+    prop: "onSite_work",
+    valueType: "input",
+    fieldProps: {
+      maxlength: 100,
+      showWordLimit: true,
+      autosize: { minRows: 1, maxRows: 5 }
+    }
   },
   {
     label: "驻场时间",
     prop: "onSite_time",
-    valueType: "date-picker"
+    valueType: "input"
   },
   {
     label: "办公室位置",
@@ -156,7 +176,12 @@ const columns: PlusColumn[] = [
   {
     label: "备注",
     prop: "remarks",
-    valueType: "textarea"
+    valueType: "textarea",
+    fieldProps: {
+      maxlength: 500,
+      showWordLimit: true,
+      autosize: { minRows: 2, maxRows: 10 }
+    }
   },
   {
     label: "相关函件",

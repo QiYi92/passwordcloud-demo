@@ -25,7 +25,7 @@ export function useColumns() {
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
-  // 创建一个帮助函数来将【资金类型】的值转换为对应的标签
+  // 创建一个帮助函数来将【类型】的值转换为对应的标签
   const getFundsTypeLabel = value => {
     const TypeOption = FundsTypeOptions.find(opt => opt.value === value);
     return TypeOption ? TypeOption.label : "未知"; // 如果找不到对应的选项，返回"未知"

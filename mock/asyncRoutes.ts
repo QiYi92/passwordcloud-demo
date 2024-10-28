@@ -17,15 +17,15 @@ const systemManagementRouter = {
     rank: system
   },
   children: [
-    {
-      path: "/system/user/index",
-      name: "SystemUser",
-      meta: {
-        icon: "ri:admin-line",
-        title: "用户管理",
-        roles: ["admin"]
-      }
-    },
+    // {
+    //   path: "/system/user/index",
+    //   name: "SystemUser",
+    //   meta: {
+    //     icon: "ri:admin-line",
+    //     title: "用户管理",
+    //     roles: ["admin"]
+    //   }
+    // },
     {
       path: "/system/role/index",
       name: "SystemRole",
