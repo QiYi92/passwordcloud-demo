@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { list } from "./high/list";
+import { list } from "@/views/meeting/meeting_management/list";
 
 defineOptions({
-  name: "PureTableHigh"
+  name: "meeting_management"
 });
 
 const selected = ref(0);
@@ -22,7 +22,7 @@ function tabClick({ index }) {
             <span
               v-tippy="{
                 maxWidth: 'none',
-                content: item.content
+                content: `（第 ${index + 1} 个示例）${item.content}`
               }"
             >
               {{ item.title }}
@@ -42,6 +42,10 @@ function tabClick({ index }) {
 
 :deep(.el-tabs__header) {
   margin-top: 10px;
+}
+
+:deep(.el-alert__title) {
+  font-size: 15px;
 }
 
 :deep(.el-tabs__nav-next),

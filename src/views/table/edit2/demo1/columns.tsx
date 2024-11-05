@@ -10,7 +10,8 @@ import axios from "axios";
 import { ContractStateOptions } from "@/views/table/edit2/data";
 
 import { message } from "@/utils/message"; // 适当调整路径
-import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
+import { CustomMouseMenu } from "@howdyjs/mouse-menu";
+import dayjs from "dayjs"; // 添加新依赖
 
 export function useColumns() {
   const dataList = ref([]);
@@ -47,11 +48,17 @@ export function useColumns() {
     },
     {
       label: "合同类型",
-      prop: "contract_type"
+      prop: "contract_type",
+      formatter: row => getContractTypeLabel(row.contract_type)
     },
     {
       label: "合同金额（万元）",
       prop: "contract_money"
+    },
+    {
+      label: "合同日期",
+      prop: "contract_date",
+      formatter: row => dayjs(row.contract_date).format("YYYY年MM月DD日")
     },
     {
       label: "合同备注",
@@ -172,8 +179,7 @@ export function useColumns() {
       console.log("数据成功获取:", response.data); // 日志输出获取到的数据
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.contract_id || index, // 使用 contract_id 或索引作为唯一ID
-        contract_type: getContractTypeLabel(item.contract_type)
+        id: item.contract_id || index // 使用 contract_id 或索引作为唯一ID
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -198,8 +204,7 @@ export function useColumns() {
             .includes(searchQuery.value.toLowerCase())
         )
         .map(item => ({
-          ...item,
-          contract_type: getContractTypeLabel(item.contract_type) //重新映射项目状态
+          ...item
         }));
       pagination.total = dataList.value.length;
     } catch (error) {

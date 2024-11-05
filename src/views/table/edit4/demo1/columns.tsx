@@ -42,7 +42,8 @@ export function useColumns() {
     },
     {
       label: "资金类型",
-      prop: "money_type"
+      prop: "money_type",
+      formatter: row => getFundsTypeLabel(row.money_type)
     },
     {
       label: "下达时间",
@@ -160,8 +161,7 @@ export function useColumns() {
       console.log("数据成功获取:", response.data); // 日志输出获取到的数据
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.pass_id || index, // 使用 pass_id 或索引作为唯一ID
-        money_type: getFundsTypeLabel(item.money_type) // 资金类型
+        id: item.pass_id || index // 使用 pass_id 或索引作为唯一ID
       }));
       pagination.total = dataList.value.length;
     } catch (error) {

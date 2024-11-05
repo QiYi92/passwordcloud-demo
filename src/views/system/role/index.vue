@@ -256,6 +256,7 @@ onMounted(() => {
           <el-checkbox v-model="isSelectAll" label="全选/全不选" />
           <el-checkbox v-model="isLinkage" label="父子联动" />
         </div>
+        <!-- 权限树形结构 -->
         <el-tree-v2
           ref="treeRef"
           show-checkbox

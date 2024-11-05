@@ -7,15 +7,25 @@ import { MotionPlugin } from "@vueuse/motion";
 import { useElementPlus } from "@/plugins/elementPlus";
 import { injectResponsiveStorage } from "@/utils/responsive";
 import Table from "@pureadmin/table";
+import axios from "axios";
 
 import "./style/reset.scss";
 import "./style/index.scss";
 import "./style/tailwind.css";
 import "element-plus/dist/index.css";
-// main.ts
-// @ts-expect-error
 import "./assets/iconfont/iconfont.js";
 import "./assets/iconfont/iconfont.css";
+
+// 禁用缓存的拦截器
+axios.interceptors.request.use(
+  config => {
+    config.headers["Cache-Control"] = "no-cache"; // 仅保留 Cache-Control
+    return config;
+  },
+  error => {
+    return Promise.reject(error);
+  }
+);
 
 // 创建Vue应用实例
 const app = createApp(App);

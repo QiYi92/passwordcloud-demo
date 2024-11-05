@@ -3,10 +3,13 @@
 interface FormItemProps {
   id: string;
   /** 用户名 */
-  username: string; // 修改为 username
+  username: string;
   /** 用户标识 */
   code: string;
+  /** 密码 */
   password: string;
+  /** 确认密码 */
+  confirmPassword?: string;
   /** 备注 */
   remark: string;
 }

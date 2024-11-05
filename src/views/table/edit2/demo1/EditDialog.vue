@@ -15,6 +15,7 @@ import {
   type FieldValues,
   PlusDialogForm
 } from "plus-pro-components";
+import dayjs from "dayjs";
 // 响应式变量，存储项目名称选项
 const projectOptions = ref([]);
 
@@ -60,6 +61,12 @@ const handleSubmit = async () => {
     console.error("No contract ID provided for updating.");
     return;
   }
+  if (values.value.contract_date) {
+    values.value.contract_date = dayjs(
+      values.value.contract_date as string
+    ).format("YYYY-MM-DD"); //报错但是正常运行
+    console.log("Formatted project_time:", values.value.contract_date);
+  }
   try {
     const response = await axios.put(
       import.meta.env.VITE_APP_SERVER +
@@ -80,14 +87,14 @@ const handleSubmit = async () => {
 const columns: PlusColumn[] = [
   {
     label: "合同名称",
-    labelWidth: 100,
+    labelWidth: 150,
     width: 120,
     prop: "contract_name",
     valueType: "copy"
   },
   {
     label: "项目名称",
-    labelWidth: 100,
+    labelWidth: 150,
     width: 120,
     prop: "project_name",
     valueType: "select",
@@ -95,14 +102,14 @@ const columns: PlusColumn[] = [
   },
   {
     label: "合同乙方",
-    labelWidth: 100,
+    labelWidth: 150,
     width: 120,
     prop: "contract_member",
     valueType: "copy"
   },
   {
     label: "合同类型",
-    labelWidth: 100,
+    labelWidth: 150,
     width: 120,
     prop: "contract_type",
     valueType: "select",
@@ -141,14 +148,20 @@ const columns: PlusColumn[] = [
   },
   {
     label: "合同金额（万元）",
-    labelWidth: 100,
+    labelWidth: 150,
     prop: "contract_money",
     valueType: "input-number",
     fieldProps: { precision: 2, step: 100 }
   },
   {
+    label: "合同日期",
+    labelWidth: 150,
+    prop: "contract_date",
+    valueType: "date-picker"
+  },
+  {
     label: "备注",
-    labelWidth: 100,
+    labelWidth: 150,
     prop: "contract_remark",
     valueType: "textarea",
     fieldProps: {

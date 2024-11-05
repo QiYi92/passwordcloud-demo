@@ -53,7 +53,8 @@ export function useColumns() {
     },
     {
       label: "责任科室",
-      prop: "project_room"
+      prop: "project_room",
+      formatter: row => getProjectRoomLabel(row.project_room)
     },
     {
       label: "项目立项总投资（万元）",
@@ -65,7 +66,8 @@ export function useColumns() {
     },
     {
       label: "项目状态",
-      prop: "project_state"
+      prop: "project_state",
+      formatter: row => getProjectStateLabel(row.project_state)
     },
     {
       label: "项目负责人",
@@ -73,7 +75,8 @@ export function useColumns() {
     },
     {
       label: "项目类型",
-      prop: "project_type"
+      prop: "project_type",
+      formatter: row => getProjectTypeLabel(row.project_type)
     },
     {
       label: "项目立项完成时间",
@@ -200,10 +203,7 @@ export function useColumns() {
       console.log("数据成功获取:", response.data); // 日志输出获取到的数据
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.project_id || index, // 使用 project_id 或索引作为唯一ID
-        project_type: getProjectTypeLabel(item.project_type), //项目类型
-        project_room: getProjectRoomLabel(item.project_room), //项目科室
-        project_state: getProjectStateLabel(item.project_state) //项目状态
+        id: item.project_id || index // 使用 project_id 或索引作为唯一ID
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -220,20 +220,12 @@ export function useColumns() {
       const response = await axios.get(
         import.meta.env.VITE_APP_SERVER + "/api/projects"
       );
-      // 对筛选后的数据重新进行映射操作
-      dataList.value = clone(response.data, true)
-        .filter(item =>
-          (item[searchField.value] || "")
-            .toString()
-            .toLowerCase()
-            .includes(searchQuery.value.toLowerCase())
-        )
-        .map(item => ({
-          ...item,
-          project_type: getProjectTypeLabel(item.project_type), //重新映射项目类型
-          project_room: getProjectRoomLabel(item.project_room), //重新映射项目科室
-          project_state: getProjectStateLabel(item.project_state) //重新映射项目状态
-        }));
+      dataList.value = clone(response.data, true).filter(item =>
+        (item[searchField.value] || "")
+          .toString()
+          .toLowerCase()
+          .includes(searchQuery.value.toLowerCase())
+      );
       pagination.total = dataList.value.length;
     } catch (error) {
       console.error("Failed to select data:", error);
@@ -241,6 +233,7 @@ export function useColumns() {
       loading.value = false;
     }
   };
+
   // 监听搜索字段和查询字符串的变化
   watch([searchField, searchQuery], selectData, { deep: true });
   // 组件挂载时执行

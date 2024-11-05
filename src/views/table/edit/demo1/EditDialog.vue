@@ -155,7 +155,7 @@ const localVisible = ref(false);
 
 watchEffect(() => {
   localVisible.value = props.visible;
-  if (props.initialData) {
+  if (props.visible && props.initialData) {
     values.value = { ...props.initialData };
   }
 });
@@ -165,6 +165,11 @@ const handleSubmit = async () => {
     console.error("No project ID provided for updating.");
     return;
   }
+  // 保证 select 类型字段的原始 value 不变
+  values.value.project_room ||= props.initialData.project_room;
+  values.value.project_state ||= props.initialData.project_state;
+  values.value.project_type ||= props.initialData.project_type;
+
   // 格式化日期
   // 确保 project_time 被正确格式化之前发送给后端
   if (values.value.project_time) {

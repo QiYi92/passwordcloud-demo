@@ -1,7 +1,7 @@
-import Demo1 from "./demo1/index.vue";
+import Demo1 from "@/views/meeting/meeting_management/demo1/index.vue";
 
 const rendContent = (val: string) =>
-  `代码位置：src/views/expert/expert_management/${val}/index.vue`;
+  `代码位置：src/views/meeting/meeting_management/${val}/index.vue`;
 
 export const list = [
   {

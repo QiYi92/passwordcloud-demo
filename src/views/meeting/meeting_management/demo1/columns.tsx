@@ -7,77 +7,51 @@ import { ref, onMounted, reactive, watch } from "vue";
 
 import { delay, clone } from "@pureadmin/utils";
 import axios from "axios";
-import {
-  PaymentTypeOptions,
-  PaymentStateOptions
-} from "@/views/table/edit3/data";
-
 import { message } from "@/utils/message"; // 适当调整路径
-import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
-import dayjs from "dayjs";
+import { CustomMouseMenu } from "@howdyjs/mouse-menu";
+import dayjs from "dayjs"; // 添加新依赖
 
 export function useColumns() {
   const dataList = ref([]);
   const loading = ref(true);
-  const searchField = ref("pay_id");
+  const searchField = ref("meeting_id");
   const searchQuery = ref("");
   const editRowData = ref(null);
-  const deletePaymentId = ref(null);
+  const deleteMeetingId = ref(null);
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
-  // 创建一个帮助函数来将【支付类型】的值转换为对应的标签
-  const getPaymentTypeLabel = value => {
-    const StateOption = PaymentTypeOptions.find(opt => opt.value === value);
-    return StateOption ? StateOption.label : "未知"; // 如果找不到对应的选项，返回"未知"
-  };
-  // 创建一个帮助函数来将【支付状态】的值转换为对应的标签
-  const getPaymentStateLabel = value => {
-    const TypeOption = PaymentStateOptions.find(opt => opt.value === value);
-    return TypeOption ? TypeOption.label : "未知";
-  };
-
   const columns: TableColumnList = [
     {
-      label: "支付项ID",
-      prop: "pay_id"
+      label: "会议ID",
+      prop: "meeting_id",
+      width: 100
     },
     {
-      label: "支付项名称",
-      prop: "pay_name"
+      label: "会议名称",
+      prop: "meeting_name",
+      width: 150
     },
     {
-      label: "合同名称",
-      prop: "contract_name"
+      label: "会议正文",
+      prop: "meeting_body",
+      width: 300
     },
     {
-      label: "支付类型",
-      prop: "pay_type",
-      formatter: row => getPaymentTypeLabel(row.pay_type)
+      label: "会议时间",
+      prop: "meeting_date",
+      width: 150,
+      formatter: row => dayjs(row.meeting_date).format("YYYY年MM月DD日")
     },
     {
-      label: "支付金额（万元）",
-      prop: "pay_money"
-    },
-    {
-      label: "支付时间",
-      prop: "pay_time",
-      formatter: row => dayjs(row.pay_time).format("YYYY年MM月DD日")
-    },
-    {
-      label: "支付状态",
-      prop: "pay_state",
-      formatter: row => getPaymentStateLabel(row.pay_state)
-    },
-    {
-      label: "支付备注",
-      prop: "pay_remark"
+      label: "摘要",
+      prop: "summary"
     },
     {
       label: "操作",
       width: "150",
       fixed: "right",
-      slot: "operation" // 指定操作列的插槽
+      slot: "operation"
     }
   ];
 
@@ -95,7 +69,7 @@ export function useColumns() {
   const menuOptions = {
     menuList: [
       {
-        label: ({ pay_id }) => `项目ID为：${pay_id}`,
+        label: ({ meeting_id }) => `项目ID为：${meeting_id}`,
         disabled: true
       },
       {
@@ -110,7 +84,7 @@ export function useColumns() {
         label: "删除",
         tips: "Delete",
         fn: row => {
-          deletePaymentId.value = row.pay_id;
+          deleteMeetingId.value = row.meeting_id;
           deleteDialogVisible.value = true;
         }
       }
@@ -183,12 +157,13 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/payments"
+        import.meta.env.VITE_APP_SERVER + "/api/meeting"
       );
+      console.log("环境变量：", import.meta.env);
       console.log("数据成功获取:", response.data); // 日志输出获取到的数据
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.pay_id || index // 使用 pay_id 或索引作为唯一ID
+        id: item.meeting_id || index // 使用 meeting_id 或索引作为唯一ID
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -203,7 +178,7 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/payments"
+        import.meta.env.VITE_APP_SERVER + "/api/meeting"
       );
       dataList.value = clone(response.data, true).filter(item =>
         (item[searchField.value] || "")
@@ -218,6 +193,7 @@ export function useColumns() {
       loading.value = false;
     }
   };
+
   // 监听搜索字段和查询字符串的变化
   watch([searchField, searchQuery], selectData, { deep: true });
   // 组件挂载时执行
@@ -242,7 +218,7 @@ export function useColumns() {
     showMouseMenu,
     editDialogVisible,
     editRowData,
-    deletePaymentId,
+    deleteMeetingId,
     deleteDialogVisible,
     fetchData
   };

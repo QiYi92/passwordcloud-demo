@@ -1,12 +1,34 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useColumns } from "./columns";
-import EditDialog from "@/views/table/edit2/demo1/EditDialog.vue";
-import DeleteDialog from "@/views/table/edit2/demo1/DeleteDialog.vue";
-import NewDialog from "@/views/table/edit2/demo1/NewDialog.vue";
+import EditDialog from "@/views/meeting/meeting_management/demo1/EditDialog.vue";
+import DeleteDialog from "@/views/meeting/meeting_management/demo1/DeleteDialog.vue";
+import NewDialog from "@/views/meeting/meeting_management/demo1/NewDialog.vue";
+import ShowDialog from "@/views/meeting/meeting_management/demo1/ShowDialog.vue";
 
 const tableRef = ref();
 const selectedRow = ref(null); // 响应式变量存储选中的行数据
+const deleteMeetingId = ref(null);
+const deleteDialogVisible = ref(false);
+const editDialogVisible = ref(false);
+const editRowData = ref(null);
+const showDialogVisible = ref(false);
+const previewData = ref(null);
+
+const handleDelete = row => {
+  deleteMeetingId.value = row.meeting_id;
+  deleteDialogVisible.value = true;
+};
+
+const handleEdit = row => {
+  editRowData.value = row;
+  editDialogVisible.value = true;
+};
+
+const handlePreview = row => {
+  previewData.value = row; // 将选中的行数据传递给预览对话框
+  showDialogVisible.value = true; // 显示预览对话框
+};
 
 const {
   loading,
@@ -20,57 +42,42 @@ const {
   searchField,
   searchQuery,
   showMouseMenu,
-  editDialogVisible,
-  editRowData,
-  deleteDialogVisible,
-  deleteContractId,
   fetchData
 } = useColumns();
-
-const handleDelete = row => {
-  deleteContractId.value = row.contract_id;
-  deleteDialogVisible.value = true;
-};
-
-const handleEdit = row => {
-  editRowData.value = row;
-  editDialogVisible.value = true;
-};
 </script>
 
 <template>
   <div>
     <!-- 搜索控件区域 -->
     <div class="search-controls mb-4">
-      <!-- mb-4 为 margin-bottom 的样式，用于添加一些间距 -->
       <el-select
         v-model="searchField"
         placeholder="选择搜索字段"
         style="width: 200px; margin-right: 10px"
       >
-        <el-option label="合同ID" value="contract_id" />
-        <el-option label="项目名称" value="project_name" />
-        <el-option label="合同乙方" value="contract_member" />
-        <el-option label="合同类型" value="contract_type" />
-        <el-option label="合同金额" value="contract_money" />
-        <el-option label="合同日期" value="contract_date" />
-        <el-option label="合同备注" value="contract_remark" />
+        <el-option label="会议ID" value="meeting_id" />
+        <el-option label="会议名称" value="meeting_name" />
+        <el-option label="会议正文" value="meeting_body" />
+        <el-option label="会议时间" value="meeting_date" />
+        <el-option label="会议地点" value="meeting_location" />
+        <el-option label="摘要" value="summary" />
       </el-select>
       <el-input
         v-model="searchQuery"
         placeholder="输入搜索内容"
         style="width: 300px; margin-right: 10px"
       />
-      <!-- 添加新数据的按钮 -->
       <NewDialog @data-updated="fetchData" />
     </div>
+
+    <!-- 表格容器 -->
     <div style="overflow-x: auto">
       <pure-table
         ref="tableRef"
         border
         adaptive
         :adaptiveConfig="adaptiveConfig"
-        row-key="contract_id"
+        row-key="meeting_id"
         alignWhole="center"
         showOverflowTooltip
         :loading="loading"
@@ -88,8 +95,15 @@ const handleEdit = row => {
         @page-current-change="onCurrentChange"
         @row-contextmenu="showMouseMenu"
       >
-        <!-- 定义操作列的内容 -->
         <template #operation="{ row }">
+          <el-button
+            link
+            type="primary"
+            size="small"
+            @click="handlePreview(row)"
+          >
+            预览
+          </el-button>
           <el-button link type="primary" size="small" @click="handleEdit(row)">
             修改
           </el-button>
@@ -104,19 +118,24 @@ const handleEdit = row => {
         </template>
       </pure-table>
     </div>
-    <!-- 添加数据更新按钮 -->
+
     <EditDialog
       :visible="editDialogVisible"
       :initialData="editRowData"
       @update:visible="editDialogVisible = $event"
       @data-updated="fetchData"
     />
-    <!-- 其他内容 -->
     <DeleteDialog
       :visible="deleteDialogVisible"
-      :contractId="deleteContractId"
+      :meetingId="deleteMeetingId"
       @update:visible="deleteDialogVisible = $event"
       @deleted="fetchData"
+    />
+
+    <ShowDialog
+      :visible="showDialogVisible"
+      :data="previewData"
+      @update:visible="showDialogVisible = $event"
     />
   </div>
 </template>
