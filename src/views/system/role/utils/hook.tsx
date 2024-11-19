@@ -69,7 +69,7 @@ export function useUser(treeRef: Ref) {
       prop: "username"
     },
     {
-      label: "用户标识",
+      label: "权限组",
       prop: "code"
     },
     {

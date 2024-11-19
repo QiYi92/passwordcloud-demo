@@ -188,7 +188,7 @@ onMounted(fetchData);
       <el-option label="责任人" value="principal" />
       <el-option label="标题" value="title" />
       <el-option label="描述" value="describe" />
-      <el-option label="是否完成" value="completion" />
+      <el-option label="完成状态" value="completion" />
       <el-option label="完成情况说明" value="remark" />
       <el-option label="时间" value="time" />
     </el-select>

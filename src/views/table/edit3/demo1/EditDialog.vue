@@ -6,7 +6,8 @@ import {
   watchEffect,
   defineEmits,
   onMounted,
-  computed
+  computed,
+  watch
 } from "vue";
 import axios from "axios";
 import "plus-pro-components/es/components/dialog-form/style/css";
@@ -16,45 +17,99 @@ import {
   PlusDialogForm
 } from "plus-pro-components";
 import dayjs from "dayjs";
-// 响应式变量，存储项目名称选项
-const contractOptions = ref([]);
 
-// 异步函数加载合同名称数据
-const loadContractNames = async () => {
-  try {
-    const { data } = await axios.get(
-      import.meta.env.VITE_APP_SERVER + "/api/contracts"
-    );
-    contractOptions.value = data.map(contract => ({
-      label: contract.contract_name,
-      value: contract.contract_name
-    }));
-  } catch (error) {
-    console.error("Failed to load contract names:", error);
-  }
-};
-// 初始化组件时加载项目名称数据
-onMounted(loadContractNames);
-// 使用computed确保类型匹配
-const computedContractOptions = computed(() => contractOptions.value);
+// 响应式变量，存储项目名称和合同名称选项
+const projectOptions = ref([]);
+const contractOptions = ref([]);
+const allContracts = ref([]); // 保存所有合同数据，包括对应项目名称
 
 // 从父组件接收的初始数据和可见性状态
 const props = defineProps({
   initialData: Object,
   visible: Boolean
 });
+
 // 发射事件到父组件的方法
 const emit = defineEmits(["update:visible", "data-updated"]);
+
 // 本地表单值的响应式状态
 const values = ref<FieldValues>({});
 const localVisible = ref(false);
-// 监视props.visible变化来更新本地显示状态
+
+// 初始化组件时加载项目名称数据和合同名称数据
+const loadProjectNames = async () => {
+  try {
+    const { data } = await axios.get(
+      `${import.meta.env.VITE_APP_SERVER}/api/projects`
+    );
+    projectOptions.value = data.map(project => ({
+      label: project.project_name,
+      value: project.project_name
+    }));
+  } catch (error) {
+    console.error("加载项目名称失败:", error);
+  }
+};
+
+const loadContractNames = async () => {
+  try {
+    const { data } = await axios.get(
+      `${import.meta.env.VITE_APP_SERVER}/api/contracts`
+    );
+    allContracts.value = data.map(contract => ({
+      label: contract.contract_name,
+      value: contract.contract_name,
+      project_name: contract.project_name
+    }));
+    contractOptions.value = allContracts.value;
+  } catch (error) {
+    console.error("加载合同名称失败:", error);
+  }
+};
+
+// 加载数据
+onMounted(() => {
+  loadProjectNames();
+  loadContractNames();
+});
+
+// 监视 props.visible 变化来加载数据
+watch(
+  () => props.visible,
+  newVisible => {
+    if (newVisible) {
+      // 可见时加载相关数据
+      loadContractNames();
+    } else {
+      // 不可见时清空合同名称
+      contractOptions.value = [];
+    }
+  }
+);
+
+// 监视 props.initialData 变化来更新本地显示状态
 watchEffect(() => {
   localVisible.value = props.visible;
   if (props.initialData) {
     values.value = { ...props.initialData };
   }
 });
+
+// 动态筛选合同选项并清空合同选择
+watch(
+  () => values.value.project_name,
+  newProjectName => {
+    contractOptions.value = allContracts.value.filter(
+      contract => contract.project_name === newProjectName
+    );
+    values.value.contract_name = ""; // 清空已有的合同选择
+  }
+);
+
+// 使用computed确保类型匹配
+const computedProjectOptions = computed(() => projectOptions.value);
+const computedContractOptions = computed(() => contractOptions.value);
+
 // 提交表单的事件处理函数
 const handleSubmit = async () => {
   if (!values.value.pay_id) {
@@ -62,11 +117,10 @@ const handleSubmit = async () => {
     return;
   }
   // 格式化日期
-  // 确保 pay_time 被正确格式化之前发送给后端
   if (values.value.pay_time) {
     values.value.pay_time = dayjs(values.value.pay_time as string).format(
       "YYYY-MM-DD"
-    ); //报错但是正常运行
+    );
     console.log("Formatted pay_time:", values.value.pay_time);
   }
   try {
@@ -76,7 +130,7 @@ const handleSubmit = async () => {
     );
     console.log(response.data);
     emit("update:visible", false);
-    emit("data-updated"); // 新增事件，通知数据已更新
+    emit("data-updated");
     alert("项目更新成功！");
   } catch (error) {
     console.error("Failed to update payments:", error);
@@ -87,19 +141,20 @@ const handleSubmit = async () => {
 // 列的定义
 const columns: PlusColumn[] = [
   {
-    label: "支付项名称",
+    label: "关联项目名称",
     width: 120,
     labelWidth: 100,
-    prop: "pay_name",
-    valueType: "copy"
+    prop: "project_name",
+    valueType: "select",
+    options: computedProjectOptions // 动态绑定项目选项
   },
   {
-    label: "合同名称",
+    label: "关联合同名称",
     width: 120,
     labelWidth: 100,
     prop: "contract_name",
     valueType: "select",
-    options: computedContractOptions // 动态绑定选项
+    options: computedContractOptions // 动态绑定合同选项
   },
   {
     label: "支付项类型",
@@ -109,18 +164,23 @@ const columns: PlusColumn[] = [
     valueType: "select",
     options: [
       {
-        label: "暂定",
+        label: "其他",
         value: "0",
         color: "yellow"
       },
       {
-        label: "A类支付项",
+        label: "已支付并到账",
         value: "1",
         color: "blue"
       },
       {
-        label: "B类支付项",
+        label: "已支付在财政",
         value: "2",
+        color: "blue"
+      },
+      {
+        label: "已支付中心流程中",
+        value: "3",
         color: "blue"
       }
     ]

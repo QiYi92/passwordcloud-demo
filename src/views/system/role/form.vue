@@ -27,6 +27,12 @@ const validatePassword = () => {
   const password = newFormInline.value.password;
   const confirmPassword = newFormInline.value.confirmPassword;
 
+  // 验证密码长度是否在 8-18 位之间
+  if (password.length < 8 || password.length > 18) {
+    errorMessage.value = "密码长度必须在 8 到 18 位之间";
+    return false;
+  }
+
   // 验证密码是否包含字母和数字
   const hasLetterAndNumber = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/.test(password);
   if (!hasLetterAndNumber) {
@@ -62,7 +68,7 @@ defineExpose({ getRef, validatePassword }); // 暴露方法供外部调用
       />
     </el-form-item>
 
-    <el-form-item label="角色标识" prop="code">
+    <el-form-item label="权限组" prop="code">
       <el-select
         v-model="newFormInline.code"
         clearable

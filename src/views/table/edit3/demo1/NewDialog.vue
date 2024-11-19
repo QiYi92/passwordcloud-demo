@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from "axios";
-import { ref, defineEmits, onMounted, computed } from "vue";
+import { ref, defineEmits, onMounted, computed, watch, nextTick } from "vue";
 import "plus-pro-components/es/components/dialog-form/style/css";
 import {
   type PlusColumn,
@@ -9,43 +9,87 @@ import {
 } from "plus-pro-components";
 import dayjs from "dayjs";
 
-// 响应式变量，存储项目名称选项
+// 响应式变量，存储项目名称和合同名称选项
+const projectOptions = ref([]);
 const contractOptions = ref([]);
+const allContracts = ref([]);
+const loading = ref(true); // 用于控制加载状态
+const values = ref<FieldValues>({}); // 初始化 values
+
+// 异步函数加载项目名称数据
+const loadProjectNames = async () => {
+  try {
+    const { data } = await axios.get(
+      import.meta.env.VITE_APP_SERVER + "/api/projects"
+    );
+    projectOptions.value = data.map(project => ({
+      label: project.project_name,
+      value: project.project_name
+    }));
+  } catch (error) {
+    console.error("Failed to load project names:", error);
+  }
+};
 
 // 异步函数加载合同名称数据
 const loadContractNames = async () => {
   try {
     const { data } = await axios.get(
-      import.meta.env.VITE_APP_SERVER + "/api/contracts"
+      `${import.meta.env.VITE_APP_SERVER}/api/contracts`
     );
-    contractOptions.value = data.map(contract => ({
+    allContracts.value = data.map(contract => ({
       label: contract.contract_name,
-      value: contract.contract_name
+      value: contract.contract_name,
+      project_name: contract.project_name
     }));
+    contractOptions.value = allContracts.value; // 初始化合同选项
   } catch (error) {
-    console.error("Failed to load contract names:", error);
+    console.error("加载合同名称失败:", error);
   }
 };
-// 初始化组件时加载项目名称数据
-onMounted(loadContractNames);
-// 使用computed确保类型匹配
+
+// 初始化组件时加载项目名称和合同名称数据
+onMounted(() => {
+  loadProjectNames();
+  loadContractNames();
+});
+
+// 使用 nextTick 确保 values 已经初始化
+onMounted(() => {
+  nextTick(() => {
+    // 在组件加载完毕后，开始监视 values
+    watch(
+      () => values.value.project_name,
+      newProjectName => {
+        contractOptions.value = allContracts.value.filter(
+          contract => contract.project_name === newProjectName
+        );
+        values.value.contract_name = ""; // 清空合同名称
+      }
+    );
+  });
+});
+
+// 使用computed确保项目和合同名称选项正确
+const computedProjectOptions = computed(() => projectOptions.value);
 const computedContractOptions = computed(() => contractOptions.value);
 
 const columns: PlusColumn[] = [
   {
-    label: "支付项名称",
+    label: "关联项目名称",
     labelWidth: 100,
     width: 120,
-    prop: "pay_name",
-    valueType: "copy"
+    prop: "project_name",
+    valueType: "select",
+    options: computedProjectOptions // 使用动态加载的项目名称选项
   },
   {
-    label: "合同名称",
+    label: "关联合同名称",
     labelWidth: 100,
     width: 120,
     prop: "contract_name",
     valueType: "select",
-    options: computedContractOptions // 动态绑定选项
+    options: computedContractOptions // 根据选中的项目名称筛选合同名称选项
   },
   {
     label: "支付项类型",
@@ -54,21 +98,10 @@ const columns: PlusColumn[] = [
     prop: "pay_type",
     valueType: "select",
     options: [
-      {
-        label: "暂定",
-        value: "0",
-        color: "yellow"
-      },
-      {
-        label: "A类支付项",
-        value: "1",
-        color: "blue"
-      },
-      {
-        label: "B类支付项",
-        value: "2",
-        color: "blue"
-      }
+      { label: "其他", value: "0", color: "yellow" },
+      { label: "已支付并到账", value: "1", color: "blue" },
+      { label: "已支付在财政", value: "2", color: "blue" },
+      { label: "已支付中心流程中", value: "3", color: "blue" }
     ]
   },
   {
@@ -91,21 +124,9 @@ const columns: PlusColumn[] = [
     prop: "pay_state",
     valueType: "select",
     options: [
-      {
-        label: "暂定",
-        value: "0",
-        color: "yellow"
-      },
-      {
-        label: "已支付",
-        value: "1",
-        color: "blue"
-      },
-      {
-        label: "未支付",
-        value: "2",
-        color: "blue"
-      }
+      { label: "暂定", value: "0", color: "yellow" },
+      { label: "已支付", value: "1", color: "blue" },
+      { label: "未支付", value: "2", color: "blue" }
     ]
   },
   {
@@ -122,7 +143,6 @@ const columns: PlusColumn[] = [
 ];
 
 const visible = ref(false);
-const values = ref<FieldValues>({});
 
 // 定义emit用于发送事件
 const emit = defineEmits(["data-updated"]);
@@ -132,14 +152,16 @@ const handleOpen = () => {
 };
 
 const handleSubmit = async () => {
-  // 格式化日期
-  // 确保 pay_time 被正确格式化之前发送给后端
-  if (values.value.pay_time) {
+  // 如果用户没有选择支付时间，则默认填入当前日期
+  if (!values.value.pay_time) {
+    values.value.pay_time = dayjs().format("YYYY-MM-DD"); // 设置为当前日期
+  } else {
+    // 如果选择了日期，格式化为指定格式
     values.value.pay_time = dayjs(values.value.pay_time as string).format(
       "YYYY-MM-DD"
-    ); //报错但是正常运行,勿动！
-    console.log("Formatted pay_time:", values.value.pay_time);
+    );
   }
+
   try {
     const response = await axios.post(
       import.meta.env.VITE_APP_SERVER + "/api/payments",

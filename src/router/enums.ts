@@ -1,9 +1,10 @@
 const home = 0,
   table = 1,
-  onsite = 2,
-  expert = 3,
-  meeting = 4,
-  feedback = 5,
-  system = 6;
+  intro = 2,
+  onsite = 3,
+  expert = 4,
+  meeting = 5,
+  feedback = 6,
+  system = 7;
 
-export { home, table, onsite, expert, feedback, meeting, system };
+export { home, intro, table, onsite, expert, feedback, meeting, system };

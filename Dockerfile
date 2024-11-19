@@ -20,6 +20,9 @@ RUN pnpm build
 # 使用一个 Nginx 镜像来服务打包后的文件
 FROM nginx:alpine
 
+# 安装支持emoji的字体
+RUN apk add --no-cache font-noto-emoji
+
 # 复制打包后的文件到 Nginx 的 html 文件夹
 COPY --from=build /app/dist /usr/share/nginx/html
 

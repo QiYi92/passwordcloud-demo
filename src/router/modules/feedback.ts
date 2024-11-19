@@ -15,7 +15,8 @@ export default {
       component: () => import("@/views/feedback/index_issues.vue"),
       meta: {
         title: "需求&问题反馈",
-        icon: info_icon
+        icon: info_icon,
+        roles: ["admin"]
       }
     }
   ]
