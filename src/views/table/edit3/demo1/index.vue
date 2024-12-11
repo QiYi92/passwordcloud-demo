@@ -47,7 +47,7 @@ const handleDelete = row => {
         <el-option label="支付ID" value="pay_id" />
         <el-option label="支付项名称" value="pay_name" />
         <el-option label="合同名称" value="contract_name" />
-        <el-option label="支付类型" value="pay_type" />
+        <el-option label="支付情况" value="pay_type" />
         <el-option label="支付时间" value="pay_time" />
         <el-option label="支付状态" value="pay_state" />
         <el-option label="支付备注" value="pay_remark" />

@@ -182,6 +182,11 @@ const columns: PlusColumn[] = [
         label: "已支付中心流程中",
         value: "3",
         color: "blue"
+      },
+      {
+        label: "未支付",
+        value: "4",
+        color: "blue"
       }
     ]
   },

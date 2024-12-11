@@ -53,7 +53,7 @@ export function useColumns() {
       prop: "contract_name"
     },
     {
-      label: "支付类型",
+      label: "支付情况",
       width: "150",
       prop: "pay_type",
       formatter: row => getPaymentTypeLabel(row.pay_type)

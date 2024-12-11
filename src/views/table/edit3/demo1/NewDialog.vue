@@ -101,7 +101,8 @@ const columns: PlusColumn[] = [
       { label: "其他", value: "0", color: "yellow" },
       { label: "已支付并到账", value: "1", color: "blue" },
       { label: "已支付在财政", value: "2", color: "blue" },
-      { label: "已支付中心流程中", value: "3", color: "blue" }
+      { label: "已支付中心流程中", value: "3", color: "blue" },
+      { label: "未支付", value: "4", color: "blue" }
     ]
   },
   {

@@ -144,23 +144,43 @@ function fetchData() {
     .get(`${import.meta.env.VITE_APP_SERVER}/api/issues`)
     .then(response => {
       tableData.value = response.data;
-      filteredData.value = response.data;
+      filteredData.value = response.data; // 默认显示所有数据
     })
     .catch(error => {
       console.error("Error fetching issues data:", error);
     });
 }
 
-// 新增部分：搜索数据的函数
+// 搜索过滤数据
 const selectData = async () => {
   loading.value = true;
   try {
-    filteredData.value = tableData.value.filter(item =>
-      (item[searchField.value] || "")
-        .toString()
+    filteredData.value = tableData.value.filter(item => {
+      let fieldValue = item[searchField.value];
+
+      if (searchField.value === "time") {
+        fieldValue = dayjs(fieldValue).format("YYYY年MM月DD日");
+      }
+
+      if (searchField.value === "type") {
+        fieldValue =
+          TypeOptions.find(option => option.value === fieldValue)?.label ||
+          fieldValue;
+      } else if (searchField.value === "level") {
+        fieldValue =
+          LevelOptions.find(option => option.value === fieldValue)?.label ||
+          fieldValue;
+      } else if (searchField.value === "completion") {
+        fieldValue =
+          CompletionOptions.find(option => option.value === fieldValue)
+            ?.label || fieldValue;
+      }
+
+      return fieldValue
+        ?.toString()
         .toLowerCase()
-        .includes(searchQuery.value.toLowerCase())
-    );
+        .includes(searchQuery.value.toLowerCase());
+    });
   } catch (error) {
     console.error("Failed to filter data:", error);
   } finally {
@@ -168,8 +188,13 @@ const selectData = async () => {
   }
 };
 
-// 新增部分：监听搜索字段和查询字符串的变化
-watch([searchField, searchQuery], selectData, { deep: true });
+// 设置默认字段并监听搜索变化
+onMounted(() => {
+  searchField.value = "type"; // 设置默认搜索字段
+  fetchData();
+});
+
+watch([searchField, searchQuery], selectData);
 
 // 组件挂载时获取数据
 onMounted(fetchData);
