@@ -58,7 +58,34 @@ const columns: PlusColumn[] = [
     width: 120,
     labelWidth: 100,
     prop: "expertise_area",
-    valueType: "input"
+    valueType: "select",
+    options: [
+      {
+        label: "数字设施",
+        value: "0",
+        color: "blue"
+      },
+      {
+        label: "数字经济",
+        value: "1",
+        color: "blue"
+      },
+      {
+        label: "数字政府",
+        value: "2",
+        color: "blue"
+      },
+      {
+        label: "数字社会",
+        value: "3",
+        color: "blue"
+      },
+      {
+        label: "经济管理",
+        value: "4",
+        color: "blue"
+      }
+    ]
   },
   {
     label: "职称",
@@ -84,7 +111,7 @@ const columns: PlusColumn[] = [
   {
     label: "备注",
     labelWidth: 100,
-    prop: "remark",
+    prop: "remarks",
     valueType: "textarea",
     fieldProps: {
       maxlength: 500,

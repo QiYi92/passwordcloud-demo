@@ -29,6 +29,22 @@ export function useColumns() {
     return option ? option.label : "未知"; // 如果找不到对应的选项，返回"未知"
   };
 
+  //精确把元转化为万元
+  function formatToTenThousand(value: any): string {
+    // 转换为数字
+    const num = parseFloat(value);
+    if (isNaN(num)) return "未知"; // 非数字直接返回"未知"
+    // 转换为万元，使用精确的计算
+    const tenThousandValue = num / 10000;
+    // 判断是否为整数（保留实际小数位数）
+    if (Number.isInteger(tenThousandValue)) {
+      return `${tenThousandValue}万元`;
+    } else {
+      // 使用字符串精确截断方式来避免浮点数误差
+      return `${tenThousandValue.toFixed(6).replace(/\.?0+$/, "")}万元`;
+    }
+  }
+
   const columns: TableColumnList = [
     {
       label: "合同ID",
@@ -53,7 +69,8 @@ export function useColumns() {
     },
     {
       label: "合同金额（万元）",
-      prop: "contract_money"
+      prop: "contract_money",
+      formatter: row => formatToTenThousand(row.contract_money)
     },
     {
       label: "合同日期",

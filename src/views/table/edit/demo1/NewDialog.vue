@@ -57,7 +57,7 @@ const columns: PlusColumn[] = [
     ]
   },
   {
-    label: "项目立项总投资（万元）",
+    label: "项目立项总投资（元）",
     labelWidth: 150,
     width: 120,
     prop: "project_money",
@@ -65,7 +65,7 @@ const columns: PlusColumn[] = [
     fieldProps: { precision: 2, step: 100 }
   },
   {
-    label: "计划总投资（万元）",
+    label: "计划总投资（元）",
     labelWidth: 150,
     width: 120,
     prop: "project_money_plan",

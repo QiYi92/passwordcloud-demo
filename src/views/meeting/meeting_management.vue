@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { list } from "@/views/intro/intro_management/list";
+import { list } from "@/views/meeting/meeting_management/list";
 
 defineOptions({
-  name: "intro_management"
+  name: "meeting_management"
 });
 
 const selected = ref(0);

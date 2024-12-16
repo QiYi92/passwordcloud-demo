@@ -13,6 +13,7 @@ import axios from "axios";
 
 import { message } from "@/utils/message"; // 适当调整路径
 import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
+import { ProjectExpertiseArea } from "@/views/expert/expert_management/data";
 import dayjs from "dayjs";
 
 export function useColumns() {
@@ -29,6 +30,11 @@ export function useColumns() {
   //   const TypeOption = FundsTypeOptions.find(opt => opt.value === value);
   //   return TypeOption ? TypeOption.label : "未知"; // 如果找不到对应的选项，返回"未知"
   // };
+
+  const getFundsTypeLabel = value => {
+    const TypeOption = ProjectExpertiseArea.find(opt => opt.value === value);
+    return TypeOption ? TypeOption.label : "未知"; // 如果找不到对应的选项，返回"未知"
+  };
 
   const columns: TableColumnList = [
     {
@@ -166,8 +172,8 @@ export function useColumns() {
       console.log("数据成功获取:", response.data); // 日志输出获取到的数据
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.expert_id || index // 使用 expert_id 或索引作为唯一ID
-        // expertise_area: getFundsTypeLabel(item.expertise_area) // 专业类型
+        id: item.expert_id || index, // 使用 expert_id 或索引作为唯一ID
+        expertise_area: getFundsTypeLabel(item.expertise_area) // 专业类型
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -183,14 +189,30 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/experts" // 修改为新的API路径
+        import.meta.env.VITE_APP_SERVER + "/api/experts"
       );
-      dataList.value = clone(response.data, true).filter(item =>
-        (item[searchField.value] || "")
-          .toString()
-          .toLowerCase()
-          .includes(searchQuery.value.toLowerCase())
-      );
+
+      dataList.value = clone(response.data, true)
+        .filter(item => {
+          const fieldValue = item[searchField.value] || "";
+
+          // 如果搜索字段是 expertise_area，搜索 label
+          if (searchField.value === "expertise_area") {
+            const label = getFundsTypeLabel(item.expertise_area);
+            return label.includes(searchQuery.value);
+          }
+
+          // 其他字段按原逻辑搜索
+          return fieldValue
+            .toString()
+            .toLowerCase()
+            .includes(searchQuery.value.toLowerCase());
+        })
+        .map(item => ({
+          ...item,
+          expertise_area: getFundsTypeLabel(item.expertise_area) // 确保映射为 label
+        }));
+
       pagination.total = dataList.value.length;
     } catch (error) {
       console.error("Failed to select data:", error);

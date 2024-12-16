@@ -94,7 +94,7 @@ const columns: PlusColumn[] = [
     ]
   },
   {
-    label: "合同金额（万元）",
+    label: "合同金额（元）",
     labelWidth: 150,
     prop: "contract_money",
     valueType: "input-number",

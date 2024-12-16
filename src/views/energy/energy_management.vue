@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { list } from "@/views/expert/expert_management/list";
+import { list } from "@/views/energy/energy_management/list";
 
 defineOptions({
-  name: "expert_management"
+  name: "energy_management"
 });
 
 const selected = ref(0);
