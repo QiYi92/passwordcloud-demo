@@ -12,6 +12,22 @@ import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
 import dayjs from "dayjs";
 import { FilesTypeOptions } from "@/views/table/edit5/data"; // 引入 FilesTypeOptions
 
+//精确把元转化为万元
+function formatToTenThousand(value: any): string {
+  // 转换为数字
+  const num = parseFloat(value);
+  if (isNaN(num)) return "未知"; // 非数字直接返回"未知"
+  // 转换为万元，使用精确的计算
+  const tenThousandValue = num / 10000;
+  // 判断是否为整数（保留实际小数位数）
+  if (Number.isInteger(tenThousandValue)) {
+    return `${tenThousandValue}万元`;
+  } else {
+    // 使用字符串精确截断方式来避免浮点数误差
+    return `${tenThousandValue.toFixed(6).replace(/\.?0+$/, "")}万元`;
+  }
+}
+
 export function useColumns() {
   const dataList = ref([]);
   const loading = ref(true);
@@ -33,6 +49,7 @@ export function useColumns() {
     },
     {
       label: "对应项目",
+      width: "200",
       prop: "project_name"
     },
     {
@@ -41,7 +58,9 @@ export function useColumns() {
     },
     {
       label: "催款金额（万元）",
-      prop: "prompt_money"
+      width: "150",
+      prop: "prompt_money",
+      formatter: row => formatToTenThousand(row.prompt_money)
     },
     {
       label: "登记时间",

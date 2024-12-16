@@ -267,14 +267,14 @@ const columns: PlusColumn[] = [
   {
     label: "催款项名称",
     width: 120,
-    labelWidth: 100,
+    labelWidth: 150,
     prop: "prompt_name",
     valueType: "input"
   },
   {
     label: "项目名称",
     width: 120,
-    labelWidth: 100,
+    labelWidth: 150,
     prop: "project_name",
     valueType: "select",
     options: computedProjectOptions
@@ -282,27 +282,27 @@ const columns: PlusColumn[] = [
   {
     label: "合同名称",
     width: 120,
-    labelWidth: 100,
+    labelWidth: 150,
     prop: "contract_name",
     valueType: "select",
     options: computedContractOptions
   },
   {
-    label: "催款金额（万元）",
-    labelWidth: 100,
+    label: "催款金额（元）",
+    labelWidth: 150,
     prop: "prompt_money",
     valueType: "input-number",
     fieldProps: { precision: 2, step: 100 }
   },
   {
     label: "登记时间",
-    labelWidth: 100,
+    labelWidth: 150,
     prop: "prompt_time",
     valueType: "date-picker"
   },
   {
     label: "备注",
-    labelWidth: 100,
+    labelWidth: 150,
     prop: "prompt_remark",
     valueType: "textarea",
     fieldProps: {
@@ -313,7 +313,7 @@ const columns: PlusColumn[] = [
   },
   {
     label: "处理情况记录",
-    labelWidth: 100,
+    labelWidth: 150,
     prop: "prompt_record",
     valueType: "textarea",
     fieldProps: {
@@ -324,7 +324,7 @@ const columns: PlusColumn[] = [
   },
   {
     label: "催款函件",
-    labelWidth: 100,
+    labelWidth: 150,
     prop: "prompt_files",
     valueType: "input" // 插槽会覆盖这个类型
   }

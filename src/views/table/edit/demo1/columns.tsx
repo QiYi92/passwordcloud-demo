@@ -42,27 +42,50 @@ export function useColumns() {
     return option ? option.label : "未知"; // 如果找不到对应的选项，返回"未知"
   };
 
+  //精确把元转化为万元
+  function formatToTenThousand(value: any): string {
+    // 转换为数字
+    const num = parseFloat(value);
+    if (isNaN(num)) return "未知"; // 非数字直接返回"未知"
+    // 转换为万元，使用精确的计算
+    const tenThousandValue = num / 10000;
+    // 判断是否为整数（保留实际小数位数）
+    if (Number.isInteger(tenThousandValue)) {
+      return `${tenThousandValue}万元`;
+    } else {
+      // 使用字符串精确截断方式来避免浮点数误差
+      return `${tenThousandValue.toFixed(6).replace(/\.?0+$/, "")}万元`;
+    }
+  }
+
   const columns: TableColumnList = [
     {
+      width: "60",
       label: "项目ID",
       prop: "project_id"
     },
     {
       label: "项目名称",
+      width: "300",
       prop: "project_name"
     },
     {
       label: "责任科室",
+      width: "100",
       prop: "project_room",
       formatter: row => getProjectRoomLabel(row.project_room)
     },
     {
       label: "项目立项总投资（万元）",
-      prop: "project_money"
+      width: "150",
+      prop: "project_money",
+      formatter: row => formatToTenThousand(row.project_money)
     },
     {
       label: "计划总投资（万元）",
-      prop: "project_money_plan"
+      width: "150",
+      prop: "project_money_plan",
+      formatter: row => formatToTenThousand(row.project_money_plan)
     },
     {
       label: "项目状态",
@@ -80,6 +103,7 @@ export function useColumns() {
     },
     {
       label: "项目立项完成时间",
+      width: "150",
       prop: "project_time",
       formatter: row => dayjs(row.project_time).format("YYYY年MM月DD日")
     },

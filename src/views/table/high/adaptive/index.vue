@@ -51,6 +51,25 @@ const formatDate = (dateString: string) => {
     .padStart(2, "0")}月${date.getDate().toString().padStart(2, "0")}日`;
 };
 
+// 格式化金额为万元，不四舍五入，精确到小数点后 6 位，并附加单位“万元”
+// 格式化金额为万元，仅显示实际小数位数，有小数点时才显示
+const formatToMillionYuan = (amount: string | number) => {
+  const numericAmount = parseFloat(amount as string);
+  if (isNaN(numericAmount)) {
+    return "0万元";
+  }
+  // 转换为万元
+  const wanYuanAmount = numericAmount / 10000;
+
+  // 去除多余的浮点误差，并限制实际小数点后的位数
+  const preciseAmount = Math.round(wanYuanAmount * 1000000) / 1000000;
+
+  // 如果是整数，去掉小数部分；否则显示实际小数位数
+  return preciseAmount % 1 === 0
+    ? `${preciseAmount}万元`
+    : `${preciseAmount.toString()}万元`;
+};
+
 // 获取支付情况的显示值
 const getPaymentLabel = (value: string) => {
   const option = PaymentTypeOptions.find(opt => opt.value === value);
@@ -188,14 +207,17 @@ onMounted(loadProjectData);
                 <td
                   v-if="paymentIndex === 0"
                   :rowspan="contract.payments?.length || 1"
+                  style="text-align: right"
                 >
-                  {{ contract.contract_money }}
+                  {{ formatToMillionYuan(contract.contract_money) }}
                 </td>
 
                 <!-- 支付信息 -->
                 <td>{{ getPaymentLabel(payment.pay_type) }}</td>
                 <td>{{ formatDate(payment.pay_time) }}</td>
-                <td>{{ payment.pay_money }}</td>
+                <td style="text-align: right">
+                  {{ formatToMillionYuan(payment.pay_money) }}
+                </td>
 
                 <!-- 中标单位 (仅在该合同的第一条支付信息时显示) -->
                 <td
@@ -212,14 +234,16 @@ onMounted(loadProjectData);
           <tr class="subtotal-row">
             <td colspan="3" class="subtotal">小计</td>
             <td class="subtotal-amount" style="text-align: right">
-              {{ getTotalContractAmount(project.contracts).toFixed(2) }}
+              {{
+                formatToMillionYuan(getTotalContractAmount(project.contracts))
+              }}
             </td>
             <td />
             <td class="subtotal" colspan="1" style="text-align: center">
               支付小计
             </td>
             <td class="subtotal-amount" style="text-align: right">
-              {{ getTotalPayment(project.contracts).toFixed(2) }}
+              {{ formatToMillionYuan(getTotalPayment(project.contracts)) }}
             </td>
             <td />
           </tr>
@@ -230,48 +254,76 @@ onMounted(loadProjectData);
 </template>
 
 <style scoped>
+/* 项目标题行的样式 */
 .project-header {
-  padding: 10px;
-  font-weight: bold;
-  text-align: left;
-  background-color: #f5b7b1;
+  padding: 10px; /* 内边距 */
+  font-weight: bold; /* 字体加粗 */
+  text-align: left; /* 左对齐 */
+  background-color: #f5b7b1; /* 背景颜色 */
 }
 
+/* 表头行样式 */
 .header-row {
-  font-weight: bold;
-  background-color: #fff;
+  font-weight: bold; /* 字体加粗 */
+  background-color: #fff; /* 背景颜色 */
 }
 
+/* 表格整体样式 */
 .contract-table {
-  width: 100%;
-  margin-bottom: 20px;
-  border-collapse: collapse;
+  width: 100%; /* 表格宽度占满容器 */
+  margin-bottom: 20px; /* 表格底部外边距 */
+  border-collapse: collapse; /* 去除表格内部间隙 */
 }
 
+/* 表格单元格通用样式（包括表头和内容） */
 th,
 td {
-  padding: 8px;
-  text-align: left;
-  border: 1px solid #ddd;
+  padding: 8px; /* 单元格内边距 */
+  text-align: left; /* 默认左对齐 */
+  border: 1px solid #ddd; /* 单元格边框 */
 }
 
+/* 设置特定列的最小宽度（适用于合同金额和支付金额列） */
+.contract-table th:nth-child(3),
+.contract-table td:nth-child(3) {
+  min-width: 100px; /* 设置最小宽度为 105 像素 */
+}
+
+.contract-table th:nth-child(4), /* 合同金额 */
+.contract-table td:nth-child(4) {
+  min-width: 110px; /* 设置最小宽度为 105 像素 */
+  text-align: left; /* 默认左对齐 */
+}
+
+/* 合同金额内容 */
+.contract-table th:nth-child(7), /* 支付金额 */
+.contract-table td:nth-child(7) {
+  /* 支付金额内容 */
+  min-width: 105px; /* 设置最小宽度为 105 像素 */
+  text-align: left; /* 默认左对齐 */
+}
+
+/* 合并后的项目名称单元格样式 */
 .merged-project-name {
-  font-weight: bold;
-  text-align: center;
-  vertical-align: middle;
+  font-weight: bold; /* 字体加粗 */
+  text-align: center; /* 居中对齐 */
+  vertical-align: middle; /* 垂直方向居中对齐 */
 }
 
+/* 小计行的通用样式 */
 .subtotal {
-  font-weight: bold;
-  text-align: left;
+  font-weight: bold; /* 字体加粗 */
+  text-align: left; /* 左对齐 */
 }
 
+/* 小计金额的样式 */
 .subtotal-amount {
-  font-weight: bold;
-  text-align: right;
+  font-weight: bold; /* 字体加粗 */
+  text-align: left; /* 右对齐，适用于数值型单元格 */
 }
 
+/* 小计行的背景颜色 */
 .subtotal-row {
-  background-color: #ddd;
+  background-color: #ddd; /* 背景设置为浅灰色 */
 }
 </style>
