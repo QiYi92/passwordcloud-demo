@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { list } from "@/views/meeting/meeting_management/list";
+import { list } from "@/views/meeting/meetingSplit_management/list";
 
 defineOptions({
   name: "meeting_management"

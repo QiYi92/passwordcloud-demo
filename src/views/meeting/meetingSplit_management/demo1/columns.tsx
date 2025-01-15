@@ -4,85 +4,85 @@ import type {
   PaginationProps
 } from "@pureadmin/table";
 import { ref, onMounted, reactive, watch } from "vue";
-import { delay, clone } from "@pureadmin/utils";
 import axios from "axios";
-import { message } from "@/utils/message"; // 适当调整路径
-import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
-import dayjs from "dayjs";
+import { delay, clone } from "@pureadmin/utils";
+import { message } from "@/utils/message";
+import { CustomMouseMenu } from "@howdyjs/mouse-menu";
 import {
-  FilesTypeOptions,
-  OnsiteTypeOptions
-} from "@/views/onsite/onsite_management/data";
-import { FundsTypeOptions } from "@/views/table/edit4/data"; // 引入 FilesTypeOptions
+  MeetingProgressOptions,
+  MeetingTypeOptions
+} from "@/views/meeting/meetingSplit_management/data";
+import dayjs from "dayjs";
+import { RegionOptions } from "@/views/energy/energy_management/data";
 
 export function useColumns() {
   const dataList = ref([]);
   const loading = ref(true);
-  const searchField = ref("personnel_id");
+  const searchField = ref("split_id");
   const searchQuery = ref("");
   const editRowData = ref(null);
-  const deleteOnsiteId = ref(null);
+  const deleteMeetingId = ref(null);
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
-  // 创建一个帮助函数来将【资金类型】的值转换为对应的标签
-  const getOnsiteTypeLabel = value => {
-    const TypeOption = OnsiteTypeOptions.find(opt => opt.value === value);
-    return TypeOption ? TypeOption.label : "未知"; // 如果找不到对应的选项，返回"未知"
+  // 🌟 格式化函数：将 meeting_progress 的 value 转换为 label
+  const getMeetingProgressLabel = value => {
+    const MeetingProgress = MeetingProgressOptions.find(
+      opt => opt.value === value
+    );
+    return MeetingProgress ? MeetingProgress.label : "未知进展"; // 如果找不到对应的选项，返回"未知"
+  };
+
+  // 🌟 格式化函数：将 meeting_type 的 value 转换为 label
+  const getMeetingTypeLabel = value => {
+    const MeetingType = MeetingTypeOptions.find(opt => opt.value === value);
+    return MeetingType ? MeetingType.label : "未知类型"; // 如果找不到对应的选项，返回"未知"
   };
 
   const columns: TableColumnList = [
     {
-      label: "驻场人员ID",
-      prop: "personnel_id"
+      label: "拆分ID",
+      prop: "split_id",
+      width: 100
     },
     {
-      label: "姓名",
-      prop: "name"
-    },
-    {
-      label: "公司",
-      prop: "company"
+      label: "选择会议纪要清单",
+      prop: "meeting_name",
+      width: 150
     },
     {
       label: "类型",
-      prop: "type",
-      formatter: row => getOnsiteTypeLabel(row.type)
+      prop: "meeting_type",
+      width: 120,
+      formatter: row => getMeetingTypeLabel(row.meeting_type) // 🌟 添加格式化逻辑，显示类型标签
     },
     {
-      label: "联系方式",
-      prop: "contact_info"
+      label: "内容",
+      prop: "meeting_content",
+      width: 300,
+      align: "left"
     },
     {
-      label: "驻场项目",
-      prop: "onSite_project"
+      label: "责任科室或人员",
+      prop: "department_personnel",
+      width: 150
     },
     {
-      label: "实施项目业务",
-      prop: "onSite_work"
+      label: "完成时限",
+      prop: "time_limit",
+      width: 150,
+      formatter: row => dayjs(row.time_limit).format("YYYY年MM月DD日")
     },
     {
-      label: "办公室位置",
-      prop: "location"
-    },
-    {
-      label: "驻场时间",
-      prop: "onSite_time",
-      formatter: row => row.onSite_time
+      label: "当前进展",
+      prop: "progress",
+      width: 150,
+      formatter: row => getMeetingProgressLabel(row.progress) // 🌟 添加格式化逻辑，显示进展标签
     },
     {
       label: "备注",
-      prop: "remarks"
-    },
-    {
-      label: "相关函件",
-      prop: "related_files",
-      formatter: row => {
-        return row.related_files === 0 || row.related_files === "0"
-          ? FilesTypeOptions.find(option => option.value === "0")?.label ||
-              "无附件"
-          : row.related_files;
-      }
+      prop: "remarks",
+      width: 200
     },
     {
       label: "操作",
@@ -92,6 +92,7 @@ export function useColumns() {
     }
   ];
 
+  /** 分页配置 */
   const pagination = reactive<PaginationProps>({
     pageSize: 20,
     currentPage: 1,
@@ -102,10 +103,11 @@ export function useColumns() {
     small: false
   });
 
+  /** 右键菜单配置 */
   const menuOptions = {
     menuList: [
       {
-        label: ({ personnel_id }) => `人员ID为：${personnel_id}`,
+        label: ({ split_id }) => `拆分ID为：${split_id}`,
         disabled: true
       },
       {
@@ -120,28 +122,30 @@ export function useColumns() {
         label: "删除",
         tips: "Delete",
         fn: row => {
-          deleteOnsiteId.value = row.personnel_id;
+          deleteMeetingId.value = row.split_id;
           deleteDialogVisible.value = true;
         }
       }
     ]
   };
 
+  /** 加载动画配置 */
   const loadingConfig = reactive<LoadingConfig>({
     text: "正在加载第一页...",
     viewBox: "-10, -10, 50, 50",
     spinner: `
-        <path class="path" d="
-          M 30 15
-          L 28 17
-          M 25.61 25.61
-          A 15 15, 0, 0, 1, 15 30
-          A 15 15, 0, 1, 1, 27.99 7.5
-          L 15 15
-        " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
-      `
+      <path class="path" d="
+        M 30 15
+        L 28 17
+        M 25.61 25.61
+        A 15 15, 0, 0, 1, 15 30
+        A 15 15, 0, 1, 1, 27.99 7.5
+        L 15 15
+      " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
+    `
   });
 
+  /** 自适应配置 */
   const adaptiveConfig: AdaptiveConfig = {
     offsetBottom: 110
   };
@@ -176,17 +180,18 @@ export function useColumns() {
     });
   }
 
+  /** 获取数据 */
   async function fetchData() {
     console.log("开始获取数据...");
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/onsite" // 修改为 onsite 的 API 路径
+        import.meta.env.VITE_APP_SERVER + "/api/meeting-split"
       );
-      console.log("数据成功获取:", response.data);
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.personnel_id || index // 🌟 保留原始数据，type 不进行格式化
+        id: item.split_id || index
+        // 🌟 不再格式化 progress 和 meeting_type，保留原始 value 值
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -197,11 +202,12 @@ export function useColumns() {
     }
   }
 
+  /** 搜索功能 */
   const selectData = async () => {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/onsite" // 修改为 onsite 的 API 路径
+        import.meta.env.VITE_APP_SERVER + "/api/meeting-split"
       );
       dataList.value = clone(response.data, true).filter(item =>
         (item[searchField.value] || "")
@@ -211,12 +217,13 @@ export function useColumns() {
       );
       pagination.total = dataList.value.length;
     } catch (error) {
-      console.error("选择数据失败:", error);
+      console.error("Failed to select data:", error);
     } finally {
       loading.value = false;
     }
   };
 
+  // 监听搜索字段和查询字符串的变化
   watch([searchField, searchQuery], selectData, { deep: true });
 
   onMounted(async () => {
@@ -240,7 +247,7 @@ export function useColumns() {
     showMouseMenu,
     editDialogVisible,
     editRowData,
-    deleteOnsiteId,
+    deleteMeetingId,
     deleteDialogVisible,
     fetchData
   };

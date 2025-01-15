@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useColumns } from "./columns";
-import EditDialog from "@/views/meeting/meeting_management/demo1/EditDialog.vue";
-import DeleteDialog from "@/views/meeting/meeting_management/demo1/DeleteDialog.vue";
-import NewDialog from "@/views/meeting/meeting_management/demo1/NewDialog.vue";
-import ShowDialog from "@/views/meeting/meeting_management/demo1/ShowDialog.vue";
+import EditDialog from "@/views/meeting/meetingSplit_management/demo1/EditDialog.vue";
+import DeleteDialog from "@/views/meeting/meetingSplit_management/demo1/DeleteDialog.vue";
+import NewDialog from "@/views/meeting/meetingSplit_management/demo1/NewDialog.vue";
+import ShowDialog from "@/views/meeting/meetingSplit_management/demo1/ShowDialog.vue";
 
 const tableRef = ref();
-const selectedRow = ref(null); // 存储选中的行数据
+const selectedRow = ref(null);
 const deleteMeetingId = ref(null);
 const deleteDialogVisible = ref(false);
 const editDialogVisible = ref(false);
@@ -15,25 +15,21 @@ const editRowData = ref(null);
 const showDialogVisible = ref(false);
 const previewData = ref(null);
 
-// 删除对话框
 const handleDelete = row => {
-  deleteMeetingId.value = row.meeting_id; // 使用 `meeting_id`
+  deleteMeetingId.value = row.split_id;
   deleteDialogVisible.value = true;
 };
 
-// 编辑对话框
 const handleEdit = row => {
-  editRowData.value = row; // 设置当前编辑的行数据
+  editRowData.value = row;
   editDialogVisible.value = true;
 };
 
-// 预览对话框
 const handlePreview = row => {
-  previewData.value = row; // 将选中的行数据传递给预览对话框
+  previewData.value = row;
   showDialogVisible.value = true;
 };
 
-// 从 useColumns 中解构需要的响应式变量和方法
 const {
   loading,
   columns,
@@ -52,20 +48,17 @@ const {
 
 <template>
   <div>
-    <!-- 搜索控件区域 -->
     <div class="search-controls mb-4">
       <el-select
         v-model="searchField"
         placeholder="选择搜索字段"
         style="width: 200px; margin-right: 10px"
       >
-        <el-option label="会议ID" value="meeting_id" />
-        <el-option label="会议名称" value="meeting_name" />
-        <el-option label="会议正文" value="meeting_body" />
-        <el-option label="会议时间" value="meeting_date" />
-        <el-option label="会议地点" value="meeting_location" />
-        <el-option label="摘要" value="summary" />
-        <el-option label="正文附件" value="meeting_files" />
+        <el-option label="拆分ID" value="split_id" />
+        <el-option label="选择会议纪要清单" value="meeting_name" />
+        <el-option label="类型" value="meeting_type" />
+        <el-option label="内容" value="meeting_content" />
+        <el-option label="责任科室或人员" value="department_personnel" />
       </el-select>
       <el-input
         v-model="searchQuery"
@@ -75,14 +68,13 @@ const {
       <NewDialog @data-updated="fetchData" />
     </div>
 
-    <!-- 表格容器 -->
     <div style="overflow-x: auto">
       <pure-table
         ref="tableRef"
         border
         adaptive
         :adaptiveConfig="adaptiveConfig"
-        row-key="meeting_id"
+        row-key="split_id"
         alignWhole="center"
         showOverflowTooltip
         :loading="loading"
@@ -100,48 +92,36 @@ const {
         @page-current-change="onCurrentChange"
         @row-contextmenu="showMouseMenu"
       >
-        <!-- 定义操作列的内容 -->
         <template #operation="{ row }">
           <el-button
             link
             type="primary"
             size="small"
             @click="handlePreview(row)"
+            >预览</el-button
           >
-            预览
-          </el-button>
-          <el-button link type="primary" size="small" @click="handleEdit(row)">
-            修改
-          </el-button>
-          <el-button
-            link
-            type="primary"
-            size="small"
-            @click="handleDelete(row)"
+          <el-button link type="primary" size="small" @click="handleEdit(row)"
+            >修改</el-button
           >
-            删除
-          </el-button>
+          <el-button link type="primary" size="small" @click="handleDelete(row)"
+            >删除</el-button
+          >
         </template>
       </pure-table>
     </div>
 
-    <!-- 编辑对话框 -->
     <EditDialog
       :visible="editDialogVisible"
       :initialData="editRowData"
       @update:visible="editDialogVisible = $event"
       @data-updated="fetchData"
     />
-
-    <!-- 删除对话框 -->
     <DeleteDialog
       :visible="deleteDialogVisible"
-      :meetingId="deleteMeetingId"
+      :splitId="deleteMeetingId"
       @update:visible="deleteDialogVisible = $event"
       @deleted="fetchData"
     />
-
-    <!-- 预览对话框 -->
     <ShowDialog
       :visible="showDialogVisible"
       :data="previewData"
@@ -149,10 +129,3 @@ const {
     />
   </div>
 </template>
-
-<style scoped>
-.search-controls {
-  display: flex;
-  align-items: center;
-}
-</style>

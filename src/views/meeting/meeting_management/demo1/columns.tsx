@@ -35,7 +35,8 @@ export function useColumns() {
     {
       label: "会议正文",
       prop: "meeting_body",
-      width: 300
+      width: 300,
+      align: "left"
     },
     {
       label: "会议时间",
@@ -46,6 +47,16 @@ export function useColumns() {
     {
       label: "摘要",
       prop: "summary"
+    },
+    {
+      label: "正文附件",
+      prop: "meeting_files",
+      formatter: row => {
+        // 映射数字类型的 0 为 "无附件"
+        return row.meeting_files === 0 || row.meeting_files === "0"
+          ? "无附件"
+          : row.meeting_files;
+      }
     },
     {
       label: "操作",
