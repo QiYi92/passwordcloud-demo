@@ -140,6 +140,11 @@ const columns: PlusColumn[] = [
         label: "混合办公类",
         value: "2",
         color: "blue"
+      },
+      {
+        label: "借用办公场地类",
+        value: "3",
+        color: "blue"
       }
     ]
   },

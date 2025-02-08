@@ -17,6 +17,9 @@ import {
 } from "plus-pro-components";
 import dayjs from "dayjs";
 
+// 引入资金类型选项，用于反向转换
+import { FundsTypeOptions } from "@/views/table/edit4/data";
+
 // 响应式变量，存储项目名称选项
 const projectOptions = ref([]);
 
@@ -49,11 +52,22 @@ const emit = defineEmits(["update:visible", "data-updated"]);
 // 本地表单值的响应式状态
 const values = ref<FieldValues>({});
 const localVisible = ref(false);
-// 监视props.visible变化来更新本地显示状态
+
+// 反向转换函数：将资金类型的 label 转换为对应的 value
+const reverseConvertMoneyType = (label: string): string => {
+  const option = FundsTypeOptions.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
+// 监视 props.visible 变化来更新本地显示状态和表单数据
 watchEffect(() => {
   localVisible.value = props.visible;
   if (props.initialData) {
-    values.value = { ...props.initialData };
+    const initialData = { ...props.initialData };
+    if (initialData.money_type) {
+      initialData.money_type = reverseConvertMoneyType(initialData.money_type);
+    }
+    values.value = initialData;
   }
 });
 // 提交表单的事件处理函数
@@ -62,22 +76,21 @@ const handleSubmit = async () => {
     console.error("No pass ID provided for updating.");
     return;
   }
-  // 格式化日期
-  // 确保 pass_time 被正确格式化之前发送给后端
+  // 格式化日期，确保 pass_time 被正确格式化后再发送给后端
   if (values.value.pass_time) {
     values.value.pass_time = dayjs(values.value.pass_time as string).format(
       "YYYY-MM-DD"
-    ); //报错但是正常运行
+    );
     console.log("Formatted pass_time:", values.value.pass_time);
   }
   try {
     const response = await axios.put(
-      import.meta.env.VITE_APP_SERVER + `/api/passes/${values.value.pass_id}`, // 修改为 passes 的 API 路径
+      import.meta.env.VITE_APP_SERVER + `/api/passes/${values.value.pass_id}`,
       values.value
     );
     console.log(response.data);
     emit("update:visible", false);
-    emit("data-updated"); // 新增事件，通知数据已更新
+    emit("data-updated");
     alert("资金下达更新成功！");
   } catch (error) {
     console.error("Failed to update pass:", error);
@@ -100,7 +113,7 @@ const columns: PlusColumn[] = [
     labelWidth: 100,
     prop: "project_name",
     valueType: "select",
-    options: computedProjectOptions // 动态绑定选项
+    options: computedProjectOptions
   },
   {
     label: "资金类型",

@@ -12,6 +12,16 @@ export default [
     }
   },
   {
+    path: "/sms-login",
+    name: "smsLogin",
+    component: () => import("@/views/login/smsLogin.vue"),
+    meta: {
+      title: "短信验证登录",
+      showLink: false,
+      rank: 102
+    }
+  },
+  {
     path: "/redirect",
     component: Layout,
     meta: {

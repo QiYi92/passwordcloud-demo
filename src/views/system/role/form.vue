@@ -9,6 +9,7 @@ const props = withDefaults(defineProps<FormProps>(), {
     username: "",
     code: "",
     password: "", // 添加密码字段
+    phone_number: "", // 添加电话号码字段
     confirmPassword: "", // 添加确认密码字段
     remark: ""
   })
@@ -77,6 +78,13 @@ defineExpose({ getRef, validatePassword }); // 暴露方法供外部调用
         <el-option label="admin" value="admin" />
         <el-option label="common" value="common" />
       </el-select>
+    </el-form-item>
+
+    <el-form-item label="电话号码" prop="phone_number">
+      <el-input
+        v-model="formInline.phone_number"
+        placeholder="请输入电话号码"
+      />
     </el-form-item>
 
     <el-form-item label="密码" prop="password">

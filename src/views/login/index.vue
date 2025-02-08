@@ -136,6 +136,12 @@ onBeforeUnmount(() => {
   // 组件卸载前
   window.document.removeEventListener("keypress", onkeypress); // 移除键盘事件监听
 });
+
+// 跳转到短信验证登录页面
+const goToSmsLogin = () => {
+  console.log("Navigating to SMS login...");
+  router.push("/sms-login"); // 使用 path 进行跳转
+};
 </script>
 
 <template>
@@ -249,6 +255,13 @@ onBeforeUnmount(() => {
               </el-button>
             </Motion>
           </el-form>
+
+          <!-- 短信验证登录按钮 -->
+          <Motion :delay="300">
+            <el-button class="w-full mt-4" type="text" @click="goToSmsLogin">
+              短信验证登录
+            </el-button>
+          </Motion>
         </div>
       </div>
     </div>

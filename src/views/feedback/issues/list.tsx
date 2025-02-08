@@ -28,6 +28,6 @@ export const list = [
     key: "fixColumnHeader",
     content: rendContent("fixColumn"),
     title: "问题反馈表",
-    component: () => <FixColumn height={"360"} />
+    component: FixColumn
   }
 ];

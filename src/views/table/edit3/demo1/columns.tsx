@@ -13,8 +13,8 @@ import {
 } from "@/views/table/edit3/data";
 
 import { message } from "@/utils/message"; // 适当调整路径
-import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
-import dayjs from "dayjs";
+import { CustomMouseMenu } from "@howdyjs/mouse-menu";
+import dayjs from "dayjs"; // 添加新依赖
 
 export function useColumns() {
   const dataList = ref([]);
@@ -26,54 +26,33 @@ export function useColumns() {
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
-  // 创建一个帮助函数来将【支付类型】的值转换为对应的标签
+  // 获取支付类型的 label
   const getPaymentTypeLabel = value => {
-    const StateOption = PaymentTypeOptions.find(opt => opt.value === value);
-    return StateOption ? StateOption.label : "未知"; // 如果找不到对应的选项，返回"未知"
-  };
-  // 创建一个帮助函数来将【支付状态】的值转换为对应的标签
-  const getPaymentStateLabel = value => {
-    const TypeOption = PaymentStateOptions.find(opt => opt.value === value);
-    return TypeOption ? TypeOption.label : "未知";
+    const option = PaymentTypeOptions.find(opt => opt.value === value);
+    return option ? option.label : "未知";
   };
 
-  //精确把元转化为万元
+  // 获取支付状态的 label
+  const getPaymentStateLabel = value => {
+    const option = PaymentStateOptions.find(opt => opt.value === value);
+    return option ? option.label : "未知";
+  };
+
+  // 精确把元转化为万元
   function formatToTenThousand(value: any): string {
-    // 转换为数字
     const num = parseFloat(value);
-    if (isNaN(num)) return "未知"; // 非数字直接返回"未知"
-    // 转换为万元，使用精确的计算
+    if (isNaN(num)) return "未知";
     const tenThousandValue = num / 10000;
-    // 判断是否为整数（保留实际小数位数）
-    if (Number.isInteger(tenThousandValue)) {
-      return `${tenThousandValue}万元`;
-    } else {
-      // 使用字符串精确截断方式来避免浮点数误差
-      return `${tenThousandValue.toFixed(6).replace(/\.?0+$/, "")}万元`;
-    }
+    return Number.isInteger(tenThousandValue)
+      ? `${tenThousandValue}万元`
+      : `${tenThousandValue.toFixed(6).replace(/\.?0+$/, "")}万元`;
   }
 
   const columns: TableColumnList = [
-    {
-      label: "支付项ID",
-      prop: "pay_id"
-    },
-    {
-      label: "关联项目名称",
-      width: "240",
-      prop: "project_name"
-    },
-    {
-      label: "关联合同名称",
-      width: "240",
-      prop: "contract_name"
-    },
-    {
-      label: "支付情况",
-      width: "150",
-      prop: "pay_type",
-      formatter: row => getPaymentTypeLabel(row.pay_type)
-    },
+    { label: "支付项ID", prop: "pay_id" },
+    { label: "关联项目名称", width: "240", prop: "project_name" },
+    { label: "关联合同名称", width: "240", prop: "contract_name" },
+    { label: "支付情况", width: "150", prop: "pay_type" },
     {
       label: "支付金额（万元）",
       width: "150",
@@ -86,21 +65,9 @@ export function useColumns() {
       prop: "pay_time",
       formatter: row => dayjs(row.pay_time).format("YYYY年MM月DD日")
     },
-    {
-      label: "支付状态",
-      prop: "pay_state",
-      formatter: row => getPaymentStateLabel(row.pay_state)
-    },
-    {
-      label: "支付备注",
-      prop: "pay_remark"
-    },
-    {
-      label: "操作",
-      width: "150",
-      fixed: "right",
-      slot: "operation" // 指定操作列的插槽
-    }
+    { label: "支付状态", prop: "pay_state" },
+    { label: "支付备注", prop: "pay_remark" },
+    { label: "操作", width: "150", fixed: "right", slot: "operation" }
   ];
 
   /** 分页配置 */
@@ -113,19 +80,20 @@ export function useColumns() {
     background: true,
     small: false
   });
-  /** 右键编辑菜单配置*/
+
+  /** 右键编辑菜单配置 */
   const menuOptions = {
     menuList: [
       {
-        label: ({ pay_id }) => `项目ID为：${pay_id}`,
+        label: ({ pay_id }) => `支付项ID为：${pay_id}`,
         disabled: true
       },
       {
         label: "修改",
         tips: "Edit",
         fn: async row => {
-          editRowData.value = row; // 设置当前行数据
-          editDialogVisible.value = true; // 打开编辑对话框
+          editRowData.value = row;
+          editDialogVisible.value = true;
         }
       },
       {
@@ -153,21 +121,10 @@ export function useColumns() {
           L 15 15
         " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
       `
-    // svg: "",
-    // background: rgba()
   });
 
   /** 撑满内容区自适应高度相关配置 */
-  const adaptiveConfig: AdaptiveConfig = {
-    /** 表格距离页面底部的偏移量，默认值为 `96` */
-    offsetBottom: 110
-    /** 是否固定表头，默认值为 `true`（如果不想固定表头，fixHeader设置为false并且表格要设置table-layout="auto"） */
-    // fixHeader: true
-    /** 页面 `resize` 时的防抖时间，默认值为 `60` ms */
-    // timeout: 60
-    /** 表头的 `z-index`，默认值为 `100` */
-    // zIndex: 100
-  };
+  const adaptiveConfig: AdaptiveConfig = { offsetBottom: 110 };
 
   function showMouseMenu(row, column, event) {
     event.preventDefault();
@@ -175,9 +132,7 @@ export function useColumns() {
     CustomMouseMenu({
       el: event.currentTarget,
       params: row,
-      menuWrapperCss: {
-        background: "var(--el-bg-color)"
-      },
+      menuWrapperCss: { background: "var(--el-bg-color)" },
       menuItemCss: {
         labelColor: "var(--el-text-color)",
         hoverLabelColor: "var(--el-color-primary)",
@@ -199,54 +154,73 @@ export function useColumns() {
     });
   }
 
-  // 定义一个函数用于重新获取数据
+  /** 获取数据并转换 `value` 为 `label` */
   async function fetchData() {
-    console.log("开始获取数据..."); // 日志输出，表示开始数据获取
     loading.value = true;
     try {
       const response = await axios.get(
         import.meta.env.VITE_APP_SERVER + "/api/payments"
       );
-      console.log("数据成功获取:", response.data); // 日志输出获取到的数据
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.pay_id || index // 使用 pay_id 或索引作为唯一ID
+        id: item.pay_id || index,
+        pay_type: getPaymentTypeLabel(item.pay_type), // 转换 value 为 label
+        pay_state: getPaymentStateLabel(item.pay_state)
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
-      console.error("获取数据时发生错误:", error); // 日志输出错误信息
+      console.error("获取数据时发生错误:", error);
     } finally {
       loading.value = false;
-      console.log("数据获取完成。"); // 日志输出，表示数据获取流程结束
     }
   }
-  // 搜索数据的函数
+
+  /** 仅支持 label 搜索 */
   const selectData = async () => {
     loading.value = true;
     try {
       const response = await axios.get(
         import.meta.env.VITE_APP_SERVER + "/api/payments"
       );
-      dataList.value = clone(response.data, true).filter(item =>
-        (item[searchField.value] || "")
-          .toString()
-          .toLowerCase()
-          .includes(searchQuery.value.toLowerCase())
-      );
+
+      dataList.value = clone(response.data, true)
+        .filter(item => {
+          if (searchField.value === "pay_type") {
+            return getPaymentTypeLabel(item.pay_type).includes(
+              searchQuery.value
+            );
+          }
+          if (searchField.value === "pay_state") {
+            return getPaymentStateLabel(item.pay_state).includes(
+              searchQuery.value
+            );
+          }
+          return (item[searchField.value] || "")
+            .toString()
+            .includes(searchQuery.value);
+        })
+        .map(item => ({
+          ...item,
+          pay_type: getPaymentTypeLabel(item.pay_type),
+          pay_state: getPaymentStateLabel(item.pay_state)
+        }));
+
       pagination.total = dataList.value.length;
     } catch (error) {
-      console.error("Failed to select data:", error);
+      console.error("搜索数据失败:", error);
     } finally {
       loading.value = false;
     }
   };
+
   // 监听搜索字段和查询字符串的变化
   watch([searchField, searchQuery], selectData, { deep: true });
+
   // 组件挂载时执行
   onMounted(async () => {
     await fetchData();
     if (searchField.value && searchQuery.value) {
-      await selectData(); // 只有当搜索字段和查询字符串都已设置时才执行
+      await selectData();
     }
   });
 

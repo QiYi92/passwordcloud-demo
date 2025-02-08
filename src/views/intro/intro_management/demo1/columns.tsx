@@ -10,7 +10,10 @@ import axios from "axios";
 import { message } from "@/utils/message"; // 调整路径
 import { CustomMouseMenu } from "@howdyjs/mouse-menu";
 import dayjs from "dayjs";
-import { ProjectRoomOptions } from "@/views/intro/intro_management/data"; // 日期格式化工具
+import {
+  ProjectRoomOptions,
+  IntroTypeOptions
+} from "@/views/intro/intro_management/data"; // 日期格式化工具
 
 export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
   const dataList = ref([]);
@@ -22,50 +25,32 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
-  // 创建一个帮助函数来将【责任科室】的值转换为对应的标签
+  // 获取责任科室的 label
   const getProjectRoomLabel = value => {
-    const TypeOption = ProjectRoomOptions.find(opt => opt.value === value);
-    return TypeOption ? TypeOption.label : "未知"; // 如果找不到对应的选项，返回"未知"
+    const option = ProjectRoomOptions.find(opt => opt.value === value);
+    return option ? option.label : "未知";
+  };
+
+  // 获取情况类型的 label
+  const getIntroTypeLabel = value => {
+    const option = IntroTypeOptions.find(opt => opt.value === value);
+    return option ? option.label : "未知";
   };
 
   const columns: TableColumnList = [
-    {
-      label: "简介ID",
-      prop: "intro_id",
-      width: 70
-    },
-    {
-      label: "简介名称",
-      prop: "intro_name",
-      width: 200
-    },
-    {
-      label: "责任科室",
-      prop: "intro_department",
-      width: 150
-    },
+    { label: "简介ID", prop: "intro_id", width: 70 },
+    { label: "简介名称", prop: "intro_name", width: 200 },
+    { label: "责任科室", prop: "intro_department", width: 150 },
+    { label: "情况类型", prop: "intro_type", width: 150 },
     {
       label: "更新时间",
       prop: "update_time",
       width: 150,
       formatter: row => dayjs(row.update_time).format("YYYY年MM月DD日")
     },
-    {
-      label: "简介内容",
-      prop: "intro_content",
-      width: 300
-    },
-    {
-      label: "更新周期",
-      prop: "update_cycle",
-      width: 150
-    },
-    {
-      label: "操作",
-      width: 150,
-      fixed: "right",
-      slot: "operation"
-    }
+    { label: "简介内容", prop: "intro_content", width: 300 },
+    { label: "更新周期", prop: "update_cycle", width: 150 },
+    { label: "操作", width: 150, fixed: "right", slot: "operation" }
   ];
 
   /** 分页配置 */
@@ -122,9 +107,7 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
   });
 
   /** 撑满内容区自适应高度相关配置 */
-  const adaptiveConfig: AdaptiveConfig = {
-    offsetBottom: 110
-  };
+  const adaptiveConfig: AdaptiveConfig = { offsetBottom: 110 };
 
   function showMouseMenu(row, column, event) {
     event.preventDefault();
@@ -132,9 +115,7 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
     CustomMouseMenu({
       el: event.currentTarget,
       params: row,
-      menuWrapperCss: {
-        background: "var(--el-bg-color)"
-      },
+      menuWrapperCss: { background: "var(--el-bg-color)" },
       menuItemCss: {
         labelColor: "var(--el-text-color)",
         hoverLabelColor: "var(--el-color-primary)",
@@ -156,19 +137,18 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
     });
   }
 
-  // 重新获取数据
+  /** 获取数据并转换 `value` 为 `label` */
   async function fetchData() {
-    console.log("开始获取数据...");
     loading.value = true;
     try {
       const response = await axios.get(
         import.meta.env.VITE_APP_SERVER + "/api/intro"
       );
-      console.log("数据成功获取:", response.data);
       dataList.value = response.data.map((item, index) => ({
         ...item,
         id: item.intro_id || index,
-        intro_department: getProjectRoomLabel(item.intro_department)
+        intro_department: getProjectRoomLabel(item.intro_department),
+        intro_type: getIntroTypeLabel(item.intro_type)
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -178,19 +158,36 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
     }
   }
 
-  // 搜索数据的函数
+  /** 仅支持 label 搜索 */
   const selectData = async () => {
     loading.value = true;
     try {
       const response = await axios.get(
         import.meta.env.VITE_APP_SERVER + "/api/intro"
       );
-      dataList.value = clone(response.data, true).filter(item =>
-        (item[searchField.value] || "")
-          .toString()
-          .toLowerCase()
-          .includes(searchQuery.value.toLowerCase())
-      );
+
+      dataList.value = clone(response.data, true)
+        .filter(item => {
+          if (searchField.value === "intro_department") {
+            return getProjectRoomLabel(item.intro_department).includes(
+              searchQuery.value
+            );
+          }
+          if (searchField.value === "intro_type") {
+            return getIntroTypeLabel(item.intro_type).includes(
+              searchQuery.value
+            );
+          }
+          return (item[searchField.value] || "")
+            .toString()
+            .includes(searchQuery.value);
+        })
+        .map(item => ({
+          ...item,
+          intro_department: getProjectRoomLabel(item.intro_department),
+          intro_type: getIntroTypeLabel(item.intro_type)
+        }));
+
       pagination.total = dataList.value.length;
     } catch (error) {
       console.error("搜索数据失败:", error);

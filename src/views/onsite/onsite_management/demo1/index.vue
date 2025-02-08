@@ -1,11 +1,12 @@
 <!-- onsite/index.vue -->
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useColumns } from "./columns";
 import EditDialog from "@/views/onsite/onsite_management/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/onsite/onsite_management/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/onsite/onsite_management/demo1/NewDialog.vue";
 import ShowDialog from "@/views/onsite/onsite_management/demo1/ShowDialog.vue";
+import axios from "axios";
 
 // 从 useColumns 中解构需要的响应式变量和方法
 const {
@@ -30,6 +31,56 @@ const {
 // 预览弹窗相关的响应式变量
 const showDialogVisible = ref(false);
 const selectedRowData = ref({});
+
+// 动态更新时间
+const lastUpdateTime = ref("");
+
+// 格式化时间
+const formatTime = timestamp => {
+  if (!timestamp) return "暂无更新时间"; // 如果时间戳无效，返回占位文本
+  const date = new Date(timestamp); // 解析 ISO 格式时间
+  if (isNaN(date.getTime())) return "暂无更新时间"; // 检查解析是否成功
+
+  const dayNames = [
+    "星期日",
+    "星期一",
+    "星期二",
+    "星期三",
+    "星期四",
+    "星期五",
+    "星期六"
+  ];
+  return `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日 ${
+    dayNames[date.getDay()]
+  } ${date.getHours().toString().padStart(2, "0")}:${date
+    .getMinutes()
+    .toString()
+    .padStart(2, "0")}`;
+};
+
+// 获取全表最后更新时间
+const fetchLastUpdateTime = async () => {
+  try {
+    const url = `${import.meta.env.VITE_APP_SERVER}/api/onsite/last-update`;
+    console.log("请求 URL:", url); // 打印完整的请求路径
+    const response = await axios.get(url);
+    lastUpdateTime.value = formatTime(response.data.lastUpdateTime);
+  } catch (error) {
+    console.error("获取最后更新时间失败：", error);
+  }
+};
+
+// 数据更新事件
+const handleDataUpdated = async () => {
+  await fetchData(); // 刷新表格数据
+  await fetchLastUpdateTime(); // 获取最新更新时间
+};
+
+// 页面加载时获取数据和更新时间
+onMounted(async () => {
+  await fetchData(); // 获取表格数据
+  await fetchLastUpdateTime(); // 获取全表最后更新时间
+});
 
 // 修改弹窗
 const handleEdit = row => {
@@ -64,7 +115,6 @@ const handlePreview = row => {
         <el-option label="公司" value="company" />
         <el-option label="类型" value="type" />
         <el-option label="联系方式" value="contact_info" />
-        <el-option label="驻场事由" value="onSite_reason" />
         <el-option label="备注" value="remarks" />
         <el-option label="驻场时间" value="onSite_time" />
       </el-select>
@@ -73,7 +123,10 @@ const handlePreview = row => {
         placeholder="输入搜索内容"
         style="width: 300px; margin-right: 10px"
       />
-      <NewDialog @data-updated="fetchData" />
+      <NewDialog @data-updated="handleDataUpdated" />
+      <span style="margin-left: 20px; color: gray">
+        最后更新时间：{{ lastUpdateTime }}
+      </span>
     </div>
 
     <div style="overflow-x: auto">
@@ -131,7 +184,7 @@ const handlePreview = row => {
       :initialData="editRowData"
       editingField="related_files"
       @update:visible="editDialogVisible = $event"
-      @data-updated="fetchData"
+      @data-updated="handleDataUpdated"
     />
 
     <!-- 预览对话框 -->
@@ -146,7 +199,7 @@ const handlePreview = row => {
       :visible="deleteDialogVisible"
       :personnelId="deleteOnsiteId"
       @update:visible="deleteDialogVisible = $event"
-      @deleted="fetchData"
+      @deleted="handleDataUpdated"
     />
   </div>
 </template>

@@ -40,6 +40,7 @@ import {
   type FieldValues,
   PlusDialogForm
 } from "plus-pro-components";
+import { OnsiteTypeOptions } from "@/views/onsite/onsite_management/data";
 
 const props = defineProps({
   initialData: Object,
@@ -79,11 +80,21 @@ const loadUploadedFiles = async () => {
   }
 };
 
+const reverseConvertType = (label: string): string => {
+  const option = OnsiteTypeOptions.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
 onMounted(() => {
   localVisible.value = props.visible;
   if (props.visible) {
     loadUploadedFiles();
-    values.value = { ...props.initialData };
+    const initialData = { ...props.initialData };
+    if (initialData.type) {
+      // 如果 type 字段是 label，则转换成对应的 value
+      initialData.type = reverseConvertType(initialData.type);
+    }
+    values.value = initialData;
   }
 });
 
@@ -91,10 +102,13 @@ watchEffect(() => {
   localVisible.value = props.visible;
   if (props.visible) {
     loadUploadedFiles();
-    values.value = { ...props.initialData };
+    const initialData = { ...props.initialData };
+    if (initialData.type) {
+      initialData.type = reverseConvertType(initialData.type);
+    }
+    values.value = initialData;
   }
 });
-
 const beforeUpload = file => {
   const allowedTypes = [
     "application/msword",
@@ -220,6 +234,11 @@ const columns: PlusColumn[] = [
       {
         label: "混合办公类",
         value: "2",
+        color: "blue"
+      },
+      {
+        label: "借用办公场地类",
+        value: "3",
         color: "blue"
       }
     ]

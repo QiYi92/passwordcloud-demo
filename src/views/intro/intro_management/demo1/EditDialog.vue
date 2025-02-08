@@ -9,6 +9,12 @@ import {
 } from "plus-pro-components";
 import dayjs from "dayjs";
 
+// 引入对应的选项数据
+import {
+  ProjectRoomOptions,
+  IntroTypeOptions
+} from "@/views/intro/intro_management/data";
+
 // 列的定义
 const columns: PlusColumn[] = [
   {
@@ -58,6 +64,40 @@ const columns: PlusColumn[] = [
     ]
   },
   {
+    label: "情况类型",
+    labelWidth: 150,
+    width: 120,
+    prop: "intro_type",
+    valueType: "select",
+    options: [
+      {
+        label: "项目类",
+        value: "0",
+        color: "blue"
+      },
+      {
+        label: "日常工作",
+        value: "1",
+        color: "blue"
+      },
+      {
+        label: "相关单位",
+        value: "2",
+        color: "blue"
+      },
+      {
+        label: "自治区或其他城市情况",
+        value: "3",
+        color: "blue"
+      },
+      {
+        label: "其他",
+        value: "4",
+        color: "blue"
+      }
+    ]
+  },
+  {
     label: "更新时间",
     labelWidth: 150,
     prop: "update_time",
@@ -99,10 +139,30 @@ const emit = defineEmits(["update:visible", "data-updated"]);
 const values = ref<FieldValues>({});
 const localVisible = ref(false);
 
+// 反向转换函数：将责任科室的 label 转换为 value
+const reverseConvertDepartment = (label: string): string => {
+  const option = ProjectRoomOptions.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
+// 反向转换函数：将情况类型的 label 转换为 value
+const reverseConvertIntroType = (label: string): string => {
+  const option = IntroTypeOptions.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
 watchEffect(() => {
   localVisible.value = props.visible;
   if (props.visible && props.initialData) {
-    values.value = { ...props.initialData };
+    values.value = {
+      ...props.initialData,
+      intro_department: props.initialData.intro_department
+        ? reverseConvertDepartment(props.initialData.intro_department)
+        : props.initialData.intro_department,
+      intro_type: props.initialData.intro_type
+        ? reverseConvertIntroType(props.initialData.intro_type)
+        : props.initialData.intro_type
+    };
   }
 });
 

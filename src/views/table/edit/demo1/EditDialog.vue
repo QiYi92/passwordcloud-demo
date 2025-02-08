@@ -9,6 +9,13 @@ import {
 } from "plus-pro-components";
 import dayjs from "dayjs";
 
+// 导入对应的选项数据，用于反向转换
+import {
+  ProjectRoomOptions,
+  ProjectStateOptions,
+  ProjectTypeOptions
+} from "@/views/table/edit/data";
+
 // 列的定义
 const columns: PlusColumn[] = [
   {
@@ -153,10 +160,39 @@ const emit = defineEmits(["update:visible", "data-updated"]);
 const values = ref<FieldValues>({});
 const localVisible = ref(false);
 
+// 反向转换函数：将项目科室的 label 转换为 value
+const reverseConvertRoom = (label: string): string => {
+  const option = ProjectRoomOptions.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
+// 反向转换函数：将项目状态的 label 转换为 value
+const reverseConvertState = (label: string): string => {
+  const option = ProjectStateOptions.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
+// 反向转换函数：将类型的 label 转换为 value
+const reverseConvertType = (label: string): string => {
+  const option = ProjectTypeOptions.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
 watchEffect(() => {
   localVisible.value = props.visible;
   if (props.visible && props.initialData) {
-    values.value = { ...props.initialData };
+    values.value = {
+      ...props.initialData,
+      project_room: props.initialData.project_room
+        ? reverseConvertRoom(props.initialData.project_room)
+        : props.initialData.project_room,
+      project_state: props.initialData.project_state
+        ? reverseConvertState(props.initialData.project_state)
+        : props.initialData.project_state,
+      project_type: props.initialData.project_type
+        ? reverseConvertType(props.initialData.project_type)
+        : props.initialData.project_type
+    };
   }
 });
 

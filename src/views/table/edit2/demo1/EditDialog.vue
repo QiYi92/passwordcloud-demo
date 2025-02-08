@@ -16,6 +16,9 @@ import {
   PlusDialogForm
 } from "plus-pro-components";
 import dayjs from "dayjs";
+// 导入合同类型选项
+import { ContractStateOptions } from "@/views/table/edit2/data";
+
 // 响应式变量，存储项目名称选项
 const projectOptions = ref([]);
 
@@ -48,11 +51,25 @@ const emit = defineEmits(["update:visible", "data-updated"]);
 // 本地表单值的响应式状态
 const values = ref<FieldValues>({});
 const localVisible = ref(false);
-// 监视props.visible变化来更新本地显示状态
+
+// 反向转换函数：将合同类型的 label 转换为 value
+const reverseConvertContractType = (label: string): string => {
+  const option = ContractStateOptions.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
 watchEffect(() => {
   localVisible.value = props.visible;
   if (props.initialData) {
-    values.value = { ...props.initialData };
+    values.value = {
+      ...props.initialData,
+      contract_type: props.initialData.contract_type
+        ? reverseConvertContractType(props.initialData.contract_type)
+        : props.initialData.contract_type
+    };
+  }
+  if (!props.visible) {
+    values.value = {}; // 清空数据
   }
 });
 // 提交表单的事件处理函数

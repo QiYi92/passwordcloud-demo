@@ -72,8 +72,7 @@ export function useColumns() {
     {
       label: "责任科室",
       width: "100",
-      prop: "project_room",
-      formatter: row => getProjectRoomLabel(row.project_room)
+      prop: "project_room"
     },
     {
       label: "项目立项总投资（万元）",
@@ -89,8 +88,7 @@ export function useColumns() {
     },
     {
       label: "项目状态",
-      prop: "project_state",
-      formatter: row => getProjectStateLabel(row.project_state)
+      prop: "project_state"
     },
     {
       label: "项目负责人",
@@ -98,8 +96,7 @@ export function useColumns() {
     },
     {
       label: "项目类型",
-      prop: "project_type",
-      formatter: row => getProjectTypeLabel(row.project_type)
+      prop: "project_type"
     },
     {
       label: "项目立项完成时间",
@@ -227,7 +224,10 @@ export function useColumns() {
       console.log("数据成功获取:", response.data); // 日志输出获取到的数据
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.project_id || index // 使用 project_id 或索引作为唯一ID
+        id: item.project_id || index, // 使用 project_id 或索引作为唯一ID
+        project_room: getProjectRoomLabel(item.project_room), // 这里转换 value 为 label
+        project_type: getProjectTypeLabel(item.project_type),
+        project_state: getProjectStateLabel(item.project_state)
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -239,22 +239,49 @@ export function useColumns() {
   }
   // 搜索数据的函数
   const selectData = async () => {
+    console.log("开始执行搜索...");
     loading.value = true;
     try {
       const response = await axios.get(
         import.meta.env.VITE_APP_SERVER + "/api/projects"
       );
-      dataList.value = clone(response.data, true).filter(item =>
-        (item[searchField.value] || "")
-          .toString()
-          .toLowerCase()
-          .includes(searchQuery.value.toLowerCase())
-      );
+
+      dataList.value = clone(response.data, true)
+        .filter(item => {
+          if (searchField.value === "project_room") {
+            return getProjectRoomLabel(item.project_room).includes(
+              searchQuery.value
+            );
+          }
+          if (searchField.value === "project_type") {
+            return getProjectTypeLabel(item.project_type).includes(
+              searchQuery.value
+            );
+          }
+          if (searchField.value === "project_state") {
+            return getProjectStateLabel(item.project_state).includes(
+              searchQuery.value
+            );
+          }
+
+          // 其他字段按默认方式搜索
+          return (item[searchField.value] || "")
+            .toString()
+            .includes(searchQuery.value);
+        })
+        .map(item => ({
+          ...item,
+          project_room: getProjectRoomLabel(item.project_room), // 确保映射为 `label`
+          project_type: getProjectTypeLabel(item.project_type),
+          project_state: getProjectStateLabel(item.project_state)
+        }));
+
       pagination.total = dataList.value.length;
     } catch (error) {
-      console.error("Failed to select data:", error);
+      console.error("搜索数据失败:", error);
     } finally {
       loading.value = false;
+      console.log("搜索完成。");
     }
   };
 

@@ -6,7 +6,7 @@ export default {
   path: "/onsite/onsite_management",
   meta: {
     icon: onsite_icon,
-    title: "外地驻场人员管理",
+    title: "驻场人员管理",
     rank: onsite
   },
   children: [
@@ -15,7 +15,7 @@ export default {
       name: "onsite_management",
       component: () => import("@/views/onsite/onsite_management.vue"),
       meta: {
-        title: "外地驻场人员管理",
+        title: "驻场人员管理",
         icon: onsite_icon
       }
     }

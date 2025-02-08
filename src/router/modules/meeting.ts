@@ -7,7 +7,7 @@ export default {
   path: "/meeting/meeting_management",
   meta: {
     icon: meeting_icon,
-    title: "会议纪要整理",
+    title: "会议纪要",
     rank: meeting
   },
   children: [

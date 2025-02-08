@@ -6,6 +6,8 @@ interface FormItemProps {
   username: string;
   /** 用户标识 */
   code: string;
+  /** 手机号码 */
+  phone_number?: string;
   /** 密码 */
   password: string;
   /** 确认密码 */

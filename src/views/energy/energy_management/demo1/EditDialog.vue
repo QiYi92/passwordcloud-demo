@@ -10,6 +10,11 @@ import {
 import dayjs from "dayjs";
 
 // 区域选项
+const regionOptions = [
+  { label: "文昌机房", value: "0", color: "blue" },
+  { label: "三中路办公区", value: "1", color: "blue" },
+  { label: "其他", value: "2", color: "blue" }
+];
 
 // 表单列配置
 const columns: PlusColumn[] = [
@@ -31,11 +36,7 @@ const columns: PlusColumn[] = [
     fieldProps: {
       placeholder: "请选择区域"
     },
-    options: [
-      { label: "文昌机房", value: "0", color: "blue" },
-      { label: "三中路办公区", value: "1", color: "blue" },
-      { label: "其他", value: "2", color: "blue" }
-    ]
+    options: regionOptions
   },
   {
     label: "耗电量 (度)",
@@ -62,16 +63,25 @@ const emit = defineEmits(["update:visible", "data-updated"]);
 const values = ref<FieldValues>({});
 const localVisible = ref(false);
 
+// 反向转换函数：将区域的 label 转换为 value
+const reverseConvertRegion = (label: string): string => {
+  const option = regionOptions.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
 watchEffect(() => {
   localVisible.value = props.visible;
 
   if (props.visible && props.initialData) {
-    // 初始化表单数据，将日期转换为 YYYY-MM 格式
+    // 初始化表单数据，将日期转换为 YYYY-MM 格式，并对 region 字段进行反向转换
     values.value = {
       ...props.initialData,
       date: props.initialData.date
         ? dayjs(props.initialData.date).format("YYYY-MM")
-        : ""
+        : "",
+      region: props.initialData.region
+        ? reverseConvertRegion(props.initialData.region)
+        : props.initialData.region
     };
   }
 

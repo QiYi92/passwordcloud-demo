@@ -73,6 +73,11 @@ export function useUser(treeRef: Ref) {
       prop: "code"
     },
     {
+      label: "电话号码",
+      prop: "phone_number",
+      minWidth: 80
+    },
+    {
       label: "备注",
       prop: "remark",
       minWidth: 160

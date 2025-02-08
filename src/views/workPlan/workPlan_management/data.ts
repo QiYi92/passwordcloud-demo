@@ -6,12 +6,13 @@ const ProjectRoomOptions = [
   { value: "4", label: "电子政务科" },
   { value: "5", label: "资源科" }
 ];
-const IntroTypeOptions = [
-  { value: "0", label: "项目类" },
-  { value: "1", label: "日常工作" },
-  { value: "2", label: "相关单位" },
-  { value: "3", label: "自治区或其他城市情况" },
+
+const ProjectStatusOptions = [
+  { value: "0", label: "计划中" },
+  { value: "1", label: "进行中" },
+  { value: "2", label: "已完成" },
+  { value: "3", label: "取消" },
   { value: "4", label: "其他" }
 ];
 
-export { ProjectRoomOptions, IntroTypeOptions };
+export { ProjectRoomOptions, ProjectStatusOptions };

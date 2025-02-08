@@ -3,61 +3,53 @@ import type {
   AdaptiveConfig,
   PaginationProps
 } from "@pureadmin/table";
-import { ref, onMounted, reactive, watch } from "vue";
-import { delay, clone } from "@pureadmin/utils";
+import { ref, onMounted, reactive, watch, type Ref, type UnwrapRef } from "vue";
 import axios from "axios";
-import { message } from "@/utils/message";
+import { delay, clone } from "@pureadmin/utils";
+import { message } from "@/utils/message"; // 调整路径
 import { CustomMouseMenu } from "@howdyjs/mouse-menu";
 import dayjs from "dayjs";
-import {
-  FilesTypeOptions,
-  OnsiteTypeOptions
-} from "@/views/onsite/onsite_management/data";
-import { FundsTypeOptions } from "@/views/table/edit4/data";
+import { RegistrationRoomOptions } from "@/views/registrationInfo/registration_info/data"; // 导入注册科室选项
 
-export function useColumns() {
+export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
   const dataList = ref([]);
   const loading = ref(true);
-  const searchField = ref("personnel_id");
+  const searchField = ref("project_id");
   const searchQuery = ref("");
   const editRowData = ref(null);
-  const deleteOnsiteId = ref(null);
+  const deleteProjectId = ref(null);
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
-  // 获取驻场人员类型的 label
-  const getOnsiteTypeLabel = value => {
-    const TypeOption = OnsiteTypeOptions.find(opt => opt.value === value);
-    return TypeOption ? TypeOption.label : "未知";
+  // 获取注册科室的标签
+  const getRegistrationRoomLabel = value => {
+    const option = RegistrationRoomOptions.find(opt => opt.value === value);
+    return option ? option.label : "未知";
   };
 
   const columns: TableColumnList = [
-    { label: "驻场人员ID", prop: "personnel_id" },
-    { label: "姓名", prop: "name" },
-    { label: "公司", prop: "company" },
-    { label: "类型", prop: "type" },
-    { label: "联系方式", prop: "contact_info" },
-    { label: "驻场项目", prop: "onSite_project" },
-    { label: "实施项目业务", prop: "onSite_work" },
-    { label: "办公室位置", prop: "location" },
+    { label: "项目ID", prop: "project_id", width: 70 },
+    { label: "项目名称", prop: "project_name", width: 200 },
+    { label: "注册机构", prop: "registration_agency", width: 200 },
+    { label: "联系方式", prop: "contact_info", width: 150 },
+    { label: "注册科室", prop: "registration_department", width: 150 },
     {
-      label: "驻场时间",
-      prop: "onSite_time",
-      formatter: row => row.onSite_time
+      label: "有效期",
+      prop: "validity_period",
+      width: 150,
+      formatter: row => dayjs(row.validity_period).format("YYYY年MM月DD日")
     },
-    { label: "备注", prop: "remarks" },
     {
-      label: "相关函件",
-      prop: "related_files",
-      formatter: row =>
-        row.related_files === 0 || row.related_files === "0"
-          ? FilesTypeOptions.find(option => option.value === "0")?.label ||
-            "无附件"
-          : row.related_files
+      label: "是否续费",
+      prop: "is_renewable",
+      width: 100,
+      formatter: row => (row.is_renewable === 1 ? "是" : "否")
     },
-    { label: "操作", width: "150", fixed: "right", slot: "operation" }
+    { label: "备注", prop: "remark", width: 300 },
+    { label: "操作", width: 150, fixed: "right", slot: "operation" }
   ];
 
+  /** 分页配置 */
   const pagination = reactive<PaginationProps>({
     pageSize: 20,
     currentPage: 1,
@@ -68,10 +60,11 @@ export function useColumns() {
     small: false
   });
 
+  /** 右键菜单配置 */
   const menuOptions = {
     menuList: [
       {
-        label: ({ personnel_id }) => `人员ID为：${personnel_id}`,
+        label: ({ project_id }) => `项目ID：${project_id}`,
         disabled: true
       },
       {
@@ -86,13 +79,14 @@ export function useColumns() {
         label: "删除",
         tips: "Delete",
         fn: row => {
-          deleteOnsiteId.value = row.personnel_id;
+          deleteProjectId.value = row.project_id;
           deleteDialogVisible.value = true;
         }
       }
     ]
   };
 
+  /** 加载动画配置 */
   const loadingConfig = reactive<LoadingConfig>({
     text: "正在加载第一页...",
     viewBox: "-10, -10, 50, 50",
@@ -108,6 +102,7 @@ export function useColumns() {
       `
   });
 
+  /** 自适应高度配置 */
   const adaptiveConfig: AdaptiveConfig = { offsetBottom: 110 };
 
   function showMouseMenu(row, column, event) {
@@ -143,16 +138,18 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/onsite"
+        import.meta.env.VITE_APP_SERVER + "/api/registration-info"
       );
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.personnel_id || index,
-        type: getOnsiteTypeLabel(item.type) // 这里转换 value 为 label
+        id: item.project_id || index,
+        registration_department: getRegistrationRoomLabel(
+          item.registration_department
+        ) // 转换 `value` 为 `label`
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
-      console.error("获取数据时发生错误:", error);
+      console.error("获取数据失败:", error);
     } finally {
       loading.value = false;
     }
@@ -163,13 +160,15 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/onsite"
+        import.meta.env.VITE_APP_SERVER + "/api/registration-info"
       );
 
       dataList.value = clone(response.data, true)
         .filter(item => {
-          if (searchField.value === "type") {
-            return getOnsiteTypeLabel(item.type).includes(searchQuery.value);
+          if (searchField.value === "registration_department") {
+            return getRegistrationRoomLabel(
+              item.registration_department
+            ).includes(searchQuery.value);
           }
           return (item[searchField.value] || "")
             .toString()
@@ -177,7 +176,9 @@ export function useColumns() {
         })
         .map(item => ({
           ...item,
-          type: getOnsiteTypeLabel(item.type)
+          registration_department: getRegistrationRoomLabel(
+            item.registration_department
+          )
         }));
 
       pagination.total = dataList.value.length;
@@ -211,7 +212,7 @@ export function useColumns() {
     showMouseMenu,
     editDialogVisible,
     editRowData,
-    deleteOnsiteId,
+    deleteProjectId,
     deleteDialogVisible,
     fetchData
   };

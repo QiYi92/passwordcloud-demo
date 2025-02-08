@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="localVisible"
-    title="预览简介数据"
+    title="预览注册信息数据"
     width="80%"
     @close="handleClose"
   >
@@ -48,10 +48,6 @@
 <script setup lang="ts">
 import { ref, defineProps, watchEffect, defineEmits } from "vue";
 import dayjs from "dayjs";
-import {
-  ProjectRoomOptions,
-  IntroTypeOptions
-} from "@/views/intro/intro_management/data"; // 引入映射数据
 
 const props = defineProps({
   visible: Boolean,
@@ -64,35 +60,39 @@ const localVisible = ref(false);
 const formattedData = ref<Array<{ field: string; value: any }>>([]);
 
 const fieldMap = {
-  intro_id: "简介ID",
-  intro_name: "简介名称",
-  intro_department: "责任科室",
-  update_time: "更新时间",
-  intro_content: "简介内容",
-  update_cycle: "更新周期",
-  intro_type: "情况类型"
+  project_id: "项目ID",
+  project_name: "项目名称",
+  registration_agency: "注册机构",
+  contact_info: "联系方式",
+  registration_department: "注册科室",
+  validity_period: "有效期",
+  is_renewable: "是否需要续费",
+  remark: "备注"
 };
 
-// 通用的映射函数
-const mapValueToLabel = (value, options) => {
-  const option = options.find(opt => opt.value === value);
-  return option ? option.label : "未知";
-};
-
+// 格式化字段名
 const formatField = row => {
-  return fieldMap[row.field] || row.field; // 显示字段名
+  return fieldMap[row.field] || row.field;
 };
 
-// 格式化值
+// 格式化字段值
 const formatValue = (key, value) => {
-  if (key === "update_time" && value) {
+  if (key === "validity_period" && value) {
     return dayjs(value).format("YYYY年MM月DD日"); // 格式化日期
   }
-  if (key === "intro_department") {
-    return mapValueToLabel(value, ProjectRoomOptions); // 映射责任科室
+  if (key === "is_renewable") {
+    return value === 1 ? "是" : "否";
   }
-  if (key === "intro_type") {
-    return mapValueToLabel(value, IntroTypeOptions); // 映射情况类型
+  if (key === "registration_department") {
+    const departmentMap = {
+      "0": "其他",
+      "1": "安全科",
+      "2": "基建科",
+      "3": "网站科",
+      "4": "电子政务科",
+      "5": "资源科"
+    };
+    return departmentMap[value] || "未知";
   }
   return value;
 };
@@ -104,9 +104,9 @@ watchEffect(() => {
     formattedData.value = Object.entries(props.data)
       .map(([key, value]) => ({
         field: key,
-        value: formatValue(key, value) // 格式化值
+        value: formatValue(key, value)
       }))
-      .filter(item => item.field !== "intro_id"); // 根据需要过滤字段
+      .filter(item => item.field !== "project_id"); // 根据需要过滤字段
   } else {
     formattedData.value = [];
   }

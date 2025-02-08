@@ -8,6 +8,7 @@ import {
   PlusDialogForm
 } from "plus-pro-components";
 import dayjs from "dayjs";
+import { ProjectExpertiseArea } from "@/views/expert/expert_management/data"; // 新增：引入专家模块选项
 
 const props = defineProps({
   initialData: Object,
@@ -18,10 +19,21 @@ const emit = defineEmits(["update:visible", "data-updated"]);
 const values = ref<FieldValues>({});
 const localVisible = ref(false);
 
+// 反向转换函数：将专业领域的 label 转换为 value
+const reverseConvertExpertiseArea = (label: string): string => {
+  const option = ProjectExpertiseArea.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
 watchEffect(() => {
   localVisible.value = props.visible;
   if (props.initialData) {
-    values.value = { ...props.initialData };
+    values.value = {
+      ...props.initialData,
+      expertise_area: props.initialData.expertise_area
+        ? reverseConvertExpertiseArea(props.initialData.expertise_area)
+        : props.initialData.expertise_area
+    };
   }
 });
 

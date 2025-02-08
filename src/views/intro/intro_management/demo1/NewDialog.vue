@@ -24,12 +24,70 @@ const columns: PlusColumn[] = [
     prop: "intro_department",
     valueType: "select",
     options: [
-      { label: "其他", value: "0", color: "blue" },
-      { label: "安全科", value: "1", color: "blue" },
-      { label: "基建科", value: "2", color: "blue" },
-      { label: "网站科", value: "3", color: "blue" },
-      { label: "电子政务科", value: "4", color: "blue" },
-      { label: "资源科", value: "5", color: "blue" }
+      {
+        label: "其他",
+        value: "0",
+        color: "blue"
+      },
+      {
+        label: "安全科",
+        value: "1",
+        color: "blue"
+      },
+      {
+        label: "基建科",
+        value: "2",
+        color: "blue"
+      },
+      {
+        label: "网站科",
+        value: "3",
+        color: "blue"
+      },
+      {
+        label: "电子政务科",
+        value: "4",
+        color: "blue"
+      },
+      {
+        label: "资源科",
+        value: "5",
+        color: "blue"
+      }
+    ]
+  },
+  {
+    label: "情况类型",
+    labelWidth: 150,
+    width: 120,
+    prop: "intro_type",
+    valueType: "select",
+    options: [
+      {
+        label: "项目类",
+        value: "0",
+        color: "blue"
+      },
+      {
+        label: "日常工作",
+        value: "1",
+        color: "blue"
+      },
+      {
+        label: "相关单位",
+        value: "2",
+        color: "blue"
+      },
+      {
+        label: "自治区或其他城市情况",
+        value: "3",
+        color: "blue"
+      },
+      {
+        label: "其他",
+        value: "4",
+        color: "blue"
+      }
     ]
   },
   {

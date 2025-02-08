@@ -18,6 +18,12 @@ import {
 } from "plus-pro-components";
 import dayjs from "dayjs";
 
+// 引入支付项模块对应的选项数据
+import {
+  PaymentTypeOptions,
+  PaymentStateOptions
+} from "@/views/table/edit3/data";
+
 // 响应式变量，存储项目名称和合同名称选项
 const projectOptions = ref([]);
 const contractOptions = ref([]);
@@ -87,11 +93,31 @@ watch(
   }
 );
 
-// 监视 props.initialData 变化来更新本地显示状态
+// 反向转换函数：将支付项类型的 label 转换为 value
+const reverseConvertPayType = (label: string): string => {
+  const option = PaymentTypeOptions.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
+// 反向转换函数：将支付状态的 label 转换为 value
+const reverseConvertPayState = (label: string): string => {
+  const option = PaymentStateOptions.find(opt => opt.label === label);
+  return option ? option.value : label;
+};
+
+// 监视 props.initialData 变化来更新本地显示状态，并进行反向转换
 watchEffect(() => {
   localVisible.value = props.visible;
   if (props.initialData) {
-    values.value = { ...props.initialData };
+    values.value = {
+      ...props.initialData,
+      pay_type: props.initialData.pay_type
+        ? reverseConvertPayType(props.initialData.pay_type)
+        : props.initialData.pay_type,
+      pay_state: props.initialData.pay_state
+        ? reverseConvertPayState(props.initialData.pay_state)
+        : props.initialData.pay_state
+    };
   }
 });
 
@@ -106,7 +132,7 @@ watch(
   }
 );
 
-// 使用computed确保类型匹配
+// 使用 computed 确保类型匹配
 const computedProjectOptions = computed(() => projectOptions.value);
 const computedContractOptions = computed(() => contractOptions.value);
 
