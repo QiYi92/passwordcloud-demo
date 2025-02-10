@@ -175,7 +175,7 @@ export function useColumns() {
     }
   }
 
-  /** 仅支持 label 搜索 */
+  /** 搜索数据的函数，仅对 label 搜索进行精确匹配（下拉项），其他字段仍模糊匹配 */
   const selectData = async () => {
     loading.value = true;
     try {
@@ -185,16 +185,17 @@ export function useColumns() {
 
       dataList.value = clone(response.data, true)
         .filter(item => {
+          // 如果搜索内容为空，则不过滤
+          if (!searchQuery.value) return true;
+
+          // 对于支付情况和支付状态采用精确匹配
           if (searchField.value === "pay_type") {
-            return getPaymentTypeLabel(item.pay_type).includes(
-              searchQuery.value
-            );
+            return item.pay_type === searchQuery.value;
           }
           if (searchField.value === "pay_state") {
-            return getPaymentStateLabel(item.pay_state).includes(
-              searchQuery.value
-            );
+            return item.pay_state === searchQuery.value;
           }
+          // 其他字段使用模糊匹配
           return (item[searchField.value] || "")
             .toString()
             .includes(searchQuery.value);

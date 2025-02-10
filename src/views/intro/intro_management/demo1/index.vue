@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useColumns } from "./columns";
 import EditDialog from "@/views/intro/intro_management/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/intro/intro_management/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/intro/intro_management/demo1/NewDialog.vue";
 import ShowDialog from "@/views/intro/intro_management/demo1/ShowDialog.vue";
-import { ProjectRoomOptions } from "@/views/intro/intro_management/data"; // 导入 ProjectRoomOptions
+import {
+  ProjectRoomOptions,
+  IntroTypeOptions
+} from "@/views/intro/intro_management/data";
 
 const tableRef = ref();
-const selectedRow = ref(null); // 响应式变量存储选中的行数据
+const selectedRow = ref(null);
 const deleteIntroId = ref(null);
 const deleteDialogVisible = ref(false);
 const editDialogVisible = ref(false);
@@ -27,8 +30,8 @@ const handleEdit = row => {
 };
 
 const handlePreview = row => {
-  previewData.value = row; // 将选中的行数据传递给预览对话框
-  showDialogVisible.value = true; // 显示预览对话框
+  previewData.value = row;
+  showDialogVisible.value = true;
 };
 
 // 责任科室映射
@@ -38,6 +41,22 @@ const departmentMap = ref(
     return map;
   }, {})
 );
+
+// 当搜索字段为“责任科室”或“情况类型”时使用下拉菜单
+const isDropdownSearch = computed(() => {
+  return ["intro_department", "intro_type"].includes(searchField.value);
+});
+
+// 根据当前搜索字段返回对应的下拉选项
+const currentOptions = computed(() => {
+  if (searchField.value === "intro_department") {
+    return ProjectRoomOptions;
+  }
+  if (searchField.value === "intro_type") {
+    return IntroTypeOptions;
+  }
+  return [];
+});
 
 const {
   loading,
@@ -67,15 +86,38 @@ const {
         <el-option label="简介ID" value="intro_id" />
         <el-option label="简介名称" value="intro_name" />
         <el-option label="责任科室" value="intro_department" />
+        <el-option label="情况类型" value="intro_type" />
         <el-option label="更新时间" value="update_time" />
         <el-option label="简介内容" value="intro_content" />
         <el-option label="更新周期" value="update_cycle" />
       </el-select>
-      <el-input
-        v-model="searchQuery"
-        placeholder="输入搜索内容"
-        style="width: 300px; margin-right: 10px"
-      />
+
+      <!-- 当搜索字段为下拉项时显示下拉选择 -->
+      <template v-if="isDropdownSearch">
+        <el-select
+          v-model="searchQuery"
+          placeholder="请选择搜索内容"
+          style="width: 300px; margin-right: 10px"
+        >
+          <!-- “全部”选项，值为空表示不过滤 -->
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="option in currentOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </template>
+      <!-- 否则显示文本输入框 -->
+      <template v-else>
+        <el-input
+          v-model="searchQuery"
+          placeholder="输入搜索内容"
+          style="width: 300px; margin-right: 10px"
+        />
+      </template>
+
       <NewDialog @data-updated="fetchData" />
     </div>
 
@@ -125,6 +167,7 @@ const {
             删除
           </el-button>
         </template>
+        <!-- 使用 departmentMap 映射显示责任科室 -->
         <template #intro_department="{ row }">
           <span>{{ departmentMap[row.intro_department] || "未知" }}</span>
         </template>
@@ -143,7 +186,6 @@ const {
       @update:visible="deleteDialogVisible = $event"
       @deleted="fetchData"
     />
-
     <ShowDialog
       :visible="showDialogVisible"
       :data="previewData"

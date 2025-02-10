@@ -166,7 +166,7 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
     }
   }
 
-  /** 仅支持 label 搜索 */
+  /** 搜索数据的函数，仅对下拉项进行精确匹配，其余字段使用模糊匹配 */
   const selectData = async () => {
     loading.value = true;
     try {
@@ -176,15 +176,15 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
 
       dataList.value = clone(response.data, true)
         .filter(item => {
+          // 如果搜索内容为空，则不过滤
+          if (!searchQuery.value) return true;
+
           if (searchField.value === "responsible_department") {
-            return getProjectRoomLabel(item.responsible_department).includes(
-              searchQuery.value
-            );
+            // 采用精确匹配：比较原始值
+            return item.responsible_department === searchQuery.value;
           }
           if (searchField.value === "current_status") {
-            return getProjectStatusLabel(item.current_status).includes(
-              searchQuery.value
-            );
+            return item.current_status === searchQuery.value;
           }
           return (item[searchField.value] || "")
             .toString()

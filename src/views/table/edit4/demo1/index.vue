@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useColumns } from "./columns";
 import EditDialog from "@/views/table/edit4/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/table/edit4/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/table/edit4/demo1/NewDialog.vue";
+import { FundsTypeOptions } from "@/views/table/edit4/data"; // 确保路径正确
 
 const {
   loading,
@@ -20,7 +21,7 @@ const {
   editDialogVisible,
   editRowData,
   deleteDialogVisible,
-  deletePassId, // 修改变量名
+  deletePassId,
   fetchData
 } = useColumns();
 
@@ -30,9 +31,22 @@ const handleEdit = row => {
 };
 
 const handleDelete = row => {
-  deletePassId.value = row.pass_id; // 修改为 pass_id
+  deletePassId.value = row.pass_id;
   deleteDialogVisible.value = true;
 };
+
+// 当搜索字段为资金类型时，使用下拉菜单
+const isDropdownSearch = computed(() => {
+  return searchField.value === "money_type";
+});
+
+// 根据当前搜索字段返回对应的下拉选项
+const currentOptions = computed(() => {
+  if (searchField.value === "money_type") {
+    return FundsTypeOptions;
+  }
+  return [];
+});
 </script>
 
 <template>
@@ -50,15 +64,38 @@ const handleDelete = row => {
         <el-option label="下达时间" value="pass_time" />
         <el-option label="备注" value="pass_remark" />
       </el-select>
-      <el-input
-        v-model="searchQuery"
-        placeholder="输入搜索内容"
-        style="width: 300px; margin-right: 10px"
-      />
+
+      <!-- 当搜索字段为资金类型时，显示下拉选择 -->
+      <template v-if="isDropdownSearch">
+        <el-select
+          v-model="searchQuery"
+          placeholder="请选择搜索内容"
+          style="width: 300px; margin-right: 10px"
+        >
+          <!-- “全部”选项，值为空表示不过滤 -->
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="option in currentOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </template>
+      <!-- 否则，显示文本输入框 -->
+      <template v-else>
+        <el-input
+          v-model="searchQuery"
+          placeholder="输入搜索内容"
+          style="width: 300px; margin-right: 10px"
+        />
+      </template>
+
       <!-- 添加新数据的按钮 -->
       <NewDialog @data-updated="fetchData" />
     </div>
 
+    <!-- 表格容器 -->
     <div style="overflow-x: auto">
       <pure-table
         ref="tableRef"
@@ -83,7 +120,7 @@ const handleDelete = row => {
         @page-current-change="onCurrentChange"
         @row-contextmenu="showMouseMenu"
       >
-        <!-- 定义操作列的内容 -->
+        <!-- 操作列 -->
         <template #operation="{ row }">
           <el-button link type="primary" size="small" @click="handleEdit(row)">
             修改

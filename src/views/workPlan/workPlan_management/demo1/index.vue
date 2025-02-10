@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useColumns } from "./columns";
 import EditDialog from "@/views/workPlan/workPlan_management/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/workPlan/workPlan_management/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/workPlan/workPlan_management/demo1/NewDialog.vue";
 import ShowDialog from "@/views/workPlan/workPlan_management/demo1/ShowDialog.vue";
-import { ProjectRoomOptions } from "@/views/workPlan/workPlan_management/data"; // 导入责任科室选项
+import {
+  ProjectRoomOptions,
+  ProjectStatusOptions
+} from "@/views/workPlan/workPlan_management/data"; // 导入选项
 
 const tableRef = ref();
-const selectedRow = ref(null); // 响应式变量存储选中的行数据
+const selectedRow = ref(null);
 const deletePlanId = ref(null);
 const deleteDialogVisible = ref(false);
 const editDialogVisible = ref(false);
@@ -27,11 +30,11 @@ const handleEdit = row => {
 };
 
 const handlePreview = row => {
-  previewData.value = row; // 将选中的行数据传递给预览对话框
-  showDialogVisible.value = true; // 显示预览对话框
+  previewData.value = row;
+  showDialogVisible.value = true;
 };
 
-// 责任科室映射
+// 构造责任科室映射
 const departmentMap = ref(
   ProjectRoomOptions.reduce((map, option) => {
     map[option.value] = option.label;
@@ -39,6 +42,7 @@ const departmentMap = ref(
   }, {})
 );
 
+// 调用模块，并传入部门映射（用于 index.vue 模板中显示部门 label）
 const {
   loading,
   columns,
@@ -53,6 +57,24 @@ const {
   showMouseMenu,
   fetchData
 } = useColumns(departmentMap);
+
+// 当搜索字段为“责任科室”或“当前状态”时，显示下拉选择
+const isDropdownSearch = computed(() => {
+  return ["responsible_department", "current_status"].includes(
+    searchField.value
+  );
+});
+
+// 根据当前搜索字段返回对应的下拉选项
+const currentOptions = computed(() => {
+  if (searchField.value === "responsible_department") {
+    return ProjectRoomOptions;
+  }
+  if (searchField.value === "current_status") {
+    return ProjectStatusOptions;
+  }
+  return [];
+});
 </script>
 
 <template>
@@ -71,11 +93,33 @@ const {
         <el-option label="结束时间" value="end_month" />
         <el-option label="当前状态" value="current_status" />
       </el-select>
-      <el-input
-        v-model="searchQuery"
-        placeholder="输入搜索内容"
-        style="width: 300px; margin-right: 10px"
-      />
+
+      <!-- 当搜索字段为下拉项时，显示下拉选择 -->
+      <template v-if="isDropdownSearch">
+        <el-select
+          v-model="searchQuery"
+          placeholder="请选择搜索内容"
+          style="width: 300px; margin-right: 10px"
+        >
+          <!-- “全部”选项，值为空表示不过滤 -->
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="option in currentOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </template>
+      <!-- 否则，显示文本输入框 -->
+      <template v-else>
+        <el-input
+          v-model="searchQuery"
+          placeholder="输入搜索内容"
+          style="width: 300px; margin-right: 10px"
+        />
+      </template>
+
       <NewDialog @data-updated="fetchData" />
     </div>
 
@@ -125,6 +169,7 @@ const {
             删除
           </el-button>
         </template>
+        <!-- 自定义显示责任科室：通过映射显示 label -->
         <template #responsible_department="{ row }">
           <span>{{ departmentMap[row.responsible_department] || "未知" }}</span>
         </template>
@@ -143,7 +188,6 @@ const {
       @update:visible="deleteDialogVisible = $event"
       @deleted="fetchData"
     />
-
     <ShowDialog
       :visible="showDialogVisible"
       :data="previewData"

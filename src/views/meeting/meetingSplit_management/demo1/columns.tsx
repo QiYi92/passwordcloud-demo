@@ -3,7 +3,7 @@ import type {
   AdaptiveConfig,
   PaginationProps
 } from "@pureadmin/table";
-import { ref, onMounted, reactive, watch } from "vue";
+import { ref, onMounted, reactive, watch, computed } from "vue";
 import axios from "axios";
 import { delay, clone } from "@pureadmin/utils";
 import { message } from "@/utils/message";
@@ -35,6 +35,22 @@ export function useColumns() {
     const option = MeetingTypeOptions.find(opt => opt.value === value);
     return option ? option.label : "未知类型";
   };
+
+  // 搜索字段选择下拉
+  const isDropdownSearch = computed(() => {
+    return ["progress", "meeting_type"].includes(searchField.value);
+  });
+
+  // 根据当前搜索字段返回对应的下拉选项
+  const currentOptions = computed(() => {
+    if (searchField.value === "progress") {
+      return MeetingProgressOptions;
+    }
+    if (searchField.value === "meeting_type") {
+      return MeetingTypeOptions;
+    }
+    return [];
+  });
 
   const columns: TableColumnList = [
     { label: "拆分ID", prop: "split_id", width: 100 },
@@ -168,15 +184,13 @@ export function useColumns() {
 
       dataList.value = clone(response.data, true)
         .filter(item => {
+          if (searchQuery.value === "") return true;
+
           if (searchField.value === "progress") {
-            return getMeetingProgressLabel(item.progress).includes(
-              searchQuery.value
-            );
+            return item.progress === searchQuery.value;
           }
           if (searchField.value === "meeting_type") {
-            return getMeetingTypeLabel(item.meeting_type).includes(
-              searchQuery.value
-            );
+            return item.meeting_type === searchQuery.value;
           }
           return (item[searchField.value] || "")
             .toString()

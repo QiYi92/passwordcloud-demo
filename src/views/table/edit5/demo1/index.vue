@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useColumns } from "./columns";
 import EditDialog from "@/views/table/edit5/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/table/edit5/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/table/edit5/demo1/NewDialog.vue";
 import ShowDialog from "@/views/table/edit5/demo1/ShowDialog.vue";
+import { FilesTypeOptions } from "@/views/table/edit5/data"; // 引入文件类型选项
 
-// 从 useColumns 中解构需要的响应式变量和方法
 const {
   loading,
   columns,
@@ -47,6 +47,19 @@ const handlePreview = row => {
   selectedRowData.value = row;
   showDialogVisible.value = true;
 };
+
+// 当搜索字段为“催款函件”时使用下拉菜单
+const isDropdownSearch = computed(() => {
+  return searchField.value === "prompt_files";
+});
+
+// 根据当前搜索字段返回对应的下拉选项
+const currentOptions = computed(() => {
+  if (searchField.value === "prompt_files") {
+    return FilesTypeOptions;
+  }
+  return [];
+});
 </script>
 
 <template>
@@ -65,15 +78,38 @@ const handlePreview = row => {
         <el-option label="催款金额" value="prompt_money" />
         <el-option label="登记时间" value="prompt_time" />
         <el-option label="备注" value="prompt_remark" />
+        <!-- 新增搜索字段：催款函件 -->
+        <el-option label="催款函件" value="prompt_files" />
       </el-select>
-      <el-input
-        v-model="searchQuery"
-        placeholder="输入搜索内容"
-        style="width: 300px; margin-right: 10px"
-      />
+
+      <!-- 当搜索字段为下拉项（催款函件）时显示下拉选择 -->
+      <template v-if="isDropdownSearch">
+        <el-select
+          v-model="searchQuery"
+          placeholder="请选择搜索内容"
+          style="width: 300px; margin-right: 10px"
+        >
+          <!-- “全部”选项，值为空表示不过滤 -->
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="option in currentOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </template>
+      <!-- 否则显示文本输入框 -->
+      <template v-else>
+        <el-input
+          v-model="searchQuery"
+          placeholder="输入搜索内容"
+          style="width: 300px; margin-right: 10px"
+        />
+      </template>
+
       <!-- 添加新数据的按钮 -->
       <NewDialog @data-updated="fetchData" />
-      <!-- 确保捕获 data-updated 事件 -->
     </div>
 
     <div style="overflow-x: auto">

@@ -248,30 +248,27 @@ export function useColumns() {
 
       dataList.value = clone(response.data, true)
         .filter(item => {
+          // 如果没有选择搜索内容，则不过滤
+          if (!searchQuery.value) return true;
+
+          // 对于 data.ts 中的数据项，采用精确匹配
           if (searchField.value === "project_room") {
-            return getProjectRoomLabel(item.project_room).includes(
-              searchQuery.value
-            );
+            return item.project_room === searchQuery.value;
           }
           if (searchField.value === "project_type") {
-            return getProjectTypeLabel(item.project_type).includes(
-              searchQuery.value
-            );
+            return item.project_type === searchQuery.value;
           }
           if (searchField.value === "project_state") {
-            return getProjectStateLabel(item.project_state).includes(
-              searchQuery.value
-            );
+            return item.project_state === searchQuery.value;
           }
-
-          // 其他字段按默认方式搜索
+          // 其他字段使用模糊匹配
           return (item[searchField.value] || "")
             .toString()
             .includes(searchQuery.value);
         })
         .map(item => ({
           ...item,
-          project_room: getProjectRoomLabel(item.project_room), // 确保映射为 `label`
+          project_room: getProjectRoomLabel(item.project_room),
           project_type: getProjectTypeLabel(item.project_type),
           project_state: getProjectStateLabel(item.project_state)
         }));

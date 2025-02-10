@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useColumns } from "./columns";
 import EditDialog from "@/views/table/edit/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/table/edit/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/table/edit/demo1/NewDialog.vue";
+import {
+  ProjectRoomOptions,
+  ProjectStateOptions,
+  ProjectTypeOptions
+} from "@/views/table/edit/data";
 
 const tableRef = ref();
 const selectedRow = ref(null); // 响应式变量存储选中的行数据
@@ -36,6 +41,27 @@ const {
   deleteProjectId,
   fetchData
 } = useColumns();
+
+// 当搜索字段为以下几种时，使用下拉菜单
+const isDropdownSearch = computed(() => {
+  return ["project_room", "project_type", "project_state"].includes(
+    searchField.value
+  );
+});
+
+// 根据当前搜索字段返回对应的下拉选项
+const currentOptions = computed(() => {
+  if (searchField.value === "project_room") {
+    return ProjectRoomOptions;
+  }
+  if (searchField.value === "project_type") {
+    return ProjectTypeOptions;
+  }
+  if (searchField.value === "project_state") {
+    return ProjectStateOptions;
+  }
+  return [];
+});
 </script>
 
 <template>
@@ -56,11 +82,33 @@ const {
         <el-option label="项目时间" value="project_time" />
         <el-option label="项目备注" value="project_remark" />
       </el-select>
-      <el-input
-        v-model="searchQuery"
-        placeholder="输入搜索内容"
-        style="width: 300px; margin-right: 10px"
-      />
+
+      <!-- 当搜索字段为 data.ts 定义的项时，显示下拉选择 -->
+      <template v-if="isDropdownSearch">
+        <el-select
+          v-model="searchQuery"
+          placeholder="请选择搜索内容"
+          style="width: 300px; margin-right: 10px"
+        >
+          <!-- “全部”选项，值为空，表示不过滤 -->
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="option in currentOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </template>
+      <!-- 否则，显示文本输入框 -->
+      <template v-else>
+        <el-input
+          v-model="searchQuery"
+          placeholder="输入搜索内容"
+          style="width: 300px; margin-right: 10px"
+        />
+      </template>
+
       <NewDialog @data-updated="fetchData" />
     </div>
     <!-- 表格容器 -->

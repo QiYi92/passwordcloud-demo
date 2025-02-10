@@ -7,13 +7,10 @@ import { ref, onMounted, reactive, watch } from "vue";
 
 import { delay, clone } from "@pureadmin/utils";
 import axios from "axios";
-// import {
-//   FundsTypeOptions // 使用新的资金类型选项
-// } from "@/views/expert/expert_management/data"; // 确保路径正确
+import { ProjectExpertiseArea } from "@/views/expert/expert_management/data"; // 导入专业领域数据
 
-import { message } from "@/utils/message"; // 适当调整路径
-import { CustomMouseMenu } from "@howdyjs/mouse-menu"; // 添加新依赖
-import { ProjectExpertiseArea } from "@/views/expert/expert_management/data";
+import { message } from "@/utils/message";
+import { CustomMouseMenu } from "@howdyjs/mouse-menu";
 import dayjs from "dayjs";
 
 export function useColumns() {
@@ -22,18 +19,14 @@ export function useColumns() {
   const searchField = ref("expert_id");
   const searchQuery = ref("");
   const editRowData = ref(null);
-  const deleteExpertId = ref(null); // 修改变量名以反映expert
+  const deleteExpertId = ref(null);
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
-  // const getFundsTypeLabel = value => {
-  //   const TypeOption = FundsTypeOptions.find(opt => opt.value === value);
-  //   return TypeOption ? TypeOption.label : "未知"; // 如果找不到对应的选项，返回"未知"
-  // };
-
-  const getFundsTypeLabel = value => {
-    const TypeOption = ProjectExpertiseArea.find(opt => opt.value === value);
-    return TypeOption ? TypeOption.label : "未知"; // 如果找不到对应的选项，返回"未知"
+  // 获取专业领域的 label
+  const getExpertiseAreaLabel = value => {
+    const option = ProjectExpertiseArea.find(opt => opt.value === value);
+    return option ? option.label : "未知"; // 如果找不到对应的选项，返回"未知"
   };
 
   const columns: TableColumnList = [
@@ -69,7 +62,7 @@ export function useColumns() {
       label: "操作",
       width: "150",
       fixed: "right",
-      slot: "operation" // 指定操作列的插槽
+      slot: "operation"
     }
   ];
 
@@ -84,7 +77,7 @@ export function useColumns() {
     small: false
   });
 
-  /** 右键编辑菜单配置*/
+  /** 右键编辑菜单配置 */
   const menuOptions = {
     menuList: [
       {
@@ -95,15 +88,15 @@ export function useColumns() {
         label: "修改",
         tips: "Edit",
         fn: async row => {
-          editRowData.value = row; // 设置当前行数据
-          editDialogVisible.value = true; // 打开编辑对话框
+          editRowData.value = row;
+          editDialogVisible.value = true;
         }
       },
       {
         label: "删除",
         tips: "Delete",
         fn: row => {
-          deleteExpertId.value = row.expert_id; // 使用 expert_id
+          deleteExpertId.value = row.expert_id;
           deleteDialogVisible.value = true;
         }
       }
@@ -126,20 +119,17 @@ export function useColumns() {
       `
   });
 
-  /** 撑满内容区自适应高度相关配置 */
-  const adaptiveConfig: AdaptiveConfig = {
-    offsetBottom: 110
-  };
+  /** 自适应配置 */
+  const adaptiveConfig: AdaptiveConfig = { offsetBottom: 110 };
 
+  // 右键菜单显示
   function showMouseMenu(row, column, event) {
     event.preventDefault();
     const { x, y } = event;
     CustomMouseMenu({
       el: event.currentTarget,
       params: row,
-      menuWrapperCss: {
-        background: "var(--el-bg-color)"
-      },
+      menuWrapperCss: { background: "var(--el-bg-color)" },
       menuItemCss: {
         labelColor: "var(--el-text-color)",
         hoverLabelColor: "var(--el-color-primary)",
@@ -161,30 +151,27 @@ export function useColumns() {
     });
   }
 
-  // 定义一个函数用于重新获取数据
+  // 获取数据
   async function fetchData() {
-    console.log("开始获取数据..."); // 日志输出，表示开始数据获取
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/experts" // 修改为新的API路径
+        import.meta.env.VITE_APP_SERVER + "/api/experts"
       );
-      console.log("数据成功获取:", response.data); // 日志输出获取到的数据
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.expert_id || index, // 使用 expert_id 或索引作为唯一ID
-        expertise_area: getFundsTypeLabel(item.expertise_area) // 专业类型
+        id: item.expert_id || index,
+        expertise_area: getExpertiseAreaLabel(item.expertise_area) // 映射专业领域
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
-      console.error("获取数据时发生错误:", error); // 日志输出错误信息
+      console.error("获取数据时发生错误:", error);
     } finally {
       loading.value = false;
-      console.log("数据获取完成。"); // 日志输出，表示数据获取流程结束
     }
   }
 
-  // 搜索数据的函数
+  // 搜索数据
   const selectData = async () => {
     loading.value = true;
     try {
@@ -194,41 +181,38 @@ export function useColumns() {
 
       dataList.value = clone(response.data, true)
         .filter(item => {
-          const fieldValue = item[searchField.value] || "";
+          // 如果 searchQuery 为空，表示选择了“全部”，不进行过滤
+          if (searchQuery.value === "") return true;
 
-          // 如果搜索字段是 expertise_area，搜索 label
+          // 对专业领域字段进行精确匹配
           if (searchField.value === "expertise_area") {
-            const label = getFundsTypeLabel(item.expertise_area);
-            return label.includes(searchQuery.value);
+            return item.expertise_area === searchQuery.value; // 匹配 value
           }
-
-          // 其他字段按原逻辑搜索
-          return fieldValue
+          return (item[searchField.value] || "")
             .toString()
-            .toLowerCase()
-            .includes(searchQuery.value.toLowerCase());
+            .includes(searchQuery.value);
         })
         .map(item => ({
           ...item,
-          expertise_area: getFundsTypeLabel(item.expertise_area) // 确保映射为 label
+          expertise_area: getExpertiseAreaLabel(item.expertise_area) // 映射专业领域
         }));
 
       pagination.total = dataList.value.length;
     } catch (error) {
-      console.error("Failed to select data:", error);
+      console.error("搜索数据失败:", error);
     } finally {
       loading.value = false;
     }
   };
 
-  // 监听搜索字段和查询字符串的变化
+  // 监听搜索字段和查询字符串变化
   watch([searchField, searchQuery], selectData, { deep: true });
 
   // 组件挂载时执行
   onMounted(async () => {
     await fetchData();
     if (searchField.value && searchQuery.value) {
-      await selectData(); // 只有当搜索字段和查询字符串都已设置时才执行
+      await selectData();
     }
   });
 

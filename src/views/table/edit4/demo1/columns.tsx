@@ -146,7 +146,7 @@ export function useColumns() {
     }
   }
 
-  /** 仅支持 label 搜索 */
+  /** 搜索数据的函数，仅对 label 搜索进行精确匹配（下拉项），其他字段使用模糊匹配 */
   const selectData = async () => {
     loading.value = true;
     try {
@@ -156,11 +156,13 @@ export function useColumns() {
 
       dataList.value = clone(response.data, true)
         .filter(item => {
+          // 如果搜索内容为空，则不过滤
+          if (!searchQuery.value) return true;
+          // 当搜索字段为资金类型时，采用精确匹配
           if (searchField.value === "money_type") {
-            return getFundsTypeLabel(item.money_type).includes(
-              searchQuery.value
-            );
+            return item.money_type === searchQuery.value;
           }
+          // 其他字段使用模糊匹配
           return (item[searchField.value] || "")
             .toString()
             .includes(searchQuery.value);

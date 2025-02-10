@@ -111,8 +111,11 @@ export function useColumns() {
 
       dataList.value = response.data
         .filter(item => {
+          // 如果 searchQuery 为空，表示选择了“全部”，不进行过滤
+          if (searchQuery.value === "") return true;
+
           if (searchField.value === "region") {
-            return getRegionLabel(item.region).includes(searchQuery.value);
+            return item.region === searchQuery.value; // 精确匹配
           }
           return (item[searchField.value] || "")
             .toString()

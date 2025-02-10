@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed, watchEffect } from "vue";
 import { useColumns } from "./columns";
 import EditDialog from "@/views/expert/expert_management/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/expert/expert_management/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/expert/expert_management/demo1/NewDialog.vue";
+import { ProjectExpertiseArea } from "@/views/expert/expert_management/data";
 
 const {
   loading,
@@ -20,7 +21,7 @@ const {
   editDialogVisible,
   editRowData,
   deleteDialogVisible,
-  deleteExpertId, // 修改变量名
+  deleteExpertId,
   fetchData
 } = useColumns();
 
@@ -30,9 +31,32 @@ const handleEdit = row => {
 };
 
 const handleDelete = row => {
-  deleteExpertId.value = row.expert_id; // 修改为 expert_id
+  deleteExpertId.value = row.expert_id;
   deleteDialogVisible.value = true;
 };
+
+// 当搜索字段为专业时使用下拉菜单
+const isDropdownSearch = computed(() => {
+  return ["expertise_area"].includes(searchField.value);
+});
+
+// 根据当前搜索字段返回对应的下拉选项
+const currentOptions = computed(() => {
+  if (searchField.value === "expertise_area") {
+    // 确保 `ProjectExpertiseArea` 数据有效
+    return ProjectExpertiseArea && Array.isArray(ProjectExpertiseArea)
+      ? ProjectExpertiseArea
+      : [];
+  }
+  return [];
+});
+
+// 确保在 `searchQuery` 或 `searchField` 更新时，触发搜索
+watchEffect(() => {
+  if (searchField.value && searchQuery.value) {
+    fetchData();
+  }
+});
 </script>
 
 <template>
@@ -51,15 +75,37 @@ const handleDelete = row => {
         <el-option label="联系方式" value="contact_info" />
         <el-option label="工作单位" value="work_unit" />
       </el-select>
-      <el-input
-        v-model="searchQuery"
-        placeholder="输入搜索内容"
-        style="width: 300px; margin-right: 10px"
-      />
+
+      <!-- 当搜索字段为专业时，显示下拉选择 -->
+      <template v-if="isDropdownSearch">
+        <el-select
+          v-model="searchQuery"
+          placeholder="请选择专业"
+          style="width: 300px; margin-right: 10px"
+        >
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="option in currentOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </template>
+      <!-- 否则，显示文本输入框 -->
+      <template v-else>
+        <el-input
+          v-model="searchQuery"
+          placeholder="输入搜索内容"
+          style="width: 300px; margin-right: 10px"
+        />
+      </template>
+
       <!-- 添加新数据的按钮 -->
       <NewDialog @data-updated="fetchData" />
     </div>
 
+    <!-- 表格容器 -->
     <div style="overflow-x: auto">
       <pure-table
         ref="tableRef"
@@ -84,7 +130,7 @@ const handleDelete = row => {
         @page-current-change="onCurrentChange"
         @row-contextmenu="showMouseMenu"
       >
-        <!-- 定义操作列的内容 -->
+        <!-- 操作列 -->
         <template #operation="{ row }">
           <el-button link type="primary" size="small" @click="handleEdit(row)">
             修改

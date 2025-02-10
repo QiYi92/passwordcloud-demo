@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useColumns } from "./columns";
 import EditDialog from "@/views/registrationInfo/registration_info/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/registrationInfo/registration_info/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/registrationInfo/registration_info/demo1/NewDialog.vue";
 import ShowDialog from "@/views/registrationInfo/registration_info/demo1/ShowDialog.vue";
-import { RegistrationRoomOptions } from "@/views/registrationInfo/registration_info/data"; // 导入注册科室选项
+import { RegistrationRoomOptions } from "@/views/registrationInfo/registration_info/data";
 
 const tableRef = ref();
-const selectedRow = ref(null); // 存储选中的行数据
+const selectedRow = ref(null);
 const deleteProjectId = ref(null);
 const deleteDialogVisible = ref(false);
 const editDialogVisible = ref(false);
@@ -16,6 +16,7 @@ const editRowData = ref(null);
 const showDialogVisible = ref(false);
 const previewData = ref(null);
 
+// 处理删除、编辑、预览
 const handleDelete = row => {
   deleteProjectId.value = row.project_id;
   deleteDialogVisible.value = true;
@@ -27,11 +28,11 @@ const handleEdit = row => {
 };
 
 const handlePreview = row => {
-  previewData.value = row; // 将选中的行数据传递给预览对话框
-  showDialogVisible.value = true; // 显示预览对话框
+  previewData.value = row;
+  showDialogVisible.value = true;
 };
 
-// 注册科室映射
+// 映射注册科室
 const departmentMap = ref(
   RegistrationRoomOptions.reduce((map, option) => {
     map[option.value] = option.label;
@@ -39,6 +40,7 @@ const departmentMap = ref(
   }, {})
 );
 
+// 使用 useColumns 函数
 const {
   loading,
   columns,
@@ -53,6 +55,19 @@ const {
   showMouseMenu,
   fetchData
 } = useColumns(departmentMap);
+
+// 判断是否显示下拉菜单
+const isDropdownSearch = computed(() => {
+  return ["registration_department"].includes(searchField.value);
+});
+
+// 根据搜索字段返回对应的下拉选项
+const currentOptions = computed(() => {
+  if (searchField.value === "registration_department") {
+    return RegistrationRoomOptions;
+  }
+  return [];
+});
 </script>
 
 <template>
@@ -72,11 +87,32 @@ const {
         <el-option label="有效期" value="validity_period" />
         <el-option label="是否续费" value="is_renewable" />
       </el-select>
-      <el-input
-        v-model="searchQuery"
-        placeholder="输入搜索内容"
-        style="width: 300px; margin-right: 10px"
-      />
+
+      <!-- 根据 searchField 判断显示搜索内容的输入框或下拉框 -->
+      <template v-if="isDropdownSearch">
+        <el-select
+          v-model="searchQuery"
+          placeholder="请选择搜索内容"
+          style="width: 300px; margin-right: 10px"
+        >
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="option in currentOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </template>
+      <!-- 否则，显示输入框 -->
+      <template v-else>
+        <el-input
+          v-model="searchQuery"
+          placeholder="输入搜索内容"
+          style="width: 300px; margin-right: 10px"
+        />
+      </template>
+
       <NewDialog @data-updated="fetchData" />
     </div>
 
@@ -134,7 +170,6 @@ const {
       </pure-table>
     </div>
 
-    <!-- 弹窗组件 -->
     <EditDialog
       :visible="editDialogVisible"
       :initialData="editRowData"

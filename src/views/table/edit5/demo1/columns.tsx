@@ -154,7 +154,7 @@ export function useColumns() {
       dataList.value = response.data.map((item, index) => ({
         ...item,
         id: item.prompt_id || index,
-        prompt_files: getFilesLabel(item.prompt_files) // 这里转换 value 为 label
+        prompt_files: getFilesLabel(item.prompt_files) // 转换 value 为 label
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -164,18 +164,19 @@ export function useColumns() {
     }
   }
 
-  /** 仅支持 label 搜索 */
+  /** 搜索数据的函数，仅对 label 搜索进行精确匹配（下拉项），其他字段使用模糊匹配 */
   const selectData = async () => {
     loading.value = true;
     try {
       const response = await axios.get(
         import.meta.env.VITE_APP_SERVER + "/api/prompts"
       );
-
       dataList.value = clone(response.data, true)
         .filter(item => {
+          // 若搜索内容为空，则不过滤
+          if (!searchQuery.value) return true;
           if (searchField.value === "prompt_files") {
-            return getFilesLabel(item.prompt_files).includes(searchQuery.value);
+            return item.prompt_files === searchQuery.value;
           }
           return (item[searchField.value] || "")
             .toString()
@@ -185,7 +186,6 @@ export function useColumns() {
           ...item,
           prompt_files: getFilesLabel(item.prompt_files)
         }));
-
       pagination.total = dataList.value.length;
     } catch (error) {
       console.error("搜索数据失败:", error);

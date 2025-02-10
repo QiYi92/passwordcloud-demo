@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useColumns } from "./columns";
 import EditDialog from "@/views/energy/energy_management/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/energy/energy_management/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/energy/energy_management/demo1/NewDialog.vue";
 import ShowDialog from "@/views/energy/energy_management/demo1/ShowDialog.vue";
+import { RegionOptions } from "@/views/energy/energy_management/data"; // 引入区域选项
 
 const tableRef = ref();
 const selectedRow = ref(null); // 响应式变量存储选中的行数据
@@ -43,6 +44,19 @@ const {
   searchQuery,
   fetchData
 } = useColumns();
+
+// 当搜索字段为区域时使用下拉菜单
+const isDropdownSearch = computed(() => {
+  return ["region"].includes(searchField.value);
+});
+
+// 根据当前搜索字段返回对应的下拉选项
+const currentOptions = computed(() => {
+  if (searchField.value === "region") {
+    return RegionOptions;
+  }
+  return [];
+});
 </script>
 
 <template>
@@ -59,11 +73,34 @@ const {
         <el-option label="区域" value="region" />
         <el-option label="耗电量" value="electricity_consumption" />
       </el-select>
-      <el-input
-        v-model="searchQuery"
-        placeholder="输入搜索内容"
-        style="width: 300px; margin-right: 10px"
-      />
+
+      <!-- 当搜索字段为区域时，显示下拉选择 -->
+      <template v-if="isDropdownSearch">
+        <el-select
+          v-model="searchQuery"
+          placeholder="请选择搜索内容"
+          style="width: 300px; margin-right: 10px"
+        >
+          <!-- “全部”选项，值为空表示不过滤 -->
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="option in currentOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </template>
+      <!-- 否则，显示文本输入框 -->
+      <template v-else>
+        <el-input
+          v-model="searchQuery"
+          placeholder="输入搜索内容"
+          style="width: 300px; margin-right: 10px"
+        />
+      </template>
+
+      <!-- 添加新数据的按钮 -->
       <NewDialog @data-updated="fetchData" />
     </div>
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import axios from "axios";
 import EditDialog from "./EditDialog.vue"; // 引入编辑对话框组件
 import NewDialog from "./NewDialog.vue"; // 引入新增对话框组件
 import DeleteDialog from "./DeleteDialog.vue"; // 引入删除对话框组件
 import ShowDialog from "./ShowDialog.vue"; // 引入预览对话框组件
-import { TypeOptions, LevelOptions, CompletionOptions } from "./data"; // 引入数据文件
+import { CompletionOptions, LevelOptions, TypeOptions } from "./data"; // 引入数据文件
 import dayjs from "dayjs"; // 引入日期处理库
 
 // 定义响应式变量
@@ -162,22 +162,24 @@ const selectData = async () => {
         fieldValue = dayjs(fieldValue).format("YYYY年MM月DD日");
       }
 
-      if (searchField.value === "type") {
-        fieldValue =
-          TypeOptions.find(option => option.value === fieldValue)?.label ||
-          fieldValue;
-      } else if (searchField.value === "level") {
-        fieldValue =
-          LevelOptions.find(option => option.value === fieldValue)?.label ||
-          fieldValue;
-      } else if (searchField.value === "completion") {
-        fieldValue =
-          CompletionOptions.find(option => option.value === fieldValue)
-            ?.label || fieldValue;
+      // 如果选择了“全部”，则直接返回所有数据
+      if (searchQuery.value === "") {
+        return true;
       }
 
-      return fieldValue
-        ?.toString()
+      // 根据选定的字段类型筛选
+      if (searchField.value === "type") {
+        // 根据 value 比较
+        return fieldValue.toString() === searchQuery.value;
+      } else if (searchField.value === "level") {
+        return fieldValue.toString() === searchQuery.value;
+      } else if (searchField.value === "completion") {
+        return fieldValue.toString() === searchQuery.value;
+      }
+
+      // 对于其他字段，使用默认的字符串包含比较
+      return (fieldValue || "")
+        .toString()
         .toLowerCase()
         .includes(searchQuery.value.toLowerCase());
     });
@@ -188,13 +190,40 @@ const selectData = async () => {
   }
 };
 
+const getSearchOptions = () => {
+  const options = [
+    { value: "", label: "全部" }, // 添加全部选项
+    ...getSearchFieldOptions()
+  ];
+  return options;
+};
+
+const getSearchFieldOptions = () => {
+  if (searchField.value === "type") return TypeOptions;
+  if (searchField.value === "level") return LevelOptions;
+  if (searchField.value === "completion") return CompletionOptions;
+  return [];
+};
+
 // 设置默认字段并监听搜索变化
 onMounted(() => {
   searchField.value = "type"; // 设置默认搜索字段
   fetchData();
 });
 
+// 监听 searchField 和 searchQuery 变化来调用 selectData
 watch([searchField, searchQuery], selectData);
+
+// 监听 searchField，当切换回可输入字段时清空 searchQuery
+watch(searchField, newField => {
+  if (
+    newField !== "type" &&
+    newField !== "level" &&
+    newField !== "completion"
+  ) {
+    searchQuery.value = ""; // 清空之前的搜索内容
+  }
+});
 
 // 组件挂载时获取数据
 onMounted(fetchData);
@@ -217,12 +246,32 @@ onMounted(fetchData);
       <el-option label="完成情况说明" value="remark" />
       <el-option label="时间" value="time" />
     </el-select>
+
     <el-input
+      v-if="
+        searchField !== 'type' &&
+        searchField !== 'level' &&
+        searchField !== 'completion'
+      "
       v-model="searchQuery"
       placeholder="输入搜索内容"
       style="width: 300px; margin-right: 10px"
     />
-    <!-- 添加新数据的按钮 -->
+
+    <el-select
+      v-else
+      v-model="searchQuery"
+      placeholder="选择搜索项"
+      style="width: 300px; margin-right: 10px"
+    >
+      <el-option
+        v-for="option in getSearchOptions()"
+        :key="option.value"
+        :label="option.label"
+        :value="option.value"
+      />
+    </el-select>
+
     <NewDialog @data-updated="fetchData" />
   </div>
 

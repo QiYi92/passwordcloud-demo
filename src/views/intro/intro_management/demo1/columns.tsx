@@ -13,7 +13,7 @@ import dayjs from "dayjs";
 import {
   ProjectRoomOptions,
   IntroTypeOptions
-} from "@/views/intro/intro_management/data"; // 日期格式化工具
+} from "@/views/intro/intro_management/data"; // 引入选项数据
 
 export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
   const dataList = ref([]);
@@ -158,26 +158,25 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
     }
   }
 
-  /** 仅支持 label 搜索 */
+  /** 搜索数据的函数，仅支持 label 搜索 */
   const selectData = async () => {
     loading.value = true;
     try {
       const response = await axios.get(
         import.meta.env.VITE_APP_SERVER + "/api/intro"
       );
-
       dataList.value = clone(response.data, true)
         .filter(item => {
+          // 如果搜索内容为空，则不过滤
+          if (!searchQuery.value) return true;
+          // 对于责任科室和情况类型采用精确匹配
           if (searchField.value === "intro_department") {
-            return getProjectRoomLabel(item.intro_department).includes(
-              searchQuery.value
-            );
+            return item.intro_department === searchQuery.value;
           }
           if (searchField.value === "intro_type") {
-            return getIntroTypeLabel(item.intro_type).includes(
-              searchQuery.value
-            );
+            return item.intro_type === searchQuery.value;
           }
+          // 其他字段使用模糊匹配
           return (item[searchField.value] || "")
             .toString()
             .includes(searchQuery.value);
@@ -187,7 +186,6 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
           intro_department: getProjectRoomLabel(item.intro_department),
           intro_type: getIntroTypeLabel(item.intro_type)
         }));
-
       pagination.total = dataList.value.length;
     } catch (error) {
       console.error("搜索数据失败:", error);

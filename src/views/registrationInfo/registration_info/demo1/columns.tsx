@@ -3,13 +3,21 @@ import type {
   AdaptiveConfig,
   PaginationProps
 } from "@pureadmin/table";
-import { ref, onMounted, reactive, watch, type Ref, type UnwrapRef } from "vue";
+import {
+  ref,
+  onMounted,
+  reactive,
+  watch,
+  type Ref,
+  type UnwrapRef,
+  computed
+} from "vue";
 import axios from "axios";
 import { delay, clone } from "@pureadmin/utils";
-import { message } from "@/utils/message"; // 调整路径
+import { message } from "@/utils/message";
 import { CustomMouseMenu } from "@howdyjs/mouse-menu";
 import dayjs from "dayjs";
-import { RegistrationRoomOptions } from "@/views/registrationInfo/registration_info/data"; // 导入注册科室选项
+import { RegistrationRoomOptions } from "@/views/registrationInfo/registration_info/data";
 
 export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
   const dataList = ref([]);
@@ -21,11 +29,21 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
-  // 获取注册科室的标签
   const getRegistrationRoomLabel = value => {
     const option = RegistrationRoomOptions.find(opt => opt.value === value);
     return option ? option.label : "未知";
   };
+
+  const isDropdownSearch = computed(() => {
+    return ["registration_department"].includes(searchField.value);
+  });
+
+  const currentOptions = computed(() => {
+    if (searchField.value === "registration_department") {
+      return RegistrationRoomOptions;
+    }
+    return [];
+  });
 
   const columns: TableColumnList = [
     { label: "项目ID", prop: "project_id", width: 70 },
@@ -49,7 +67,6 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
     { label: "操作", width: 150, fixed: "right", slot: "operation" }
   ];
 
-  /** 分页配置 */
   const pagination = reactive<PaginationProps>({
     pageSize: 20,
     currentPage: 1,
@@ -60,7 +77,6 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
     small: false
   });
 
-  /** 右键菜单配置 */
   const menuOptions = {
     menuList: [
       {
@@ -86,7 +102,6 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
     ]
   };
 
-  /** 加载动画配置 */
   const loadingConfig = reactive<LoadingConfig>({
     text: "正在加载第一页...",
     viewBox: "-10, -10, 50, 50",
@@ -102,7 +117,6 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
       `
   });
 
-  /** 自适应高度配置 */
   const adaptiveConfig: AdaptiveConfig = { offsetBottom: 110 };
 
   function showMouseMenu(row, column, event) {
@@ -133,7 +147,6 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
     });
   }
 
-  /** 获取数据并转换 `value` 为 `label` */
   async function fetchData() {
     loading.value = true;
     try {
@@ -145,7 +158,7 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
         id: item.project_id || index,
         registration_department: getRegistrationRoomLabel(
           item.registration_department
-        ) // 转换 `value` 为 `label`
+        )
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -155,7 +168,6 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
     }
   }
 
-  /** 仅支持 label 搜索 */
   const selectData = async () => {
     loading.value = true;
     try {
@@ -165,10 +177,10 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
 
       dataList.value = clone(response.data, true)
         .filter(item => {
+          if (searchQuery.value === "") return true;
+
           if (searchField.value === "registration_department") {
-            return getRegistrationRoomLabel(
-              item.registration_department
-            ).includes(searchQuery.value);
+            return item.registration_department === searchQuery.value;
           }
           return (item[searchField.value] || "")
             .toString()

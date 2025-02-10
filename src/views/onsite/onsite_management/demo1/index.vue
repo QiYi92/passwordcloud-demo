@@ -1,12 +1,12 @@
-<!-- onsite/index.vue -->
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useColumns } from "./columns";
 import EditDialog from "@/views/onsite/onsite_management/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/onsite/onsite_management/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/onsite/onsite_management/demo1/NewDialog.vue";
 import ShowDialog from "@/views/onsite/onsite_management/demo1/ShowDialog.vue";
 import axios from "axios";
+import { OnsiteTypeOptions } from "@/views/onsite/onsite_management/data";
 
 // 从 useColumns 中解构需要的响应式变量和方法
 const {
@@ -99,6 +99,18 @@ const handlePreview = row => {
   selectedRowData.value = row;
   showDialogVisible.value = true;
 };
+
+// 搜索控件逻辑
+const isDropdownSearch = computed(() => {
+  return ["type"].includes(searchField.value); // 判断是否为 type 类型字段
+});
+
+const currentOptions = computed(() => {
+  if (searchField.value === "type") {
+    return OnsiteTypeOptions;
+  }
+  return [];
+});
 </script>
 
 <template>
@@ -118,17 +130,38 @@ const handlePreview = row => {
         <el-option label="备注" value="remarks" />
         <el-option label="驻场时间" value="onSite_time" />
       </el-select>
-      <el-input
-        v-model="searchQuery"
-        placeholder="输入搜索内容"
-        style="width: 300px; margin-right: 10px"
-      />
+
+      <!-- 动态切换搜索方式：下拉菜单或文本框 -->
+      <template v-if="isDropdownSearch">
+        <el-select
+          v-model="searchQuery"
+          placeholder="请选择搜索内容"
+          style="width: 300px; margin-right: 10px"
+        >
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="option in currentOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </template>
+      <template v-else>
+        <el-input
+          v-model="searchQuery"
+          placeholder="输入搜索内容"
+          style="width: 300px; margin-right: 10px"
+        />
+      </template>
+
       <NewDialog @data-updated="handleDataUpdated" />
       <span style="margin-left: 20px; color: gray">
         最后更新时间：{{ lastUpdateTime }}
       </span>
     </div>
 
+    <!-- 表格容器 -->
     <div style="overflow-x: auto">
       <pure-table
         ref="tableRef"
@@ -153,7 +186,7 @@ const handlePreview = row => {
         @page-current-change="onCurrentChange"
         @row-contextmenu="showMouseMenu"
       >
-        <!-- 定义操作列的内容 -->
+        <!-- 操作列 -->
         <template #operation="{ row }">
           <el-button link type="primary" size="small" @click="handleEdit(row)">
             修改

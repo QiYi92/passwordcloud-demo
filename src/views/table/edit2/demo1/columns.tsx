@@ -143,7 +143,7 @@ export function useColumns() {
     });
   }
 
-  /** 获取数据并转换 `value` 为 `label` */
+  /** 获取数据并转换 contract_type 的值为 label */
   async function fetchData() {
     loading.value = true;
     try {
@@ -153,7 +153,7 @@ export function useColumns() {
       dataList.value = response.data.map((item, index) => ({
         ...item,
         id: item.contract_id || index,
-        contract_type: getContractTypeLabel(item.contract_type) // 这里转换 value 为 label
+        contract_type: getContractTypeLabel(item.contract_type)
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -163,20 +163,18 @@ export function useColumns() {
     }
   }
 
-  /** 仅支持 label 搜索 */
+  /** 搜索数据函数：对于 contract_type 字段采用精确匹配；如果下拉选择为空则不过滤 */
   const selectData = async () => {
     loading.value = true;
     try {
       const response = await axios.get(
         import.meta.env.VITE_APP_SERVER + "/api/contracts"
       );
-
       dataList.value = clone(response.data, true)
         .filter(item => {
+          if (!searchQuery.value) return true;
           if (searchField.value === "contract_type") {
-            return getContractTypeLabel(item.contract_type).includes(
-              searchQuery.value
-            );
+            return item.contract_type === searchQuery.value;
           }
           return (item[searchField.value] || "")
             .toString()
@@ -186,7 +184,6 @@ export function useColumns() {
           ...item,
           contract_type: getContractTypeLabel(item.contract_type)
         }));
-
       pagination.total = dataList.value.length;
     } catch (error) {
       console.error("搜索数据失败:", error);
