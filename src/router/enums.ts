@@ -5,10 +5,11 @@ const home = 0,
   onsite = 4,
   expert = 5,
   energy = 6,
-  meeting = 7,
-  registrationInfo = 8,
-  feedback = 9,
-  system = 10;
+  enterpriseInfo = 7,
+  meeting = 8,
+  registrationInfo = 9,
+  feedback = 10,
+  system = 11;
 
 export {
   home,
@@ -18,6 +19,7 @@ export {
   onsite,
   expert,
   energy,
+  enterpriseInfo,
   feedback,
   registrationInfo,
   meeting,

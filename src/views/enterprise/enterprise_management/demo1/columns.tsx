@@ -8,63 +8,46 @@ import axios from "axios";
 import { delay, clone } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { CustomMouseMenu } from "@howdyjs/mouse-menu";
-import {
-  MeetingProgressOptions,
-  MeetingTypeOptions
-} from "@/views/meeting/meetingSplit_management/data";
-import dayjs from "dayjs";
+import { LargeScaleOptions } from "@/views/enterprise/enterprise_management/data";
+import provincesJson from "@/views/enterprise/enterprise_management/provinces.json";
+import citiesJson from "@/views/enterprise/enterprise_management/cities.json";
 
 export function useColumns() {
   const dataList = ref([]);
   const loading = ref(true);
-  const searchField = ref("split_id");
+  const searchField = ref("enterprise_name");
   const searchQuery = ref("");
   const editRowData = ref(null);
-  const deleteMeetingId = ref(null);
+  const deleteEnterpriseId = ref(null);
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
-  // 获取 meeting_progress 的 label
-  const getMeetingProgressLabel = value => {
-    const option = MeetingProgressOptions.find(opt => opt.value === value);
-    return option ? option.label : "未知进展";
+  // 获取是否上规的label
+
+  const getLargeScaleLabel = value => {
+    const region = LargeScaleOptions.find(item => item.value === value);
+    return region ? region.label : "未知";
   };
 
-  // 获取 meeting_type 的 label
-  const getMeetingTypeLabel = value => {
-    const option = MeetingTypeOptions.find(opt => opt.value === value);
-    return option ? option.label : "未知类型";
-  };
+  /** 获取省份名称 */
+  function getProvinceName(provinceCode) {
+    const province = provincesJson.find(item => item.code === provinceCode);
+    return province ? province.name : provinceCode; // 返回省份名称，找不到时返回原始值
+  }
 
-  // 搜索字段选择下拉
-  const isDropdownSearch = computed(() => {
-    return ["progress", "meeting_type"].includes(searchField.value);
-  });
-
-  // 根据当前搜索字段返回对应的下拉选项
-  const currentOptions = computed(() => {
-    if (searchField.value === "progress") {
-      return MeetingProgressOptions;
-    }
-    if (searchField.value === "meeting_type") {
-      return MeetingTypeOptions;
-    }
-    return [];
-  });
+  /** 获取地市名称 */
+  function getCityName(cityCode) {
+    const city = citiesJson.find(item => item.code === cityCode);
+    return city ? city.name : cityCode; // 返回地市名称，找不到时返回原始值
+  }
 
   const columns: TableColumnList = [
-    { label: "拆分ID", prop: "split_id", width: 100 },
-    { label: "选择会议纪要清单", prop: "meeting_name", width: 150 },
-    { label: "类型", prop: "meeting_type", width: 120 },
-    { label: "内容", prop: "meeting_content", width: 300, align: "left" },
-    { label: "责任科室或人员", prop: "department_personnel", width: 150 },
-    {
-      label: "完成时限",
-      prop: "time_limit",
-      width: 150,
-      formatter: row => dayjs(row.time_limit).format("YYYY年MM月DD日")
-    },
-    { label: "当前进展", prop: "progress", width: 150 },
+    // { label: "企业ID", prop: "enterprise_id", width: 100 },
+    { label: "企业名称", prop: "enterprise_name" },
+    { label: "联系人", prop: "contact_person", width: 150 },
+    { label: "是否上规", prop: "is_large_scale", width: 100 },
+    { label: "省份", prop: "province", width: 120 },
+    { label: "地市", prop: "city", width: 120 },
     { label: "备注", prop: "remarks", width: 200 },
     { label: "操作", width: "150", fixed: "right", slot: "operation" }
   ];
@@ -84,12 +67,11 @@ export function useColumns() {
   const menuOptions = {
     menuList: [
       {
-        label: ({ split_id }) => `拆分ID为：${split_id}`,
+        label: ({ enterprise_id }) => `企业ID为：${enterprise_id}`,
         disabled: true
       },
       {
         label: "修改",
-        tips: "Edit",
         fn: async row => {
           editRowData.value = row;
           editDialogVisible.value = true;
@@ -97,9 +79,8 @@ export function useColumns() {
       },
       {
         label: "删除",
-        tips: "Delete",
         fn: row => {
-          deleteMeetingId.value = row.split_id;
+          deleteEnterpriseId.value = row.enterprise_id;
           deleteDialogVisible.value = true;
         }
       }
@@ -158,13 +139,14 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/meeting-split"
+        import.meta.env.VITE_APP_SERVER + "/api/enterprise"
       );
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.split_id || index,
-        progress: getMeetingProgressLabel(item.progress),
-        meeting_type: getMeetingTypeLabel(item.meeting_type)
+        id: item.enterprise_id || index,
+        province: getProvinceName(item.province), // 获取省份名称
+        city: getCityName(item.city), // 获取地市名称
+        is_large_scale: getLargeScaleLabel(item.is_large_scale) // 调用转换函数
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -179,18 +161,15 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/meeting-split"
+        import.meta.env.VITE_APP_SERVER + "/api/enterprise"
       );
 
       dataList.value = clone(response.data, true)
         .filter(item => {
           if (searchQuery.value === "") return true;
 
-          if (searchField.value === "progress") {
-            return item.progress === searchQuery.value;
-          }
-          if (searchField.value === "meeting_type") {
-            return item.meeting_type === searchQuery.value;
+          if (searchField.value === "is_large_scale") {
+            return item.is_large_scale === searchQuery.value;
           }
           return (item[searchField.value] || "")
             .toString()
@@ -198,8 +177,7 @@ export function useColumns() {
         })
         .map(item => ({
           ...item,
-          progress: getMeetingProgressLabel(item.progress),
-          meeting_type: getMeetingTypeLabel(item.meeting_type)
+          is_large_scale: getLargeScaleLabel(item.is_large_scale)
         }));
 
       pagination.total = dataList.value.length;
@@ -215,11 +193,7 @@ export function useColumns() {
 
   // 监听 searchField，当切换回可输入字段时清空 searchQuery
   watch(searchField, newField => {
-    if (
-      newField !== "type" &&
-      newField !== "level" &&
-      newField !== "completion"
-    ) {
+    if (newField !== "is_large_scale") {
       searchQuery.value = ""; // 清空之前的搜索内容
     }
   });
@@ -246,7 +220,7 @@ export function useColumns() {
     showMouseMenu,
     editDialogVisible,
     editRowData,
-    deleteMeetingId,
+    deleteEnterpriseId,
     deleteDialogVisible,
     fetchData
   };
