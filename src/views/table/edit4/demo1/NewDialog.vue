@@ -33,13 +33,6 @@ const computedProjectOptions = computed(() => projectOptions.value);
 
 const columns: PlusColumn[] = [
   {
-    label: "资金名称",
-    labelWidth: 100,
-    width: 120,
-    prop: "pass_name",
-    valueType: "copy"
-  },
-  {
     label: "项目名称",
     labelWidth: 100,
     width: 120,

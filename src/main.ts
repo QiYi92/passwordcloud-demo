@@ -8,6 +8,7 @@ import { useElementPlus } from "@/plugins/elementPlus";
 import { injectResponsiveStorage } from "@/utils/responsive";
 import Table from "@pureadmin/table";
 import axios from "axios";
+axios.defaults.withCredentials = true;
 
 import "./style/reset.scss";
 import "./style/index.scss";
@@ -17,12 +18,27 @@ import "./assets/iconfont/iconfont.js";
 import "./assets/iconfont/iconfont.css";
 
 // 禁用缓存的拦截器
-axios.interceptors.request.use(
-  config => {
-    config.headers["Cache-Control"] = "no-cache"; // 仅保留 Cache-Control
-    return config;
-  },
+axios.interceptors.response.use(
+  response => response,
   error => {
+    if (error.response?.status === 401) {
+      console.warn("【全局 axios】检测到 401，执行统一登出流程");
+
+      // 清除缓存（可省略，因为 logout 方法内已处理）
+      // localStorage.removeItem("token");
+      // sessionStorage.removeItem("user");
+
+      // 弹出提示
+      ElMessage.warning("登录已过期，请重新登录");
+
+      // 延迟调用 logout，避免在中途冲突
+      setTimeout(() => {
+        import("@/store/modules/user").then(({ useUserStoreHook }) => {
+          useUserStoreHook().logOut();
+        });
+      }, 300);
+    }
+
     return Promise.reject(error);
   }
 );
@@ -48,6 +64,7 @@ app.component("Auth", Auth);
 import "tippy.js/dist/tippy.css";
 import "tippy.js/themes/light.css";
 import VueTippy from "vue-tippy";
+import { ElMessage } from "element-plus";
 app.use(VueTippy);
 
 // 获取平台配置并进行初始化

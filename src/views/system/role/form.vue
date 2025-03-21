@@ -69,6 +69,14 @@ defineExpose({ getRef, validatePassword }); // 暴露方法供外部调用
       />
     </el-form-item>
 
+    <el-form-item label="真实姓名" prop="real_name">
+      <el-input
+        v-model="newFormInline.real_name"
+        clearable
+        placeholder="请输入真实姓名"
+      />
+    </el-form-item>
+
     <el-form-item label="权限组" prop="code">
       <el-select
         v-model="newFormInline.code"

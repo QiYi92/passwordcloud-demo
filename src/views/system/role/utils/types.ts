@@ -4,6 +4,8 @@ interface FormItemProps {
   id: string;
   /** 用户名 */
   username: string;
+  /** 真实姓名 */
+  real_name?: string; // 新增字段
   /** 用户标识 */
   code: string;
   /** 手机号码 */
@@ -15,6 +17,7 @@ interface FormItemProps {
   /** 备注 */
   remark: string;
 }
+
 interface FormProps {
   formInline: FormItemProps;
 }

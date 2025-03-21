@@ -31,7 +31,16 @@ const systemManagementRouter = {
       name: "SystemRole",
       meta: {
         icon: "ri:admin-fill",
-        title: "角色管理",
+        title: "用户管理",
+        roles: ["admin"]
+      }
+    },
+    {
+      path: "/system/logs/demo1/index",
+      name: "UserLogs",
+      meta: {
+        icon: "ri:admin-fill",
+        title: "用户日志管理",
         roles: ["admin"]
       }
     }

@@ -92,18 +92,26 @@ onMounted(() => {
       :model="form"
       class="search-form bg-bg_color w-[99/100] pl-8 pt-[12px] overflow-auto"
     >
-      <el-form-item label="角色名称：" prop="username">
+      <el-form-item label="用户名：" prop="username">
         <el-input
           v-model="form.username"
-          placeholder="请输入角色名称"
+          placeholder="请输入用户名"
           clearable
           class="!w-[180px]"
         />
       </el-form-item>
-      <el-form-item label="角色标识：" prop="code">
+      <el-form-item label="权限组：" prop="code">
         <el-input
           v-model="form.code"
-          placeholder="请输入角色标识"
+          placeholder="请输入查询的权限组"
+          clearable
+          class="!w-[180px]"
+        />
+      </el-form-item>
+      <el-form-item label="真实姓名：" prop="real_name">
+        <el-input
+          v-model="form.real_name"
+          placeholder="请输入真实姓名"
           clearable
           class="!w-[180px]"
         />

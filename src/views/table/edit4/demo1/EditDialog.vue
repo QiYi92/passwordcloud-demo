@@ -101,13 +101,6 @@ const handleSubmit = async () => {
 // 列的定义
 const columns: PlusColumn[] = [
   {
-    label: "资金名称",
-    width: 120,
-    labelWidth: 100,
-    prop: "pass_name",
-    valueType: "copy"
-  },
-  {
     label: "项目名称",
     width: 120,
     labelWidth: 100,

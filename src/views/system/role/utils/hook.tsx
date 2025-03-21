@@ -27,6 +27,7 @@ export function useUser(treeRef: Ref) {
   const form = reactive({
     // 定义表单数据的响应式对象
     username: "",
+    real_name: "",
     code: ""
   });
 
@@ -67,6 +68,11 @@ export function useUser(treeRef: Ref) {
     {
       label: "用户名",
       prop: "username"
+    },
+    {
+      label: "真实姓名",
+      prop: "real_name", // 新增字段
+      minWidth: 100
     },
     {
       label: "权限组",
@@ -143,6 +149,7 @@ export function useUser(treeRef: Ref) {
         formInline: {
           id: row?.id ?? null, // 用户 ID
           username: row?.username ?? "", // 用户名
+          real_name: row?.real_name ?? "", // 真实姓名
           code: row?.code ?? "", // 用户标识
           password: row?.password ?? "", // 密码字段
           remark: row?.remark ?? "" // 备注
