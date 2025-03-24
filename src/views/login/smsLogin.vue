@@ -86,8 +86,13 @@ const onSmsLogin = async () => {
     );
 
     if (res.data.success) {
-      const { id, username, code } = res.data.data; // 获取后端返回的用户信息
+      const { id, username, code, roles } = res.data.data; // 获取后端返回的用户信息
       console.log("用户信息:", { id, username, code });
+
+      if (roles) {
+        storageLocal().setItem(userKey, { roles }); // 存储用户角色信息
+        console.log("本地存储中存储的角色：", roles); // 打印存储的角色信息
+      }
 
       // 存储用户信息
       if (code) {

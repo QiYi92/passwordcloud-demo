@@ -76,11 +76,11 @@ const onLogin = async (formEl: FormInstance | undefined) => {
         if (res.data.success) {
           // 如果登录成功
           const { id, username, code, roles } = res.data.data; // 从响应中获取所需的数据
-          console.log("Response data:", { id, username, code, roles }); // 打印响应数据
+          console.log("用户信息:", { id, username, code, roles }); // 打印响应数据
 
           if (roles) {
             storageLocal().setItem(userKey, { roles }); // 存储用户角色信息
-            console.log("Stored roles in local storage:", roles); // 打印存储的角色信息
+            console.log("本地存储中存储的角色：", roles); // 打印存储的角色信息
           }
           if (code) {
             const userInfo = { roles: [code], id, username }; // 创建用户信息对象
