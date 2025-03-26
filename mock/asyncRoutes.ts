@@ -43,6 +43,15 @@ const systemManagementRouter = {
         title: "用户日志管理",
         roles: ["admin"]
       }
+    },
+    {
+      path: "/system/loginStats/demo1/index",
+      name: "loginStats",
+      meta: {
+        icon: "ri:admin-fill",
+        title: "用户登录统计",
+        roles: ["admin"]
+      }
     }
   ]
 };

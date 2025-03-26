@@ -21,6 +21,7 @@ import User from "@iconify-icons/ri/user-3-fill"; // 导入用户图标
 import { storageLocal } from "@pureadmin/utils"; // 导入本地存储工具
 import { userKey, DataInfo } from "@/utils/auth"; // 导入用户键和数据类型
 import Cookies from "js-cookie"; // 导入 js-cookie 库
+import { reportLogin } from "@/views/login/utils/reportLogin"; // 导入日志记录工具
 defineOptions({
   name: "Login" // 定义组件名称
 });
@@ -77,6 +78,8 @@ const onLogin = async (formEl: FormInstance | undefined) => {
           // 如果登录成功
           const { id, username, code, roles } = res.data.data; // 从响应中获取所需的数据
           console.log("用户信息:", { id, username, code, roles }); // 打印响应数据
+
+          await reportLogin(username); // 调用日志记录
 
           if (roles) {
             storageLocal().setItem(userKey, { roles }); // 存储用户角色信息

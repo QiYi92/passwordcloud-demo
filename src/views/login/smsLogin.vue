@@ -12,6 +12,7 @@ import { storageLocal } from "@pureadmin/utils";
 import Cookies from "js-cookie";
 import { userKey } from "@/utils/auth";
 import { getTopMenu, initRouter } from "@/router/utils"; // 夜间模式图标
+import { reportLogin } from "@/views/login/utils/reportLogin"; // 导入日志记录工具
 
 const router = useRouter();
 const loading = ref(false); // 加载状态
@@ -88,6 +89,8 @@ const onSmsLogin = async () => {
     if (res.data.success) {
       const { id, username, code, roles } = res.data.data; // 获取后端返回的用户信息
       console.log("用户信息:", { id, username, code });
+
+      await reportLogin(username); // 调用日志记录
 
       if (roles) {
         storageLocal().setItem(userKey, { roles }); // 存储用户角色信息
