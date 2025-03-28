@@ -116,6 +116,18 @@ const columns: PlusColumn[] = [
     }
   },
   {
+    label: "信息来源",
+    labelWidth: 150,
+    width: 120,
+    prop: "info_source",
+    valueType: "textarea",
+    fieldProps: {
+      maxlength: 500,
+      showWordLimit: true,
+      autosize: { minRows: 2, maxRows: 5 }
+    }
+  },
+  {
     label: "更新周期",
     labelWidth: 150,
     width: 120,

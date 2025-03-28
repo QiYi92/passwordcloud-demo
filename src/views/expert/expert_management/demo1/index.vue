@@ -4,7 +4,10 @@ import { useColumns } from "./columns";
 import EditDialog from "@/views/expert/expert_management/demo1/EditDialog.vue";
 import DeleteDialog from "@/views/expert/expert_management/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/expert/expert_management/demo1/NewDialog.vue";
-import { ProjectExpertiseArea } from "@/views/expert/expert_management/data";
+import {
+  ProjectExpertiseArea,
+  LocationOptions
+} from "@/views/expert/expert_management/data";
 
 const {
   loading,
@@ -22,7 +25,8 @@ const {
   editRowData,
   deleteDialogVisible,
   deleteExpertId,
-  fetchData
+  fetchData,
+  selectData
 } = useColumns();
 
 const handleEdit = row => {
@@ -37,16 +41,15 @@ const handleDelete = row => {
 
 // 当搜索字段为专业时使用下拉菜单
 const isDropdownSearch = computed(() => {
-  return ["expertise_area"].includes(searchField.value);
+  return ["expertise_area", "location"].includes(searchField.value);
 });
 
 // 根据当前搜索字段返回对应的下拉选项
 const currentOptions = computed(() => {
   if (searchField.value === "expertise_area") {
-    // 确保 `ProjectExpertiseArea` 数据有效
-    return ProjectExpertiseArea && Array.isArray(ProjectExpertiseArea)
-      ? ProjectExpertiseArea
-      : [];
+    return ProjectExpertiseArea;
+  } else if (searchField.value === "location") {
+    return LocationOptions;
   }
   return [];
 });
@@ -54,7 +57,7 @@ const currentOptions = computed(() => {
 // 确保在 `searchQuery` 或 `searchField` 更新时，触发搜索
 watchEffect(() => {
   if (searchField.value && searchQuery.value) {
-    fetchData();
+    selectData();
   }
 });
 </script>
@@ -74,6 +77,9 @@ watchEffect(() => {
         <el-option label="职称" value="title" />
         <el-option label="联系方式" value="contact_info" />
         <el-option label="工作单位" value="work_unit" />
+        <el-option label="所在地" value="location" />
+        <el-option label="现任职务" value="current_position" />
+        <el-option label="现从事专业" value="current_expertise" />
       </el-select>
 
       <!-- 当搜索字段为专业时，显示下拉选择 -->

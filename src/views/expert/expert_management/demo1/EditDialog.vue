@@ -74,27 +74,27 @@ const columns: PlusColumn[] = [
     options: [
       {
         label: "数字设施",
-        value: "0",
+        value: "数字设施",
         color: "blue"
       },
       {
         label: "数字经济",
-        value: "1",
+        value: "数字经济",
         color: "blue"
       },
       {
         label: "数字政府",
-        value: "2",
+        value: "数字经济",
         color: "blue"
       },
       {
         label: "数字社会",
-        value: "3",
+        value: "数字经济",
         color: "blue"
       },
       {
         label: "经济管理",
-        value: "4",
+        value: "数字经济",
         color: "blue"
       }
     ]
@@ -118,6 +118,32 @@ const columns: PlusColumn[] = [
     width: 120,
     labelWidth: 100,
     prop: "work_unit",
+    valueType: "input"
+  },
+  {
+    label: "所在地",
+    width: 120,
+    labelWidth: 100,
+    prop: "location",
+    valueType: "select",
+    options: [
+      { label: "柳州市", value: "柳州市" },
+      { label: "本地", value: "本地" },
+      { label: "外地", value: "外地" }
+    ]
+  },
+  {
+    label: "现任职务",
+    width: 120,
+    labelWidth: 100,
+    prop: "current_position",
+    valueType: "input"
+  },
+  {
+    label: "现从事专业",
+    width: 120,
+    labelWidth: 100,
+    prop: "current_expertise",
     valueType: "input"
   },
   {

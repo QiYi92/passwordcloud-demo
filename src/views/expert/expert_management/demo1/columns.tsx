@@ -7,11 +7,14 @@ import { ref, onMounted, reactive, watch } from "vue";
 
 import { delay, clone } from "@pureadmin/utils";
 import axios from "axios";
-import { ProjectExpertiseArea } from "@/views/expert/expert_management/data"; // 导入专业领域数据
 
 import { message } from "@/utils/message";
 import { CustomMouseMenu } from "@howdyjs/mouse-menu";
 import dayjs from "dayjs";
+import {
+  ProjectExpertiseArea,
+  LocationOptions
+} from "@/views/expert/expert_management/data";
 
 export function useColumns() {
   const dataList = ref([]);
@@ -24,10 +27,6 @@ export function useColumns() {
   const deleteDialogVisible = ref(false);
 
   // 获取专业领域的 label
-  const getExpertiseAreaLabel = value => {
-    const option = ProjectExpertiseArea.find(opt => opt.value === value);
-    return option ? option.label : "未知"; // 如果找不到对应的选项，返回"未知"
-  };
 
   const columns: TableColumnList = [
     {
@@ -53,6 +52,18 @@ export function useColumns() {
     {
       label: "工作单位",
       prop: "work_unit"
+    },
+    {
+      label: "所在地",
+      prop: "location"
+    },
+    {
+      label: "现任职务",
+      prop: "current_position"
+    },
+    {
+      label: "现从事专业",
+      prop: "current_expertise"
     },
     {
       label: "备注",
@@ -160,8 +171,7 @@ export function useColumns() {
       );
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.expert_id || index,
-        expertise_area: getExpertiseAreaLabel(item.expertise_area) // 映射专业领域
+        id: item.expert_id || index
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -185,16 +195,19 @@ export function useColumns() {
           if (searchQuery.value === "") return true;
 
           // 对专业领域字段进行精确匹配
-          if (searchField.value === "expertise_area") {
-            return item.expertise_area === searchQuery.value; // 匹配 value
+          if (
+            searchField.value === "expertise_area" ||
+            searchField.value === "location"
+          ) {
+            return item[searchField.value] === searchQuery.value;
           }
+
           return (item[searchField.value] || "")
             .toString()
             .includes(searchQuery.value);
         })
         .map(item => ({
-          ...item,
-          expertise_area: getExpertiseAreaLabel(item.expertise_area) // 映射专业领域
+          ...item
         }));
 
       pagination.total = dataList.value.length;
@@ -232,6 +245,7 @@ export function useColumns() {
     editRowData,
     deleteExpertId,
     deleteDialogVisible,
-    fetchData
+    fetchData,
+    selectData
   };
 }

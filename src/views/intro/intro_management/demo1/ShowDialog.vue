@@ -70,6 +70,7 @@ const fieldMap = {
   update_time: "更新时间",
   intro_content: "简介内容",
   update_cycle: "更新周期",
+  info_source: "信息来源",
   intro_type: "情况类型"
 };
 

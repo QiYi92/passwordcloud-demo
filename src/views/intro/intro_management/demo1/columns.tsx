@@ -49,6 +49,7 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
       formatter: row => dayjs(row.update_time).format("YYYY年MM月DD日")
     },
     { label: "简介内容", prop: "intro_content", width: 300 },
+    { label: "信息来源", prop: "info_source", width: 300 },
     { label: "更新周期", prop: "update_cycle", width: 150 },
     { label: "操作", width: 150, fixed: "right", slot: "operation" }
   ];

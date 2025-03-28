@@ -89,6 +89,7 @@ const {
         <el-option label="情况类型" value="intro_type" />
         <el-option label="更新时间" value="update_time" />
         <el-option label="简介内容" value="intro_content" />
+        <el-option label="信息来源" value="info_source" />
         <el-option label="更新周期" value="update_cycle" />
       </el-select>
 

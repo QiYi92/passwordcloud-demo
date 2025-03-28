@@ -58,4 +58,10 @@ function tabClick({ index }) {
 :deep(.el-tabs__nav-prev.is-disabled) {
   opacity: 0.5;
 }
+
+:deep(.el-table .cell) {
+  word-break: break-word;
+  word-wrap: break-word;
+  white-space: pre-wrap; /* 自动换行 */
+}
 </style>
