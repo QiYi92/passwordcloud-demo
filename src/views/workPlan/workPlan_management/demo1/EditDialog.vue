@@ -92,6 +92,15 @@ const columns: PlusColumn[] = [
     }
   },
   {
+    label: "更新人员",
+    labelWidth: 150,
+    prop: "update_user",
+    valueType: "input",
+    fieldProps: {
+      placeholder: "请输入更新人员"
+    }
+  },
+  {
     label: "备注",
     labelWidth: 150,
     prop: "remark",

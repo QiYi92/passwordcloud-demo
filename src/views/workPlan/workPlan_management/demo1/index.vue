@@ -92,6 +92,7 @@ const currentOptions = computed(() => {
         <el-option label="开始时间" value="start_month" />
         <el-option label="结束时间" value="end_month" />
         <el-option label="当前状态" value="current_status" />
+        <el-option label="更新人员" value="update_user" />
       </el-select>
 
       <!-- 当搜索字段为下拉项时，显示下拉选择 -->

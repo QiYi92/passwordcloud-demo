@@ -85,6 +85,7 @@ const handleSubmit = async () => {
     visible.value = false; // 关闭对话框
     alert("能耗记录添加成功！");
     emit("data-updated"); // 发射事件通知父组件刷新数据
+    window.dispatchEvent(new Event("energy-changed"));
   } catch (error) {
     console.error("Failed to add energy record:", error);
     alert("能耗记录添加失败，请稍后重试！");

@@ -56,6 +56,7 @@ export function useColumns(departmentMap: Ref<UnwrapRef<{}>>) {
     },
     { label: "当前状态", prop: "current_status", width: 150 },
     { label: "备注", prop: "remark", width: 300 },
+    { label: "更新人员", prop: "update_user", width: 120 },
     { label: "操作", width: 150, fixed: "right", slot: "operation" }
   ];
 

@@ -7,6 +7,7 @@ import show2_icon from "@iconify-icons/ri/list-radio";
 import show3_icon from "@iconify-icons/ri/list-check-3";
 import show4_icon from "@iconify-icons/ri/money-cny-box-line";
 import show5_icon from "@iconify-icons/ri/pages-line";
+import show6_icon from "@iconify-icons/ri/layout-2-fill";
 
 export default {
   path: "/table",
@@ -51,6 +52,15 @@ export default {
       meta: {
         title: "项目支付管理",
         icon: show3_icon
+      }
+    },
+    {
+      path: "/table/edit6",
+      name: "PureTableEdit6",
+      component: () => import("@/views/table/edit6.vue"),
+      meta: {
+        title: "合同支付计划",
+        icon: show6_icon
       }
     },
     {

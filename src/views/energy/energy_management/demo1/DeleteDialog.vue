@@ -47,6 +47,7 @@ const confirmDelete = async () => {
     );
     if (response.status === 200 || response.status === 204) {
       emit("deleted"); // 发出已删除的事件，通知父组件
+      window.dispatchEvent(new Event("energy-changed"));
       emit("update:visible", false); // 隐藏对话框
       alert("能耗记录删除成功");
     } else {

@@ -3,6 +3,7 @@ import { enterpriseInfo } from "@/router/enums";
 
 import enterprise_icon from "@iconify-icons/ri/building-4-fill";
 import enterpriseInfo_icon from "@iconify-icons/ri/building-fill";
+import enterprise_main_businessInfo_icon from "@iconify-icons/ri/building-2-fill";
 import outputInfo_icon from "@iconify-icons/ri/book-read-fill";
 
 export default {
@@ -20,6 +21,16 @@ export default {
       meta: {
         title: "企业管理",
         icon: enterpriseInfo_icon
+      }
+    },
+    {
+      path: "/enterprise/enterprise_main_business",
+      name: "enterprise_main_business",
+      component: () =>
+        import("@/views/enterprise/enterprise_main_business.vue"),
+      meta: {
+        title: "企业主营业务",
+        icon: enterprise_main_businessInfo_icon
       }
     },
     {

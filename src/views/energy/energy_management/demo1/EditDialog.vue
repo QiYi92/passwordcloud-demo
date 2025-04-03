@@ -108,6 +108,7 @@ const handleSubmit = async () => {
     console.log("更新成功:", response.data);
     emit("update:visible", false); // 关闭弹窗
     emit("data-updated"); // 通知父组件数据已更新
+    window.dispatchEvent(new Event("energy-changed"));
     alert("能耗记录更新成功！");
   } catch (error) {
     console.error("Failed to update energy record:", error);

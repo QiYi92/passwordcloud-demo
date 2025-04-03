@@ -8,6 +8,7 @@ import { useElementPlus } from "@/plugins/elementPlus";
 import { injectResponsiveStorage } from "@/utils/responsive";
 import Table from "@pureadmin/table";
 import axios from "axios";
+
 axios.defaults.withCredentials = true;
 
 import "./style/reset.scss";
@@ -66,6 +67,11 @@ import "tippy.js/themes/light.css";
 import VueTippy from "vue-tippy";
 import { ElMessage } from "element-plus";
 app.use(VueTippy);
+
+// 导入 echarts 库
+import VueECharts from "vue-echarts";
+import "echarts";
+app.component("v-chart", VueECharts); // 注册 v-chart 组件
 
 // 获取平台配置并进行初始化
 getPlatformConfig(app).then(async config => {

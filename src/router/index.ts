@@ -204,4 +204,7 @@ router.afterEach(() => {
   NProgress.done(); // 结束进度条
 });
 
+// console.log("✅ 当前已注册的路由路径：", router.getRoutes().map(r => r.path));
+// console.log("✅ constantRoutes 内容：", constantRoutes);
+
 export default router;
