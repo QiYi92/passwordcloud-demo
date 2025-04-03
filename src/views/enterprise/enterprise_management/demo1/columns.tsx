@@ -171,13 +171,22 @@ export function useColumns() {
           if (searchField.value === "is_large_scale") {
             return item.is_large_scale === searchQuery.value;
           }
-          return (item[searchField.value] || "")
-            .toString()
-            .includes(searchQuery.value);
+          return (() => {
+            const value = item[searchField.value] || "";
+            if (searchField.value === "province") {
+              return getProvinceName(value).includes(searchQuery.value);
+            }
+            if (searchField.value === "city") {
+              return getCityName(value).includes(searchQuery.value);
+            }
+            return value.toString().includes(searchQuery.value);
+          })();
         })
         .map(item => ({
           ...item,
-          is_large_scale: getLargeScaleLabel(item.is_large_scale)
+          is_large_scale: getLargeScaleLabel(item.is_large_scale),
+          province: getProvinceName(item.province),
+          city: getCityName(item.city)
         }));
 
       pagination.total = dataList.value.length;

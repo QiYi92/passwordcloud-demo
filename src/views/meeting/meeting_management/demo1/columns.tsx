@@ -36,7 +36,11 @@ export function useColumns() {
       label: "会议正文",
       prop: "meeting_body",
       width: 300,
-      align: "left"
+      align: "left",
+      formatter: row => {
+        const text = row.meeting_body || "";
+        return text.length > 50 ? text.slice(0, 50) + "（省略）" : text;
+      }
     },
     {
       label: "会议时间",
@@ -47,7 +51,11 @@ export function useColumns() {
     {
       label: "摘要",
       prop: "summary",
-      width: 200
+      width: 200,
+      formatter: row => {
+        const text = row.meeting_body || "";
+        return text.length > 50 ? text.slice(0, 50) + "（省略）" : text;
+      }
     },
     {
       label: "正文附件",

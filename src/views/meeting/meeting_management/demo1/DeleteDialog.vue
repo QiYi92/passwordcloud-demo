@@ -46,6 +46,10 @@ const confirmDelete = async () => {
 
     // Step 2: 删除所有附件文件
     for (const file of files) {
+      if (file.url === "0") {
+        console.log("跳过无效文件记录: 0");
+        continue; // 跳过“0”
+      }
       try {
         await axios.post(
           `${import.meta.env.VITE_APP_SERVER}/api/meeting/deleteFile`,
@@ -75,18 +79,19 @@ const confirmDelete = async () => {
       alert("删除失败");
     }
   } catch (error) {
-    // 如果返回 404，假定记录已经删除并处理界面更新
-    if (error.response && error.response.status === 404) {
+    if (error.response?.status === 404) {
       console.warn(`未找到 ID: ${props.meetingId} 的会议，假设它已经被删除。`);
-      emit("deleted"); // 通知父组件删除操作
-      emit("update:visible", false); // 关闭对话框
+      emit("deleted");
+      emit("update:visible", false);
       alert("会议已删除");
+    } else if (
+      error.response?.status === 400 ||
+      error.response?.status === 500
+    ) {
+      const message = error.response?.data?.message || "删除失败";
+      alert(message); // ✅ 显示后端返回的 message
     } else {
       console.error("删除会议失败:", error);
-      console.error(
-        "错误响应数据:",
-        error.response ? error.response.data : "无响应数据"
-      );
       alert("删除失败！");
     }
   }

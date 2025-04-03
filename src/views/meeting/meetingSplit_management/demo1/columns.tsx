@@ -56,13 +56,26 @@ export function useColumns() {
     { label: "拆分ID", prop: "split_id", width: 100 },
     { label: "选择会议纪要清单", prop: "meeting_name", width: 150 },
     { label: "类型", prop: "meeting_type", width: 120 },
-    { label: "内容", prop: "meeting_content", width: 300, align: "left" },
+    {
+      label: "内容",
+      prop: "meeting_content",
+      width: 300,
+      align: "left",
+      formatter: row => {
+        const text = row.meeting_body || "";
+        return text.length > 50 ? text.slice(0, 50) + "（省略）" : text;
+      }
+    },
     { label: "责任科室或人员", prop: "department_personnel", width: 150 },
     {
       label: "完成时限",
       prop: "time_limit",
       width: 150,
-      formatter: row => dayjs(row.time_limit).format("YYYY年MM月DD日")
+      formatter: row => {
+        return row.time_limit
+          ? dayjs(row.time_limit).format("YYYY年MM月DD日")
+          : "无时限";
+      }
     },
     { label: "当前进展", prop: "progress", width: 150 },
     { label: "备注", prop: "remarks", width: 200 },
