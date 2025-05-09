@@ -8,7 +8,7 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { message } from "@/utils/message";
 import { CustomMouseMenu } from "@howdyjs/mouse-menu";
-import { FilesTypeOptions } from "@/views/work_taskforce/workTaskForce_management/data";
+import { FilesTypeOptions } from "@/views/fileTemplate/fileTemplate_management/data";
 import { clone, delay } from "@pureadmin/utils";
 
 // 获取附件名显示标签
@@ -22,7 +22,7 @@ const getFilesLabel = value => {
 export function useColumns() {
   const dataList = ref([]);
   const loading = ref(true);
-  const searchField = ref("taskforce_name");
+  const searchField = ref("template_name");
   const searchQuery = ref("");
   const editRowData = ref(null);
   const deleteId = ref(null);
@@ -31,21 +31,20 @@ export function useColumns() {
 
   const columns: TableColumnList = [
     { label: "ID", prop: "id", width: 80 },
-    { label: "工作专班名称", prop: "taskforce_name" },
-    { label: "人员名称", prop: "member_name" },
+    { label: "模板名称", prop: "template_name" },
+    { label: "文档说明", prop: "template_description" },
     {
-      label: "成立时间",
-      prop: "established_date",
+      label: "最后更新时间",
+      prop: "updated_time",
       formatter: row =>
-        row.established_date
-          ? dayjs(row.established_date).format("YYYY年MM月DD日")
+        row.updated_time
+          ? dayjs(row.updated_time).format("YYYY-MM-DD HH:mm:ss")
           : "未填写"
     },
-    { label: "备注", prop: "remark" },
     {
       label: "附件",
-      prop: "taskforce_files",
-      formatter: row => getFilesLabel(row.taskforce_files)
+      prop: "attachment_files",
+      formatter: row => getFilesLabel(row.attachment_files)
     },
     { label: "操作", width: "150", fixed: "right", slot: "operation" }
   ];
@@ -63,7 +62,7 @@ export function useColumns() {
   const menuOptions = {
     menuList: [
       {
-        label: ({ id }) => `专班ID：${id}`,
+        label: ({ id }) => `模板ID：${id}`,
         disabled: true
       },
       {
@@ -134,12 +133,12 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/taskforces"
+        import.meta.env.VITE_APP_SERVER + "/api/file_templates"
       );
       dataList.value = response.data.map((item, index) => ({
         ...item,
         id: item.id || index,
-        taskforce_files: getFilesLabel(item.taskforce_files)
+        attachment_files: getFilesLabel(item.attachment_files)
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
@@ -153,13 +152,13 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/taskforces"
+        import.meta.env.VITE_APP_SERVER + "/api/file_templates"
       );
       dataList.value = clone(response.data, true)
         .filter(item => {
           if (!searchQuery.value) return true;
-          if (searchField.value === "taskforce_files") {
-            return item.taskforce_files === searchQuery.value;
+          if (searchField.value === "attachment_files") {
+            return item.attachment_files === searchQuery.value;
           }
           return (item[searchField.value] || "")
             .toString()
@@ -167,7 +166,7 @@ export function useColumns() {
         })
         .map(item => ({
           ...item,
-          taskforce_files: getFilesLabel(item.taskforce_files)
+          attachment_files: getFilesLabel(item.attachment_files)
         }));
       pagination.total = dataList.value.length;
     } catch (error) {

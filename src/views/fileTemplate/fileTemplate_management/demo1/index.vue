@@ -1,49 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import axios from "axios";
 import { useColumns } from "./columns";
 import EditDialog from "./EditDialog.vue";
 import DeleteDialog from "./DeleteDialog.vue";
 import NewDialog from "./NewDialog.vue";
 import ShowDialog from "./ShowDialog.vue";
-import UploadDialog from "./UploadDialog.vue";
-import {
-  FlowTypeOptions,
-  FlowStatusOptions
-} from "@/views/workFlow/workFlow_management/data";
-import { message } from "@/utils/message";
+import { FilesTypeOptions } from "@/views/fileTemplate/fileTemplate_management/data";
 
-const tableRef = ref();
-const selectedRow = ref(null);
-const deleteWorkflowId = ref(null);
-const deleteDialogVisible = ref(false);
-const editDialogVisible = ref(false);
-const editRowData = ref(null);
-const showDialogVisible = ref(false);
-const previewData = ref(null);
-const uploadDialogVisible = ref(false);
-const currentRowForUpload = ref(null);
-
-const handleDelete = row => {
-  deleteWorkflowId.value = row.id;
-  deleteDialogVisible.value = true;
-};
-
-const handleEdit = row => {
-  editRowData.value = row;
-  editDialogVisible.value = true;
-};
-
-const handlePreview = row => {
-  previewData.value = row;
-  showDialogVisible.value = true;
-};
-
-const handleSetImage = row => {
-  currentRowForUpload.value = row;
-  uploadDialogVisible.value = true;
-};
-
+// useColumns 引出字段逻辑与方法
 const {
   loading,
   columns,
@@ -56,19 +20,43 @@ const {
   searchField,
   searchQuery,
   showMouseMenu,
+  editDialogVisible,
+  editRowData,
+  deleteDialogVisible,
+  deleteId,
   fetchData
 } = useColumns();
 
+// 预览弹窗逻辑
+const showDialogVisible = ref(false);
+const selectedRowData = ref({});
+
+// 修改弹窗
+const handleEdit = row => {
+  editRowData.value = row;
+  editDialogVisible.value = true;
+};
+
+// 删除弹窗
+const handleDelete = row => {
+  deleteId.value = row.id;
+  deleteDialogVisible.value = true;
+};
+
+// 预览弹窗
+const handlePreview = row => {
+  selectedRowData.value = row;
+  showDialogVisible.value = true;
+};
+
+// 是否下拉搜索
 const isDropdownSearch = computed(() => {
-  return ["type", "status"].includes(searchField.value);
+  return searchField.value === "attachment_files";
 });
 
 const currentOptions = computed(() => {
-  if (searchField.value === "type") {
-    return FlowTypeOptions;
-  }
-  if (searchField.value === "status") {
-    return FlowStatusOptions;
+  if (searchField.value === "attachment_files") {
+    return FilesTypeOptions;
   }
   return [];
 });
@@ -76,24 +64,24 @@ const currentOptions = computed(() => {
 
 <template>
   <div>
-    <!-- 搜索区域 -->
+    <!-- 搜索栏 -->
     <div class="search-controls mb-4">
       <el-select
         v-model="searchField"
         placeholder="选择搜索字段"
         style="width: 200px; margin-right: 10px"
       >
-        <el-option label="流程名称" value="name" />
-        <el-option label="流程类型" value="type" />
-        <el-option label="状态" value="status" />
-        <el-option label="备注" value="remark" />
-        <el-option label="流程责任" value="owner" />
+        <el-option label="ID" value="id" />
+        <el-option label="模板名称" value="template_name" />
+        <el-option label="文档说明" value="template_description" />
+        <el-option label="最后更新时间" value="updated_time" />
+        <el-option label="附件" value="attachment_files" />
       </el-select>
 
       <template v-if="isDropdownSearch">
         <el-select
           v-model="searchQuery"
-          placeholder="请选择搜索内容"
+          placeholder="请选择附件类型"
           style="width: 300px; margin-right: 10px"
         >
           <el-option label="全部" value="" />
@@ -114,10 +102,11 @@ const currentOptions = computed(() => {
         />
       </template>
 
+      <!-- 新增按钮 -->
       <NewDialog @data-updated="fetchData" />
     </div>
 
-    <!-- 表格区域 -->
+    <!-- 表格主体 -->
     <div style="overflow-x: auto">
       <pure-table
         ref="tableRef"
@@ -142,69 +131,59 @@ const currentOptions = computed(() => {
         @page-current-change="onCurrentChange"
         @row-contextmenu="showMouseMenu"
       >
-        <!-- 操作列 -->
         <template #operation="{ row }">
+          <el-button link type="primary" size="small" @click="handleEdit(row)">
+            修改
+          </el-button>
           <el-button
             link
             type="primary"
             size="small"
             @click="handlePreview(row)"
-            >预览</el-button
           >
-          <el-button link type="primary" size="small" @click="handleEdit(row)"
-            >修改</el-button
-          >
-          <el-button link type="primary" size="small" @click="handleDelete(row)"
-            >删除</el-button
-          >
+            预览
+          </el-button>
           <el-button
             link
             type="primary"
             size="small"
-            @click="handleSetImage(row)"
-            >设置流程图</el-button
+            @click="handleDelete(row)"
           >
-        </template>
-
-        <!-- 工作流程图列 -->
-        <template #workflowImage="{ row }">
-          <el-image
-            v-if="row.workflow_image"
-            preview-teleported
-            loading="lazy"
-            :src="row.workflow_image"
-            :preview-src-list="[row.workflow_image]"
-            fit="cover"
-            class="w-[100px] h-[100px]"
-          />
-          <span v-else style="color: #999">暂无图片</span>
+            删除
+          </el-button>
         </template>
       </pure-table>
     </div>
 
-    <!-- 弹窗组件 -->
+    <!-- 编辑弹窗 -->
     <EditDialog
       :visible="editDialogVisible"
       :initialData="editRowData"
+      editingField="attachment_files"
       @update:visible="editDialogVisible = $event"
       @data-updated="fetchData"
     />
+
+    <!-- 预览弹窗 -->
+    <ShowDialog
+      :visible="showDialogVisible"
+      :data="selectedRowData"
+      @update:visible="showDialogVisible = $event"
+    />
+
+    <!-- 删除弹窗 -->
     <DeleteDialog
+      :id="deleteId"
       :visible="deleteDialogVisible"
-      :workflowId="deleteWorkflowId"
       @update:visible="deleteDialogVisible = $event"
       @deleted="fetchData"
     />
-    <ShowDialog
-      :visible="showDialogVisible"
-      :data="previewData"
-      @update:visible="showDialogVisible = $event"
-    />
-    <UploadDialog
-      :visible="uploadDialogVisible"
-      :initialData="currentRowForUpload"
-      @update:visible="uploadDialogVisible = $event"
-      @data-updated="fetchData"
-    />
   </div>
 </template>
+
+<style scoped>
+.search-controls {
+  display: flex;
+  align-items: center;
+}
+</style>

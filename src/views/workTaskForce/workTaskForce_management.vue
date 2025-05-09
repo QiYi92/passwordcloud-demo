@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { list } from "@/views/work_taskforce/workTaskForce_management/list";
+import { list } from "@/views/workTaskForce/workTaskForce_management/list";
 
 defineOptions({
   name: "workTaskForce_management"

@@ -3,56 +3,51 @@ import type {
   AdaptiveConfig,
   PaginationProps
 } from "@pureadmin/table";
-import { ref, onMounted, reactive, watch, type Ref, type UnwrapRef } from "vue";
-
-import { delay, clone } from "@pureadmin/utils";
+import { ref, onMounted, reactive, watch } from "vue";
 import axios from "axios";
+import dayjs from "dayjs";
 import { message } from "@/utils/message";
 import { CustomMouseMenu } from "@howdyjs/mouse-menu";
-import {
-  FlowTypeOptions,
-  FlowStatusOptions
-} from "@/views/workFlow/workFlow_management/data";
-import dayjs from "dayjs";
+import { FilesTypeOptions } from "@/views/workTaskForce/workTaskForce_management/data";
+import { clone, delay } from "@pureadmin/utils";
+
+// 获取附件名显示标签
+const getFilesLabel = value => {
+  if (!value || value === "0") {
+    return "无附件";
+  }
+  return value;
+};
 
 export function useColumns() {
   const dataList = ref([]);
   const loading = ref(true);
-  const searchField = ref("name");
+  const searchField = ref("taskforce_name");
   const searchQuery = ref("");
   const editRowData = ref(null);
-  const deleteWorkflowId = ref(null);
+  const deleteId = ref(null);
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
-  const getFlowTypeLabel = value => {
-    const option = FlowTypeOptions.find(opt => opt.value === value);
-    return option ? option.label : "未知";
-  };
-
-  const getFlowStatusLabel = value => {
-    const option = FlowStatusOptions.find(opt => opt.value === value);
-    return option ? option.label : "未知";
-  };
-
   const columns: TableColumnList = [
-    { label: "流程名称", prop: "name", width: 200 },
+    { label: "ID", prop: "id", width: 80 },
+    { label: "工作专班名称", prop: "taskforce_name" },
+    { label: "人员名称", prop: "member_name" },
     {
-      label: "流程类型",
-      prop: "type",
-      width: 150,
-      formatter: row => getFlowTypeLabel(row.type)
+      label: "成立时间",
+      prop: "established_date",
+      formatter: row =>
+        row.established_date
+          ? dayjs(row.established_date).format("YYYY年MM月DD日")
+          : "未填写"
     },
+    { label: "备注", prop: "remark" },
     {
-      label: "状态",
-      prop: "status",
-      width: 150,
-      formatter: row => getFlowStatusLabel(row.status)
+      label: "附件",
+      prop: "taskforce_files",
+      formatter: row => getFilesLabel(row.taskforce_files)
     },
-    { label: "工作流程图", slot: "workflowImage" },
-    { label: "备注", prop: "remark", width: 300 },
-    { label: "流程责任", prop: "owner", width: 150 },
-    { label: "操作", width: 150, fixed: "right", slot: "operation" }
+    { label: "操作", width: "150", fixed: "right", slot: "operation" }
   ];
 
   const pagination = reactive<PaginationProps>({
@@ -68,11 +63,11 @@ export function useColumns() {
   const menuOptions = {
     menuList: [
       {
-        label: ({ id }) => `流程ID为：${id}`,
+        label: ({ id }) => `专班ID：${id}`,
         disabled: true
       },
       {
-        label: "修改",
+        label: "编辑",
         tips: "Edit",
         fn: async row => {
           editRowData.value = row;
@@ -83,7 +78,7 @@ export function useColumns() {
         label: "删除",
         tips: "Delete",
         fn: row => {
-          deleteWorkflowId.value = row.id;
+          deleteId.value = row.id;
           deleteDialogVisible.value = true;
         }
       }
@@ -94,15 +89,15 @@ export function useColumns() {
     text: "正在加载第一页...",
     viewBox: "-10, -10, 50, 50",
     spinner: `
-      <path class="path" d="
-        M 30 15
-        L 28 17
-        M 25.61 25.61
-        A 15 15, 0, 0, 1, 15 30
-        A 15 15, 0, 1, 1, 27.99 7.5
-        L 15 15
-      " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
-    `
+        <path class="path" d="
+          M 30 15
+          L 28 17
+          M 25.61 25.61
+          A 15 15, 0, 0, 1, 15 30
+          A 15 15, 0, 1, 1, 27.99 7.5
+          L 15 15
+        " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
+      `
   });
 
   const adaptiveConfig: AdaptiveConfig = { offsetBottom: 110 };
@@ -124,7 +119,7 @@ export function useColumns() {
   }
 
   function onSizeChange(val) {
-    loadingConfig.text = `正在加载第${pagination.currentPage}页...`;
+    console.log("onSizeChange", val);
   }
 
   function onCurrentChange(val) {
@@ -139,15 +134,16 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/workflows"
+        import.meta.env.VITE_APP_SERVER + "/api/taskforces"
       );
       dataList.value = response.data.map((item, index) => ({
         ...item,
-        id: item.id || index
+        id: item.id || index,
+        taskforce_files: getFilesLabel(item.taskforce_files)
       }));
       pagination.total = dataList.value.length;
     } catch (error) {
-      console.error("获取流程数据失败:", error);
+      console.error("数据获取失败:", error);
     } finally {
       loading.value = false;
     }
@@ -157,30 +153,25 @@ export function useColumns() {
     loading.value = true;
     try {
       const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/workflows"
+        import.meta.env.VITE_APP_SERVER + "/api/taskforces"
       );
-
       dataList.value = clone(response.data, true)
         .filter(item => {
           if (!searchQuery.value) return true;
-
-          if (searchField.value === "type") {
-            return item.type === searchQuery.value;
-          }
-          if (searchField.value === "status") {
-            return item.status === searchQuery.value;
+          if (searchField.value === "taskforce_files") {
+            return item.taskforce_files === searchQuery.value;
           }
           return (item[searchField.value] || "")
             .toString()
             .includes(searchQuery.value);
         })
         .map(item => ({
-          ...item
+          ...item,
+          taskforce_files: getFilesLabel(item.taskforce_files)
         }));
-
       pagination.total = dataList.value.length;
     } catch (error) {
-      console.error("搜索流程失败:", error);
+      console.error("搜索失败:", error);
     } finally {
       loading.value = false;
     }
@@ -209,7 +200,7 @@ export function useColumns() {
     showMouseMenu,
     editDialogVisible,
     editRowData,
-    deleteWorkflowId,
+    deleteId,
     deleteDialogVisible,
     fetchData
   };

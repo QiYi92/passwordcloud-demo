@@ -5,7 +5,7 @@ import EditDialog from "./EditDialog.vue";
 import DeleteDialog from "./DeleteDialog.vue";
 import NewDialog from "./NewDialog.vue";
 import ShowDialog from "./ShowDialog.vue";
-import { FilesTypeOptions } from "@/views/work_taskforce/workTaskForce_management/data";
+import { FilesTypeOptions } from "@/views/workTaskForce/workTaskForce_management/data";
 
 // useColumns 引出字段逻辑与方法
 const {

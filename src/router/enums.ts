@@ -9,12 +9,13 @@ const home = 0,
   businessScenario = 8,
   borrowed_equipment = 9,
   energy = 10,
-  enterpriseInfo = 11,
-  expert = 12,
-  meeting = 13,
-  registrationInfo = 14,
-  feedback = 15,
-  system = 16;
+  fileTemplate = 11,
+  enterpriseInfo = 12,
+  expert = 13,
+  meeting = 14,
+  registrationInfo = 15,
+  feedback = 16,
+  system = 17;
 
 export {
   home,
@@ -26,6 +27,7 @@ export {
   onsite,
   expert,
   energy,
+  fileTemplate,
   enterpriseInfo,
   organizationContact,
   businessScenario,
