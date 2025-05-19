@@ -22,56 +22,47 @@ import { PlusDialogForm } from "plus-pro-components";
 import "plus-pro-components/es/components/dialog-form/style/css";
 import { ElMessage } from "element-plus";
 
-// 接收 props
+/* ---------------- props / emits ---------------- */
 const props = defineProps({
   visible: Boolean,
   workflowId: Number
 });
-
-// emits
 const emit = defineEmits(["update:visible", "deleted"]);
+
+/* ---------------- 弹窗可视 ---------------- */
 const localVisible = ref(false);
+watchEffect(() => (localVisible.value = props.visible));
 
-watchEffect(() => {
-  localVisible.value = props.visible;
-});
-
-// 删除流程
+/* ---------------- 删除逻辑 ---------------- */
 const confirmDelete = async () => {
-  try {
-    // Step 1: 获取 workflow 数据，拿到 workflow_image
-    const { data } = await axios.get(
-      `${import.meta.env.VITE_APP_SERVER}/api/workflows`
-    );
-    const workflow = data.find(item => item.id === props.workflowId);
-    const imagePath = workflow?.workflow_image;
+  const base = import.meta.env.VITE_APP_SERVER;
 
-    // Step 2: 如果有图片，先请求后端删除图片
-    if (imagePath) {
+  try {
+    /* 1️⃣ 取行数据，收集图片路径 */
+    const { data: all } = await axios.get(`${base}/api/workflows`);
+    const row = all.find(item => item.id === props.workflowId);
+
+    const pathList = [
+      row?.workflow_thumb || "",
+      row?.workflow_image || ""
+    ].filter(Boolean); // 只保留非空
+
+    /* 2️⃣ 有路径就先物理删除 */
+    if (pathList.length) {
       try {
-        const relativePath = new URL(imagePath).pathname;
-        await axios.post(
-          `${import.meta.env.VITE_APP_SERVER}/api/workflows/deleteFile`,
-          { path: relativePath }
-        );
-        console.log(`已删除图片: ${relativePath}`);
+        await axios.post(`${base}/api/workflows/deleteFile`, { pathList });
+        console.log("[DeleteDialog] 已请求后端删除文件:", pathList);
       } catch (err) {
-        console.warn(`删除图片失败: ${imagePath}`, err);
+        console.warn("[DeleteDialog] 删除图片接口失败，但继续删记录", err);
       }
     }
 
-    // Step 3: 删除数据库记录
-    const response = await axios.delete(
-      `${import.meta.env.VITE_APP_SERVER}/api/workflows/${props.workflowId}`
-    );
+    /* 3️⃣ 删除数据库记录 */
+    await axios.delete(`${base}/api/workflows/${props.workflowId}`);
 
-    if (response.status === 200 || response.status === 204) {
-      emit("deleted");
-      emit("update:visible", false);
-      ElMessage.success("工作流程删除成功");
-    } else {
-      ElMessage.error("删除失败");
-    }
+    ElMessage.success("工作流程删除成功");
+    emit("deleted");
+    emit("update:visible", false);
   } catch (error) {
     console.error("删除失败:", error);
     ElMessage.error("删除失败，请稍后重试！");

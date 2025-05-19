@@ -3,37 +3,38 @@ import type {
   AdaptiveConfig,
   PaginationProps
 } from "@pureadmin/table";
-import { ref, onMounted, reactive, watch, type Ref, type UnwrapRef } from "vue";
-
+import { ref, onMounted, reactive, watch } from "vue";
 import { delay, clone } from "@pureadmin/utils";
 import axios from "axios";
-import { message } from "@/utils/message";
 import { CustomMouseMenu } from "@howdyjs/mouse-menu";
 import {
   FlowTypeOptions,
   FlowStatusOptions
 } from "@/views/workFlow/workFlow_management/data";
-import dayjs from "dayjs";
 
 export function useColumns() {
-  const dataList = ref([]);
+  /* -------------------------------- 反应式状态 ------------------------------- */
+  const dataList = ref<any[]>([]);
   const loading = ref(true);
-  const searchField = ref("name");
+
+  /* ------- 搜索 ------- */
+  const searchField = ref<"name" | "type" | "status" | "remark" | "owner">(
+    "name"
+  );
   const searchQuery = ref("");
-  const editRowData = ref(null);
-  const deleteWorkflowId = ref(null);
+
+  /* ------- 弹窗控制（右键菜单）------- */
+  const editRowData = ref<any>(null);
+  const deleteWorkflowId = ref<number | null>(null);
   const editDialogVisible = ref(false);
   const deleteDialogVisible = ref(false);
 
-  const getFlowTypeLabel = value => {
-    const option = FlowTypeOptions.find(opt => opt.value === value);
-    return option ? option.label : "未知";
-  };
+  /* -------------------------------- 列定义 ---------------------------------- */
+  const getFlowTypeLabel = (v: string) =>
+    FlowTypeOptions.find(o => o.value === v)?.label ?? "未知";
 
-  const getFlowStatusLabel = value => {
-    const option = FlowStatusOptions.find(opt => opt.value === value);
-    return option ? option.label : "未知";
-  };
+  const getFlowStatusLabel = (v: string) =>
+    FlowStatusOptions.find(o => o.value === v)?.label ?? "未知";
 
   const columns: TableColumnList = [
     { label: "流程名称", prop: "name", width: 200 },
@@ -46,15 +47,16 @@ export function useColumns() {
     {
       label: "状态",
       prop: "status",
-      width: 150,
+      width: 100,
       formatter: row => getFlowStatusLabel(row.status)
     },
-    { label: "工作流程图", slot: "workflowImage" },
+    { label: "工作流程图", slot: "workflowImage", width: 220 },
     { label: "备注", prop: "remark", width: 300 },
     { label: "流程责任", prop: "owner", width: 150 },
     { label: "操作", width: 150, fixed: "right", slot: "operation" }
   ];
 
+  /* -------------------------------- 分页 ------------------------------------ */
   const pagination = reactive<PaginationProps>({
     pageSize: 20,
     currentPage: 1,
@@ -65,16 +67,14 @@ export function useColumns() {
     small: false
   });
 
+  /* -------------------------------- 右键菜单 ------------------------------- */
   const menuOptions = {
     menuList: [
-      {
-        label: ({ id }) => `流程ID为：${id}`,
-        disabled: true
-      },
+      { label: ({ id }) => `流程ID：${id}`, disabled: true },
       {
         label: "修改",
         tips: "Edit",
-        fn: async row => {
+        fn: row => {
           editRowData.value = row;
           editDialogVisible.value = true;
         }
@@ -89,25 +89,7 @@ export function useColumns() {
       }
     ]
   };
-
-  const loadingConfig = reactive<LoadingConfig>({
-    text: "正在加载第一页...",
-    viewBox: "-10, -10, 50, 50",
-    spinner: `
-      <path class="path" d="
-        M 30 15
-        L 28 17
-        M 25.61 25.61
-        A 15 15, 0, 0, 1, 15 30
-        A 15 15, 0, 1, 1, 27.99 7.5
-        L 15 15
-      " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
-    `
-  });
-
-  const adaptiveConfig: AdaptiveConfig = { offsetBottom: 110 };
-
-  function showMouseMenu(row, column, event) {
+  function showMouseMenu(row, _col, event) {
     event.preventDefault();
     const { x, y } = event;
     CustomMouseMenu({
@@ -123,64 +105,68 @@ export function useColumns() {
     }).show(x, y);
   }
 
-  function onSizeChange(val) {
+  /* -------------------------------- 加载动画 ------------------------------- */
+  const loadingConfig: LoadingConfig = reactive({
+    text: "正在加载第一页...",
+    viewBox: "-10, -10, 50, 50",
+    spinner: `
+      <path class="path"
+        d="M 30 15 L 28 17 M 25.61 25.61
+           A 15 15 0 0 1 15 30
+           A 15 15 0 1 1 27.99 7.5
+           L 15 15"
+        style="stroke-width:4px;fill:none"/>
+    `
+  });
+  const adaptiveConfig: AdaptiveConfig = { offsetBottom: 110 };
+
+  function onSizeChange() {
     loadingConfig.text = `正在加载第${pagination.currentPage}页...`;
   }
-
-  function onCurrentChange(val) {
+  function onCurrentChange(val: number) {
     loadingConfig.text = `正在加载第${val}页...`;
     loading.value = true;
-    delay(600).then(() => {
-      loading.value = false;
-    });
+    delay(600).then(() => (loading.value = false));
   }
 
+  /* -------------------------------- 数据请求 ------------------------------- */
   async function fetchData() {
     loading.value = true;
     try {
-      const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/workflows"
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_APP_SERVER}/api/workflows`
       );
-      dataList.value = response.data.map((item, index) => ({
-        ...item,
-        id: item.id || index
-      }));
+      dataList.value = data.map((it, idx) => ({ ...it, id: it.id ?? idx }));
       pagination.total = dataList.value.length;
-    } catch (error) {
-      console.error("获取流程数据失败:", error);
+    } catch (e) {
+      console.error("获取流程数据失败:", e);
     } finally {
       loading.value = false;
     }
   }
 
+  /* ---- 搜索筛选 ---- */
   const selectData = async () => {
     loading.value = true;
     try {
-      const response = await axios.get(
-        import.meta.env.VITE_APP_SERVER + "/api/workflows"
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_APP_SERVER}/api/workflows`
       );
-
-      dataList.value = clone(response.data, true)
+      dataList.value = clone(data, true)
         .filter(item => {
           if (!searchQuery.value) return true;
-
-          if (searchField.value === "type") {
+          if (searchField.value === "type")
             return item.type === searchQuery.value;
-          }
-          if (searchField.value === "status") {
+          if (searchField.value === "status")
             return item.status === searchQuery.value;
-          }
-          return (item[searchField.value] || "")
+          return (item[searchField.value] ?? "")
             .toString()
             .includes(searchQuery.value);
         })
-        .map(item => ({
-          ...item
-        }));
-
+        .map(it => ({ ...it }));
       pagination.total = dataList.value.length;
-    } catch (error) {
-      console.error("搜索流程失败:", error);
+    } catch (e) {
+      console.error("搜索流程失败:", e);
     } finally {
       loading.value = false;
     }
@@ -190,11 +176,10 @@ export function useColumns() {
 
   onMounted(async () => {
     await fetchData();
-    if (searchField.value && searchQuery.value) {
-      await selectData();
-    }
+    if (searchQuery.value) await selectData();
   });
 
+  /* -------------------------------- return ------------------------------- */
   return {
     loading,
     columns,
@@ -209,8 +194,8 @@ export function useColumns() {
     showMouseMenu,
     editDialogVisible,
     editRowData,
-    deleteWorkflowId,
     deleteDialogVisible,
+    deleteWorkflowId,
     fetchData
   };
 }

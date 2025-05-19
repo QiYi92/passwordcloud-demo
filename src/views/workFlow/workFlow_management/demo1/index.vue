@@ -11,39 +11,41 @@ import {
   FlowTypeOptions,
   FlowStatusOptions
 } from "@/views/workFlow/workFlow_management/data";
-import { message } from "@/utils/message";
 
+/* draw.io 监听 */
+import { initDrawioSaveListener, setCurrentRowId } from "@/utils/drawio";
+import { ElMessage } from "element-plus";
+
+/* ------------------- 局部状态 ------------------- */
 const tableRef = ref();
-const selectedRow = ref(null);
-const deleteWorkflowId = ref(null);
+const deleteWorkflowId = ref<number | null>(null);
 const deleteDialogVisible = ref(false);
 const editDialogVisible = ref(false);
-const editRowData = ref(null);
+const editRowData = ref<any>(null);
 const showDialogVisible = ref(false);
-const previewData = ref(null);
+const previewData = ref<any>(null);
 const uploadDialogVisible = ref(false);
-const currentRowForUpload = ref(null);
+const currentRowForUpload = ref<any>(null);
 
+/* ------------------- 操作回调 ------------------- */
 const handleDelete = row => {
   deleteWorkflowId.value = row.id;
   deleteDialogVisible.value = true;
 };
-
 const handleEdit = row => {
   editRowData.value = row;
   editDialogVisible.value = true;
 };
-
 const handlePreview = row => {
   previewData.value = row;
   showDialogVisible.value = true;
 };
-
 const handleSetImage = row => {
   currentRowForUpload.value = row;
   uploadDialogVisible.value = true;
 };
 
+/* ------------------- 列表数据 & 分页 ------------------- */
 const {
   loading,
   columns,
@@ -59,24 +61,71 @@ const {
   fetchData
 } = useColumns();
 
-const isDropdownSearch = computed(() => {
-  return ["type", "status"].includes(searchField.value);
+/* ===== Draw.io 保存监听 ===== */
+initDrawioSaveListener(async (rowId, xmlUrl, pngUrl, svgUrl) => {
+  try {
+    /* 1️⃣ 取旧路径 */
+    const oldRow = dataList.value.find(r => r.id === rowId)!;
+    const oldXml = oldRow.workflow_xml || "";
+    const oldPng = oldRow.workflow_thumb || "";
+    const oldSvg = oldRow.workflow_image || "";
+
+    /* 2️⃣ 删除旧文件（XML + PNG + SVG） */
+    const pathsToDelete: string[] = [];
+    if (oldXml && oldXml !== xmlUrl) pathsToDelete.push(oldXml);
+    if (oldPng && oldPng !== pngUrl) pathsToDelete.push(oldPng);
+    if (oldSvg && oldSvg !== svgUrl) pathsToDelete.push(oldSvg);
+    if (pathsToDelete.length) {
+      await axios.post(
+        `${import.meta.env.VITE_APP_SERVER}/api/workflows/deleteFile`,
+        { pathList: pathsToDelete }
+      );
+    }
+
+    /* 3️⃣ Patch 新的 XML + PNG + SVG 到数据库 */
+    await axios.patch(
+      `${import.meta.env.VITE_APP_SERVER}/api/workflows/${rowId}/image`,
+      {
+        workflow_xml: xmlUrl,
+        workflow_thumb: pngUrl,
+        workflow_image: svgUrl
+      }
+    );
+
+    /* 4️⃣ 更新本地行 & 刷新表格 */
+    oldRow.workflow_xml = xmlUrl;
+    oldRow.workflow_thumb = pngUrl;
+    oldRow.workflow_image = svgUrl;
+    await fetchData();
+    ElMessage.success("流程图已更新（XML/PNG/SVG）");
+  } catch (e) {
+    console.error(e);
+    ElMessage.error("保存流程图失败");
+  } finally {
+    setCurrentRowId(null);
+  }
 });
 
+/* ------------------- 搜索联动下拉 ------------------- */
+const isDropdownSearch = computed(() =>
+  ["type", "status"].includes(searchField.value)
+);
 const currentOptions = computed(() => {
-  if (searchField.value === "type") {
-    return FlowTypeOptions;
-  }
-  if (searchField.value === "status") {
-    return FlowStatusOptions;
-  }
+  if (searchField.value === "type") return FlowTypeOptions;
+  if (searchField.value === "status") return FlowStatusOptions;
   return [];
 });
 </script>
 
 <template>
+  <el-alert
+    style="margin-bottom: 16px"
+    title="重新编辑流程图后需要刷新一下页面，更新后的流程图才会在页面上刷新"
+    type="info"
+    :closable="false"
+  />
   <div>
-    <!-- 搜索区域 -->
+    <!-- ================= 搜索 ================= -->
     <div class="search-controls mb-4">
       <el-select
         v-model="searchField"
@@ -98,14 +147,13 @@ const currentOptions = computed(() => {
         >
           <el-option label="全部" value="" />
           <el-option
-            v-for="option in currentOptions"
-            :key="option.value"
-            :label="option.label"
-            :value="option.value"
+            v-for="opt in currentOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
           />
         </el-select>
       </template>
-
       <template v-else>
         <el-input
           v-model="searchQuery"
@@ -117,7 +165,7 @@ const currentOptions = computed(() => {
       <NewDialog @data-updated="fetchData" />
     </div>
 
-    <!-- 表格区域 -->
+    <!-- ================= 表格 ================= -->
     <div style="overflow-x: auto">
       <pure-table
         ref="tableRef"
@@ -142,7 +190,7 @@ const currentOptions = computed(() => {
         @page-current-change="onCurrentChange"
         @row-contextmenu="showMouseMenu"
       >
-        <!-- 操作列 -->
+        <!-- -------- 操作列 -------- -->
         <template #operation="{ row }">
           <el-button
             link
@@ -166,14 +214,16 @@ const currentOptions = computed(() => {
           >
         </template>
 
-        <!-- 工作流程图列 -->
+        <!-- -------- 缩略图列 -------- -->
         <template #workflowImage="{ row }">
           <el-image
-            v-if="row.workflow_image"
+            v-if="row.workflow_thumb"
+            :key="row.workflow_thumb"
             preview-teleported
             loading="lazy"
-            :src="row.workflow_image"
-            :preview-src-list="[row.workflow_image]"
+            :src="row.workflow_thumb"
+            :preview-src-list="[row.workflow_thumb]"
+            :zoom-rate="1.04"
             fit="cover"
             class="w-[100px] h-[100px]"
           />
@@ -182,7 +232,7 @@ const currentOptions = computed(() => {
       </pure-table>
     </div>
 
-    <!-- 弹窗组件 -->
+    <!-- ================= 弹窗 ================= -->
     <EditDialog
       :visible="editDialogVisible"
       :initialData="editRowData"
