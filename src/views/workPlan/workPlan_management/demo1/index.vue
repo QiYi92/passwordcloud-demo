@@ -78,7 +78,18 @@ const currentOptions = computed(() => {
 </script>
 
 <template>
-  <div>
+  <el-card shadow="never">
+    <template #header>
+      <div class="card-header">
+        <span class="font-medium"> 年度工作计划 </span>
+      </div>
+    </template>
+    <el-alert
+      style="margin-bottom: 16px"
+      title="如有Bug等问题请通过“问题反馈”栏目反馈给开发者。"
+      type="info"
+      :closable="false"
+    />
     <!-- 搜索控件区域 -->
     <div class="search-controls mb-4">
       <el-select
@@ -194,5 +205,5 @@ const currentOptions = computed(() => {
       :data="previewData"
       @update:visible="showDialogVisible = $event"
     />
-  </div>
+  </el-card>
 </template>

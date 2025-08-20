@@ -15,15 +15,16 @@
         list-type="text"
         :limit="1"
         :file-list="uploadedFiles"
-        accept=".doc,.docx,.pdf,.png,.jpg,.jpeg"
+        accept=".doc,.docx,.pdf,.png,.jpg,.jpeg,.wps"
         :before-upload="beforeUpload"
+        @exceed="handleExceed"
         @success="handleUploadSuccess"
         @remove="handleRemoveFile"
       >
         <el-button type="primary">上传附件</el-button>
         <template #tip>
           <div class="el-upload__tip">
-            仅支持上传 Word、PDF、图片文件，大小不超过 500KB
+            只能上传 Word(doc/docx/wps)、PDF、PNG、JPG、JPEG 文件，且不超过 3MB
           </div>
         </template>
       </el-upload>
@@ -87,23 +88,26 @@ watch(
 );
 
 // 上传前校验
-const beforeUpload = file => {
-  const allowedTypes = [
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/pdf",
-    "image/png",
-    "image/jpeg"
-  ];
-  const isAllowed = allowedTypes.includes(file.type);
-  const isLt500k = file.size / 1024 < 500;
-  if (!isAllowed) {
-    ElMessage.error("只支持上传 Word、PDF、图片格式文件");
+/** 上传前校验：格式 & 大小（3MB） */
+const beforeUpload = (file: File) => {
+  const validExt = /\.(doc|docx|pdf|png|jpg|jpeg|wps)$/i.test(file.name);
+  if (!validExt) {
+    ElMessage.error(
+      "只能上传 Word(doc/docx/wps)、PDF、PNG、JPG、JPEG 格式文件"
+    );
+    return false;
   }
-  if (!isLt500k) {
-    ElMessage.error("文件大小不能超过 500KB");
+  const isLt3M = file.size / 1024 / 1024 < 3;
+  if (!isLt3M) {
+    ElMessage.error("上传文件大小不能超过 3MB");
+    return false;
   }
-  return isAllowed && isLt500k;
+  return true;
+};
+
+/** 超出数量限制时的提示（最多 1 个） */
+const handleExceed = (_files: File[], _fileList: any[]) => {
+  ElMessage.warning("最多只能上传 1 个文件");
 };
 
 // 上传成功处理（删除旧文件 + 更新列表）

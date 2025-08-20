@@ -20,6 +20,7 @@ interface FormItemProps {
 
 interface FormProps {
   formInline: FormItemProps;
+  isEdit?: boolean; // 新增：是否编辑模式（编辑=不显示密码项）
 }
 
 export type { FormItemProps, FormProps };

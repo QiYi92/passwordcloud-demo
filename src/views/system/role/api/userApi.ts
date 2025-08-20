@@ -54,3 +54,16 @@ export const deleteUser = (id: number) => {
     `${import.meta.env.VITE_APP_SERVER}/api/user/${id}`
   );
 };
+
+/** 修改用户密码 */
+export const changePassword = (data: {
+  id: number | string;
+  old_password: string;
+  new_password: string;
+}) => {
+  return http.request<Result>(
+    "post",
+    `${import.meta.env.VITE_APP_SERVER}/api/user/change-password`,
+    { data }
+  );
+};

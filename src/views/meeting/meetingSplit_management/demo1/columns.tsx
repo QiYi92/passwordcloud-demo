@@ -62,7 +62,7 @@ export function useColumns() {
       width: 300,
       align: "left",
       formatter: row => {
-        const text = row.meeting_body || "";
+        const text = row.meeting_content || "";
         return text.length > 50 ? text.slice(0, 50) + "（省略）" : text;
       }
     },

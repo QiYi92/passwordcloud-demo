@@ -50,7 +50,18 @@ const currentOptions = computed(() => {
 </script>
 
 <template>
-  <div>
+  <el-card shadow="never">
+    <template #header>
+      <div class="card-header">
+        <span class="font-medium"> 项目资金下达情况管理 </span>
+      </div>
+    </template>
+    <el-alert
+      style="margin-bottom: 16px"
+      title="如有Bug等问题请通过“问题反馈”栏目反馈给开发者。"
+      type="info"
+      :closable="false"
+    />
     <!-- 搜索控件区域 -->
     <div class="search-controls mb-4">
       <el-select
@@ -150,5 +161,5 @@ const currentOptions = computed(() => {
       @update:visible="deleteDialogVisible = $event"
       @deleted="fetchData"
     />
-  </div>
+  </el-card>
 </template>

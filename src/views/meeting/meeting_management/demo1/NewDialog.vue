@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import axios from "axios";
 import { ref, defineEmits } from "vue";
+import { ElMessage } from "element-plus"; // 新增：提示
 import "plus-pro-components/es/components/dialog-form/style/css";
 import {
   type PlusColumn,
@@ -101,7 +102,33 @@ const handleSubmit = async () => {
   }
 };
 
-const handleUploadSuccess = async (response, file, fileList) => {
+// 上传前校验：格式 & 大小
+const beforeUpload = (file: File) => {
+  const validExt = /\.(doc|docx|pdf|png|jpg|jpeg|wps)$/i.test(file.name);
+  if (!validExt) {
+    ElMessage.error(
+      "只能上传 Word(doc/docx/wps)、PDF、PNG、JPG、JPEG 格式文件"
+    );
+    return false;
+  }
+  const isLt3M = file.size / 1024 / 1024 < 3;
+  if (!isLt3M) {
+    ElMessage.error("上传文件大小不能超过 3MB");
+    return false;
+  }
+  return true;
+};
+
+// 超出数量限制时的提示（可选）
+const handleExceed = (files: File[], fileList: any[]) => {
+  ElMessage.warning("最多只能上传 1 个文件");
+};
+
+const handleUploadSuccess = async (
+  response: any,
+  file: any,
+  fileList: any[]
+) => {
   const filePath = response.path || file.url; // 确保使用返回的文件路径
   values.value.meeting_files = filePath.split("/").pop(); // 仅保存文件名
 
@@ -112,7 +139,7 @@ const handleUploadSuccess = async (response, file, fileList) => {
   }));
 };
 
-const handleRemoveFile = async file => {
+const handleRemoveFile = async (file: any) => {
   try {
     await axios.post(
       `${import.meta.env.VITE_APP_SERVER}/api/meeting/deleteFile`,
@@ -150,16 +177,18 @@ const handleRemoveFile = async file => {
         :action="uploadUrl"
         list-type="text"
         multiple
-        :limit="5"
+        :limit="1"
         :file-list="uploadedFiles"
-        accept=".doc,.docx,.pdf,.png,.jpg,.jpeg"
+        accept=".doc,.docx,.pdf,.png,.jpg,.jpeg,.wps"
+        :before-upload="beforeUpload"
+        @exceed="handleExceed"
         @success="handleUploadSuccess"
         @remove="handleRemoveFile"
       >
         <el-button type="primary">上传附件</el-button>
         <template #tip>
           <div class="el-upload__tip">
-            只能上传 Word (doc, docx)、PDF、PNG、JPG、JPEG 文件，且不超过 500kb
+            只能上传 Word(doc/docx/wps)、PDF、PNG、JPG、JPEG 文件，且不超过 3MB
           </div>
         </template>
       </el-upload>

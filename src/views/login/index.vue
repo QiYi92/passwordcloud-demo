@@ -11,13 +11,21 @@ import { useUserStoreHook } from "@/store/modules/user"; // 导入用户存储�
 import { initRouter, getTopMenu } from "@/router/utils"; // 导入路由初始化和获取顶部菜单的函数
 import { bg, avatar, illustration } from "./utils/static"; // 导入静态资源
 import { useRenderIcon } from "@/components/ReIcon/src/hooks"; // 导入图标渲染钩子
-import { ref, reactive, toRaw, onMounted, onBeforeUnmount } from "vue"; // 导入 Vue 的相关函数
+import {
+  ref,
+  reactive,
+  toRaw,
+  onMounted,
+  onBeforeUnmount,
+  computed
+} from "vue"; // 导入 Vue 的相关函数
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange"; // 导入主题切换相关的钩子
 
 import dayIcon from "@/assets/svg/day.svg?component"; // 导入白天模式图标
 import darkIcon from "@/assets/svg/dark.svg?component"; // 导入夜间模式图标
 import Lock from "@iconify-icons/ri/lock-fill"; // 导入锁图标
 import User from "@iconify-icons/ri/user-3-fill"; // 导入用户图标
+import Captcha from "@iconify-icons/ri/shield-keyhole-line"; // 导入验证码图标
 import { storageLocal } from "@pureadmin/utils"; // 导入本地存储工具
 import { userKey, DataInfo } from "@/utils/auth"; // 导入用户键和数据类型
 import Cookies from "js-cookie"; // 导入 js-cookie 库
@@ -36,6 +44,9 @@ initStorage(); // 调用初始化存储函数
 const { dataTheme, dataThemeChange } = useDataThemeChange(); // 获取主题相关的数据和函数
 dataThemeChange(); // 调用主题切换函数
 const { title } = useNav(); // 获取导航标题
+const lines = computed(() => title.value.split("\n"));
+const line1 = computed(() => lines.value[0] || "");
+const line2 = computed(() => lines.value[1] || "");
 
 const ruleForm = reactive({
   username: "", // 定义用户名默认值
@@ -170,7 +181,11 @@ const goToSmsLogin = () => {
           <avatar class="avatar" />
           <!-- 头像 -->
           <Motion>
-            <h2 class="outline-none">{{ title }}</h2>
+            <h2 class="login-title outline-none">
+              <span class="first-line">{{ line1 }}</span
+              ><br />
+              <span class="second-line">{{ line2 }}</span>
+            </h2>
             <!-- 标题 -->
           </Motion>
 
@@ -236,13 +251,17 @@ const goToSmsLogin = () => {
                   v-model="ruleForm.captcha"
                   clearable
                   placeholder="验证码"
-                />
-                <img
-                  :src="captchaUrl"
-                  class="captcha-img"
-                  @click="reloadCaptcha"
-                />
-                <!-- 验证码图片 -->
+                  :prefix-icon="useRenderIcon(Captcha)"
+                >
+                  <template #append>
+                    <img
+                      :src="captchaUrl"
+                      class="captcha-img"
+                      alt="验证码"
+                      @click="reloadCaptcha"
+                    />
+                  </template>
+                </el-input>
               </el-form-item>
             </Motion>
 
@@ -271,18 +290,50 @@ const goToSmsLogin = () => {
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 @import url("@/style/login.css");
 
-.captcha-img {
-  height: 40px; /* 验证码图片高度 */
-  vertical-align: middle; /* 垂直对齐方式 */
-  cursor: pointer; /* 指针悬停在图片上时显示手型光标 */
+/* ---------- 1. 先彻底清掉 append 自带样式 ---------- */
+:deep(.el-input-group__append) {
+  padding: 4px !important; // 去掉内边距
+  background: none !important; // 去掉灰背景
+  border-left: none !important; // 去掉原本的分隔线
 }
-</style>
 
-<style lang="scss" scoped>
-:deep(.el-input-group__append, .el-input-group__prepend) {
-  padding: 0;
+/* 如果你还需要处理 prepend（图标那侧）的内边距也可一起写 */
+:deep(.el-input-group__prepend) {
+  padding: 0 !important;
+}
+
+/* ---------- 2. 再让验证码图片自己顶满 append ---------- */
+.captcha-img {
+  display: block; // 占满父盒子
+  width: 108px; // 期望宽度，按需调；或用 width:auto
+  height: 100%; // 跟随输入框高度
+  cursor: pointer;
+  object-fit: cover; // 填充且保持比例
+  border-left: 1px solid #dcdfe6; // 自己画一条分隔线
+}
+
+/* ---------- 3. 新增标题与布局样式 ---------- */
+.login-container {
+  text-align: center; // 让标题、logo 居中
+}
+
+.login-title {
+  margin: 0 0 24px;
+  line-height: 1.2;
+}
+
+.first-line {
+  font-size: 42px; // 第一行字体
+  font-weight: 600;
+  color: #666;
+}
+
+.second-line {
+  font-size: 32px; // 第二行字体
+  font-weight: 600;
+  color: #333;
 }
 </style>

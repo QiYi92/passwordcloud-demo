@@ -13,17 +13,19 @@
       <el-upload
         :action="uploadUrl"
         list-type="text"
+        multiple
         :limit="5"
         :file-list="uploadedFiles"
-        accept=".doc,.docx,.pdf,.png,.jpg,.jpeg"
+        accept=".doc,.docx,.pdf,.png,.jpg,.jpeg,.wps"
         :before-upload="beforeUpload"
+        @exceed="handleExceed"
         @success="handleUploadSuccess"
         @remove="handleRemoveFile"
       >
         <el-button type="primary">上传</el-button>
         <template v-slot:tip>
           <div class="el-upload__tip">
-            只能上传 Word (doc, docx)、PDF、PNG、JPG、JPEG 文件，且不超过 500kb
+            只能上传 Word(doc/docx/wps)、PDF、PNG、JPG、JPEG 文件，且不超过 3MB
           </div>
         </template>
       </el-upload>
@@ -34,6 +36,7 @@
 <script setup lang="ts">
 import { ref, defineProps, watchEffect, defineEmits, onMounted } from "vue";
 import axios from "axios";
+import { ElMessage } from "element-plus";
 import "plus-pro-components/es/components/dialog-form/style/css";
 import {
   type PlusColumn,
@@ -109,19 +112,26 @@ watchEffect(() => {
     values.value = initialData;
   }
 });
-const beforeUpload = file => {
-  const allowedTypes = [
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/pdf",
-    "image/png",
-    "image/jpeg"
-  ];
-  const isAllowedType = allowedTypes.includes(file.type);
-  if (!isAllowedType) {
-    alert("只能上传 Word (doc, docx)、PDF、PNG、JPG、JPEG 格式的文件！");
+/** 上传前校验：格式 & 大小（3MB） */
+const beforeUpload = (file: File) => {
+  const validExt = /\.(doc|docx|pdf|png|jpg|jpeg|wps)$/i.test(file.name);
+  if (!validExt) {
+    ElMessage.error(
+      "只能上传 Word(doc/docx/wps)、PDF、PNG、JPG、JPEG 格式文件"
+    );
+    return false;
   }
-  return isAllowedType;
+  const isLt3M = file.size / 1024 / 1024 < 3;
+  if (!isLt3M) {
+    ElMessage.error("上传文件大小不能超过 3MB");
+    return false;
+  }
+  return true;
+};
+
+/** 超出数量限制时的提示 */
+const handleExceed = (_files: File[], _fileList: any[]) => {
+  ElMessage.warning("最多只能上传 5 个文件"); // 或者 1 个，根据 limit 而定
 };
 
 const handleSubmit = async () => {

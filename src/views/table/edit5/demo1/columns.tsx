@@ -58,7 +58,7 @@ export function useColumns() {
     },
     { label: "备注", prop: "prompt_remark" },
     { label: "处理情况记录", prop: "prompt_record" },
-    { label: "催款函件", prop: "prompt_files" },
+    { label: "催款函件", prop: "prompt_files", slot: "prompt_files" },
     { label: "操作", width: "150", fixed: "right", slot: "operation" }
   ];
 

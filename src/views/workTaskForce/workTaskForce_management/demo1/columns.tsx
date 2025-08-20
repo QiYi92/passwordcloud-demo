@@ -45,6 +45,7 @@ export function useColumns() {
     {
       label: "附件",
       prop: "taskforce_files",
+      slot: "taskforce_files",
       formatter: row => getFilesLabel(row.taskforce_files)
     },
     { label: "操作", width: "150", fixed: "right", slot: "operation" }

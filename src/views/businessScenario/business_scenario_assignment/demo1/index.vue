@@ -61,7 +61,18 @@ const handlePreview = row => {
 </script>
 
 <template>
-  <div>
+  <el-card shadow="never">
+    <template #header>
+      <div class="card-header">
+        <span class="font-medium"> 业务场景分工 </span>
+      </div>
+    </template>
+    <el-alert
+      style="margin-bottom: 16px"
+      title="如有Bug等问题请通过“问题反馈”栏目反馈给开发者。"
+      type="info"
+      :closable="false"
+    />
     <!-- 搜索区域 -->
     <div class="search-controls mb-4">
       <el-select
@@ -169,5 +180,5 @@ const handlePreview = row => {
       :data="previewData"
       @update:visible="showDialogVisible = $event"
     />
-  </div>
+  </el-card>
 </template>

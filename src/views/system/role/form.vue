@@ -4,6 +4,7 @@ import { formRules } from "./utils/rule";
 import { FormProps } from "./utils/types";
 
 const props = withDefaults(defineProps<FormProps>(), {
+  isEdit: false,
   formInline: () => ({
     id: null,
     username: "",
@@ -17,7 +18,7 @@ const props = withDefaults(defineProps<FormProps>(), {
 
 const ruleFormRef = ref();
 const newFormInline = ref(props.formInline);
-const errorMessage = ref(""); // 用于存储错误提示信息
+const errorMessage = ref("");
 
 function getRef() {
   return ruleFormRef.value;
@@ -25,6 +26,7 @@ function getRef() {
 
 // 验证两个密码是否一致并且包含英文字母和数字
 const validatePassword = () => {
+  if (props.isEdit) return true;
   const password = newFormInline.value.password;
   const confirmPassword = newFormInline.value.confirmPassword;
 
@@ -90,12 +92,12 @@ defineExpose({ getRef, validatePassword }); // 暴露方法供外部调用
 
     <el-form-item label="电话号码" prop="phone_number">
       <el-input
-        v-model="formInline.phone_number"
+        v-model="newFormInline.phone_number"
         placeholder="请输入电话号码"
       />
     </el-form-item>
 
-    <el-form-item label="密码" prop="password">
+    <el-form-item v-if="!props.isEdit" label="密码" prop="password">
       <el-input
         v-model="newFormInline.password"
         type="password"
@@ -104,7 +106,7 @@ defineExpose({ getRef, validatePassword }); // 暴露方法供外部调用
       />
     </el-form-item>
 
-    <el-form-item label="确认密码" prop="confirmPassword">
+    <el-form-item v-if="!props.isEdit" label="确认密码" prop="confirmPassword">
       <el-input
         v-model="newFormInline.confirmPassword"
         type="password"

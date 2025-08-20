@@ -6,6 +6,8 @@ import DeleteDialog from "./DeleteDialog.vue";
 import NewDialog from "./NewDialog.vue";
 import ShowDialog from "./ShowDialog.vue";
 import { FilesTypeOptions } from "@/views/workTaskForce/workTaskForce_management/data";
+const fileBaseUrl =
+  import.meta.env.VITE_APP_SERVER + "/uploads/work_taskforce/";
 
 // useColumns 引出字段逻辑与方法
 const {
@@ -63,7 +65,18 @@ const currentOptions = computed(() => {
 </script>
 
 <template>
-  <div>
+  <el-card shadow="never">
+    <template #header>
+      <div class="card-header">
+        <span class="font-medium"> 工作专班 </span>
+      </div>
+    </template>
+    <el-alert
+      style="margin-bottom: 16px"
+      title="如有Bug等问题请通过“问题反馈”栏目反馈给开发者。"
+      type="info"
+      :closable="false"
+    />
     <!-- 搜索栏 -->
     <div class="search-controls mb-4">
       <el-select
@@ -132,6 +145,36 @@ const currentOptions = computed(() => {
         @page-current-change="onCurrentChange"
         @row-contextmenu="showMouseMenu"
       >
+        <!-- 正文附件列插槽-->
+        <template #taskforce_files="{ row }">
+          <span
+            v-if="
+              row.taskforce_files === 0 ||
+              row.taskforce_files === '0' ||
+              row.taskforce_files === null ||
+              row.taskforce_files === undefined ||
+              row.taskforce_files === '' ||
+              row.taskforce_files === '无附件'
+            "
+          >
+            无附件
+          </span>
+
+          <!-- 只有有文件名时才渲染链接，并套用 file-link 类 -->
+          <a
+            v-else
+            class="file-link"
+            :href="
+              fileBaseUrl +
+              String(row.taskforce_files).replace(/^\//, '').trim()
+            "
+            download
+            target="_blank"
+          >
+            {{ row.taskforce_files }}
+          </a>
+        </template>
+
         <template #operation="{ row }">
           <el-button link type="primary" size="small" @click="handleEdit(row)">
             修改
@@ -179,12 +222,22 @@ const currentOptions = computed(() => {
       @update:visible="deleteDialogVisible = $event"
       @deleted="fetchData"
     />
-  </div>
+  </el-card>
 </template>
 
 <style scoped>
 .search-controls {
   display: flex;
   align-items: center;
+}
+
+.file-link {
+  color: var(--el-color-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.file-link:hover {
+  text-decoration: underline;
 }
 </style>

@@ -7,6 +7,7 @@ import NewDialog from "@/views/onsite/onsite_management/demo1/NewDialog.vue";
 import ShowDialog from "@/views/onsite/onsite_management/demo1/ShowDialog.vue";
 import axios from "axios";
 import { OnsiteTypeOptions } from "@/views/onsite/onsite_management/data";
+const fileBaseUrl = import.meta.env.VITE_APP_SERVER + "/uploads/onsite/";
 
 // 从 useColumns 中解构需要的响应式变量和方法
 const {
@@ -114,7 +115,18 @@ const currentOptions = computed(() => {
 </script>
 
 <template>
-  <div>
+  <el-card shadow="never">
+    <template #header>
+      <div class="card-header">
+        <span class="font-medium"> 驻场人员管理 </span>
+      </div>
+    </template>
+    <el-alert
+      style="margin-bottom: 16px"
+      title="如有Bug等问题请通过“问题反馈”栏目反馈给开发者。"
+      type="info"
+      :closable="false"
+    />
     <!-- 搜索控件区域 -->
     <div class="search-controls mb-4">
       <el-select
@@ -186,6 +198,35 @@ const currentOptions = computed(() => {
         @page-current-change="onCurrentChange"
         @row-contextmenu="showMouseMenu"
       >
+        <!-- 正文附件列插槽-->
+        <template #related_files="{ row }">
+          <span
+            v-if="
+              row.related_files === 0 ||
+              row.related_files === '0' ||
+              row.related_files === null ||
+              row.related_files === undefined ||
+              row.related_files === '' ||
+              row.related_files === '无附件'
+            "
+          >
+            无附件
+          </span>
+
+          <!-- 只有有文件名时才渲染链接，并套用 file-link 类 -->
+          <a
+            v-else
+            class="file-link"
+            :href="
+              fileBaseUrl + String(row.related_files).replace(/^\//, '').trim()
+            "
+            download
+            target="_blank"
+          >
+            {{ row.related_files }}
+          </a>
+        </template>
+
         <!-- 操作列 -->
         <template #operation="{ row }">
           <el-button link type="primary" size="small" @click="handleEdit(row)">
@@ -234,12 +275,22 @@ const currentOptions = computed(() => {
       @update:visible="deleteDialogVisible = $event"
       @deleted="handleDataUpdated"
     />
-  </div>
+  </el-card>
 </template>
 
 <style scoped>
 .search-controls {
   display: flex;
   align-items: center;
+}
+
+.file-link {
+  color: var(--el-color-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.file-link:hover {
+  text-decoration: underline;
 }
 </style>

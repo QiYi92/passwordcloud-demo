@@ -15,15 +15,17 @@
         list-type="text"
         :limit="1"
         :file-list="uploadedFiles"
-        accept=".doc,.docx,.pdf,.png,.jpg,.jpeg"
+        accept=".doc,.docx,.pdf,.png,.jpg,.jpeg,.wps"
         :before-upload="beforeUpload"
+        @exceed="handleExceed"
         @success="handleUploadSuccess"
         @remove="handleRemoveFile"
       >
         <el-button type="primary">上传附件</el-button>
         <template #tip>
           <div class="el-upload__tip">
-            仅支持上传 Word、PDF、图片文件，大小不超过 500KB
+            支持上传 Word(doc/docx/wps)、PDF、PNG、JPG、JPEG 文件，大小不超过
+            3MB
           </div>
         </template>
       </el-upload>
@@ -35,6 +37,7 @@
 import { ref, defineProps, defineEmits, watchEffect, watch } from "vue";
 import axios from "axios";
 import dayjs from "dayjs";
+import { ElMessage } from "element-plus";
 import {
   PlusDialogForm,
   type FieldValues,
@@ -81,20 +84,25 @@ const loadUploadedFiles = async () => {
   }
 };
 
-// 上传前类型验证
-const beforeUpload = file => {
-  const allowedTypes = [
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/pdf",
-    "image/png",
-    "image/jpeg"
-  ];
-  const isAllowed = allowedTypes.includes(file.type);
-  if (!isAllowed) {
-    alert("只能上传 Word、PDF、PNG、JPG、JPEG 文件！");
+/** 上传前校验 */
+const beforeUpload = (file: File) => {
+  const validExt = /\.(doc|docx|pdf|png|jpg|jpeg|wps)$/i.test(file.name);
+  if (!validExt) {
+    ElMessage.error(
+      "只能上传 Word(doc/docx/wps)、PDF、PNG、JPG、JPEG 格式文件"
+    );
+    return false;
   }
-  return isAllowed;
+  const isLt3M = file.size / 1024 / 1024 < 3;
+  if (!isLt3M) {
+    ElMessage.error("上传文件大小不能超过 3MB");
+    return false;
+  }
+  return true;
+};
+/** 超出数量提示 */
+const handleExceed = (files: File[], fileList: any[]) => {
+  ElMessage.warning("最多只能上传 1 个文件");
 };
 
 // 提交编辑表单

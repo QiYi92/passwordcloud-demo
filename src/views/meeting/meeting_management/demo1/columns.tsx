@@ -10,6 +10,7 @@ import axios from "axios";
 import { message } from "@/utils/message"; // 适当调整路径
 import { CustomMouseMenu } from "@howdyjs/mouse-menu";
 import dayjs from "dayjs"; // 添加新依赖
+import { h } from "vue";
 
 export function useColumns() {
   const dataList = ref([]);
@@ -22,11 +23,6 @@ export function useColumns() {
   const deleteDialogVisible = ref(false);
 
   const columns: TableColumnList = [
-    {
-      label: "会议ID",
-      prop: "meeting_id",
-      width: 100
-    },
     {
       label: "会议名称",
       prop: "meeting_name",
@@ -61,12 +57,7 @@ export function useColumns() {
       label: "正文附件",
       prop: "meeting_files",
       width: 150,
-      formatter: row => {
-        // 映射数字类型的 0 为 "无附件"
-        return row.meeting_files === 0 || row.meeting_files === "0"
-          ? "无附件"
-          : row.meeting_files;
-      }
+      slot: "meeting_files" // 用 slot 指定走哪个具名插槽
     },
     {
       label: "操作",

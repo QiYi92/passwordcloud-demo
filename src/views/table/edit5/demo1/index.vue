@@ -6,6 +6,7 @@ import DeleteDialog from "@/views/table/edit5/demo1/DeleteDialog.vue";
 import NewDialog from "@/views/table/edit5/demo1/NewDialog.vue";
 import ShowDialog from "@/views/table/edit5/demo1/ShowDialog.vue";
 import { FilesTypeOptions } from "@/views/table/edit5/data"; // 引入文件类型选项
+const fileBaseUrl = import.meta.env.VITE_APP_SERVER + "/uploads/prompts/";
 
 const {
   loading,
@@ -63,7 +64,18 @@ const currentOptions = computed(() => {
 </script>
 
 <template>
-  <div>
+  <el-card shadow="never">
+    <template #header>
+      <div class="card-header">
+        <span class="font-medium"> 合同催款项登记管理 </span>
+      </div>
+    </template>
+    <el-alert
+      style="margin-bottom: 16px"
+      title="如有Bug等问题请通过“问题反馈”栏目反馈给开发者。"
+      type="info"
+      :closable="false"
+    />
     <!-- 搜索控件区域 -->
     <div class="search-controls mb-4">
       <el-select
@@ -136,6 +148,35 @@ const currentOptions = computed(() => {
         @page-current-change="onCurrentChange"
         @row-contextmenu="showMouseMenu"
       >
+        <!-- 正文附件列插槽（替换原来的 meeting_files 模板）-->
+        <template #prompt_files="{ row }">
+          <span
+            v-if="
+              row.prompt_files === 0 ||
+              row.prompt_files === '0' ||
+              row.prompt_files === null ||
+              row.prompt_files === undefined ||
+              row.prompt_files === '' ||
+              row.prompt_files === '无附件'
+            "
+          >
+            无附件
+          </span>
+
+          <!-- 只有有文件名时才渲染链接，并套用 file-link 类 -->
+          <a
+            v-else
+            class="file-link"
+            :href="
+              fileBaseUrl + String(row.prompt_files).replace(/^\//, '').trim()
+            "
+            download
+            target="_blank"
+          >
+            {{ row.prompt_files }}
+          </a>
+        </template>
+
         <!-- 定义操作列的内容 -->
         <template #operation="{ row }">
           <el-button link type="primary" size="small" @click="handleEdit(row)">
@@ -184,12 +225,24 @@ const currentOptions = computed(() => {
       @update:visible="deleteDialogVisible = $event"
       @deleted="fetchData"
     />
-  </div>
+  </el-card>
 </template>
 
 <style scoped>
 .search-controls {
   display: flex;
   align-items: center;
+}
+
+.file-link {
+  color: var(
+    --el-color-primary
+  ); /* Element Plus 主色 —— 与按钮/链接一致 */ /* turn0search1 */
+  text-decoration: none; /* 可选：去掉下划线 */
+  cursor: pointer; /* 鼠标悬停显示小手 */
+}
+
+.file-link:hover {
+  text-decoration: underline; /* 悬停时给用户反馈，更易识别 */
 }
 </style>

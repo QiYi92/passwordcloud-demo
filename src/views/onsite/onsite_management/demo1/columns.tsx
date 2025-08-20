@@ -76,6 +76,7 @@ export function useColumns() {
     {
       label: "相关函件",
       prop: "related_files",
+      slot: "related_files",
       formatter: row => {
         return row.related_files === 0 || row.related_files === "0"
           ? FilesTypeOptions.find(option => option.value === "0")?.label ||

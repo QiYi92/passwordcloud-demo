@@ -51,6 +51,20 @@ onMounted(fetchExperts);
 <template>
   <div>
     <el-card shadow="never">
+      <template #header>
+        <div class="card-header">
+          <span class="font-medium"> 专家抽取系统 </span>
+        </div>
+      </template>
+      <el-alert
+        style="margin-bottom: 1px"
+        title="如有Bug等问题请通过“问题反馈”栏目反馈给开发者。"
+        type="info"
+        :closable="false"
+      />
+    </el-card>
+
+    <el-card shadow="never">
       <h3>请选择要抽取的专家专业：</h3>
       <el-checkbox-group v-model="selectedAreas">
         <el-checkbox

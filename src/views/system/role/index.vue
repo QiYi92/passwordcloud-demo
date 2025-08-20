@@ -62,7 +62,8 @@ const {
   treeSearchValue,
   onSearch,
   resetForm,
-  openDialog,
+  openPasswordDialog,
+  openProfileDialog,
   handleMenu,
   handleSave,
   handleDelete,
@@ -146,7 +147,7 @@ onMounted(() => {
           <el-button
             type="primary"
             :icon="useRenderIcon(AddFill)"
-            @click="openDialog()"
+            @click="openProfileDialog()"
           >
             新增角色
           </el-button>
@@ -181,10 +182,22 @@ onMounted(() => {
                 type="primary"
                 :size="size"
                 :icon="useRenderIcon(EditPen)"
-                @click="openDialog('修改', row)"
+                @click="openProfileDialog('修改', row)"
               >
-                修改
+                个人设置
               </el-button>
+
+              <el-button
+                class="reset-margin"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon('ri:lock-password-line')"
+                @click="openPasswordDialog(row)"
+              >
+                密码设置
+              </el-button>
+
               <el-popconfirm
                 :title="`是否确认删除角色名称为${row.username}的这条数据`"
                 @confirm="handleDelete(row)"
@@ -201,16 +214,6 @@ onMounted(() => {
                   </el-button>
                 </template>
               </el-popconfirm>
-              <el-button
-                class="reset-margin"
-                link
-                type="primary"
-                :size="size"
-                :icon="useRenderIcon(Menu)"
-                @click="handleMenu(row)"
-              >
-                权限
-              </el-button>
             </template>
           </pure-table>
         </template>

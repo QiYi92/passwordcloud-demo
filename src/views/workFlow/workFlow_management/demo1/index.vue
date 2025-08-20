@@ -118,143 +118,154 @@ const currentOptions = computed(() => {
 </script>
 
 <template>
-  <el-alert
-    style="margin-bottom: 16px"
-    title="重新编辑流程图后需要刷新一下页面，更新后的流程图才会在页面上刷新"
-    type="info"
-    :closable="false"
-  />
-  <div>
-    <!-- ================= 搜索 ================= -->
-    <div class="search-controls mb-4">
-      <el-select
-        v-model="searchField"
-        placeholder="选择搜索字段"
-        style="width: 200px; margin-right: 10px"
-      >
-        <el-option label="流程名称" value="name" />
-        <el-option label="流程类型" value="type" />
-        <el-option label="状态" value="status" />
-        <el-option label="备注" value="remark" />
-        <el-option label="流程责任" value="owner" />
-      </el-select>
-
-      <template v-if="isDropdownSearch">
+  <el-card shadow="never">
+    <template #header>
+      <div class="card-header">
+        <span class="font-medium"> 工作流程 </span>
+      </div>
+    </template>
+    <el-alert
+      style="margin-bottom: 16px"
+      title="重新编辑流程图后需要刷新一下页面，更新后的流程图才会在页面上刷新"
+      type="info"
+      :closable="false"
+    />
+    <div>
+      <!-- ================= 搜索 ================= -->
+      <div class="search-controls mb-4">
         <el-select
-          v-model="searchQuery"
-          placeholder="请选择搜索内容"
-          style="width: 300px; margin-right: 10px"
+          v-model="searchField"
+          placeholder="选择搜索字段"
+          style="width: 200px; margin-right: 10px"
         >
-          <el-option label="全部" value="" />
-          <el-option
-            v-for="opt in currentOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
+          <el-option label="流程名称" value="name" />
+          <el-option label="流程类型" value="type" />
+          <el-option label="状态" value="status" />
+          <el-option label="备注" value="remark" />
+          <el-option label="流程责任" value="owner" />
         </el-select>
-      </template>
-      <template v-else>
-        <el-input
-          v-model="searchQuery"
-          placeholder="输入搜索内容"
-          style="width: 300px; margin-right: 10px"
-        />
-      </template>
 
-      <NewDialog @data-updated="fetchData" />
-    </div>
-
-    <!-- ================= 表格 ================= -->
-    <div style="overflow-x: auto">
-      <pure-table
-        ref="tableRef"
-        border
-        adaptive
-        :adaptiveConfig="adaptiveConfig"
-        row-key="id"
-        alignWhole="center"
-        showOverflowTooltip
-        :loading="loading"
-        :loading-config="loadingConfig"
-        :data="
-          dataList.slice(
-            (pagination.currentPage - 1) * pagination.pageSize,
-            pagination.currentPage * pagination.pageSize
-          )
-        "
-        :columns="columns"
-        :pagination="pagination"
-        style="min-width: 120px"
-        @page-size-change="onSizeChange"
-        @page-current-change="onCurrentChange"
-        @row-contextmenu="showMouseMenu"
-      >
-        <!-- -------- 操作列 -------- -->
-        <template #operation="{ row }">
-          <el-button
-            link
-            type="primary"
-            size="small"
-            @click="handlePreview(row)"
-            >预览</el-button
+        <template v-if="isDropdownSearch">
+          <el-select
+            v-model="searchQuery"
+            placeholder="请选择搜索内容"
+            style="width: 300px; margin-right: 10px"
           >
-          <el-button link type="primary" size="small" @click="handleEdit(row)"
-            >修改</el-button
-          >
-          <el-button link type="primary" size="small" @click="handleDelete(row)"
-            >删除</el-button
-          >
-          <el-button
-            link
-            type="primary"
-            size="small"
-            @click="handleSetImage(row)"
-            >设置流程图</el-button
-          >
+            <el-option label="全部" value="" />
+            <el-option
+              v-for="opt in currentOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
         </template>
-
-        <!-- -------- 缩略图列 -------- -->
-        <template #workflowImage="{ row }">
-          <el-image
-            v-if="row.workflow_thumb"
-            :key="row.workflow_thumb"
-            preview-teleported
-            loading="lazy"
-            :src="row.workflow_thumb"
-            :preview-src-list="[row.workflow_thumb]"
-            :zoom-rate="1.04"
-            fit="cover"
-            class="w-[100px] h-[100px]"
+        <template v-else>
+          <el-input
+            v-model="searchQuery"
+            placeholder="输入搜索内容"
+            style="width: 300px; margin-right: 10px"
           />
-          <span v-else style="color: #999">暂无图片</span>
         </template>
-      </pure-table>
-    </div>
 
-    <!-- ================= 弹窗 ================= -->
-    <EditDialog
-      :visible="editDialogVisible"
-      :initialData="editRowData"
-      @update:visible="editDialogVisible = $event"
-      @data-updated="fetchData"
-    />
-    <DeleteDialog
-      :visible="deleteDialogVisible"
-      :workflowId="deleteWorkflowId"
-      @update:visible="deleteDialogVisible = $event"
-      @deleted="fetchData"
-    />
-    <ShowDialog
-      :visible="showDialogVisible"
-      :data="previewData"
-      @update:visible="showDialogVisible = $event"
-    />
-    <UploadDialog
-      :visible="uploadDialogVisible"
-      :initialData="currentRowForUpload"
-      @update:visible="uploadDialogVisible = $event"
-      @data-updated="fetchData"
-    />
-  </div>
+        <NewDialog @data-updated="fetchData" />
+      </div>
+
+      <!-- ================= 表格 ================= -->
+      <div style="overflow-x: auto">
+        <pure-table
+          ref="tableRef"
+          border
+          adaptive
+          :adaptiveConfig="adaptiveConfig"
+          row-key="id"
+          alignWhole="center"
+          showOverflowTooltip
+          :loading="loading"
+          :loading-config="loadingConfig"
+          :data="
+            dataList.slice(
+              (pagination.currentPage - 1) * pagination.pageSize,
+              pagination.currentPage * pagination.pageSize
+            )
+          "
+          :columns="columns"
+          :pagination="pagination"
+          style="min-width: 120px"
+          @page-size-change="onSizeChange"
+          @page-current-change="onCurrentChange"
+          @row-contextmenu="showMouseMenu"
+        >
+          <!-- -------- 操作列 -------- -->
+          <template #operation="{ row }">
+            <el-button
+              link
+              type="primary"
+              size="small"
+              @click="handlePreview(row)"
+              >预览</el-button
+            >
+            <el-button link type="primary" size="small" @click="handleEdit(row)"
+              >修改</el-button
+            >
+            <el-button
+              link
+              type="primary"
+              size="small"
+              @click="handleDelete(row)"
+              >删除</el-button
+            >
+            <el-button
+              link
+              type="primary"
+              size="small"
+              @click="handleSetImage(row)"
+              >设置流程图</el-button
+            >
+          </template>
+
+          <!-- -------- 缩略图列 -------- -->
+          <template #workflowImage="{ row }">
+            <el-image
+              v-if="row.workflow_thumb"
+              :key="row.workflow_thumb"
+              preview-teleported
+              loading="lazy"
+              :src="row.workflow_thumb"
+              :preview-src-list="[row.workflow_thumb]"
+              :zoom-rate="1.04"
+              fit="cover"
+              class="w-[100px] h-[100px]"
+            />
+            <span v-else style="color: #999">暂无图片</span>
+          </template>
+        </pure-table>
+      </div>
+
+      <!-- ================= 弹窗 ================= -->
+      <EditDialog
+        :visible="editDialogVisible"
+        :initialData="editRowData"
+        @update:visible="editDialogVisible = $event"
+        @data-updated="fetchData"
+      />
+      <DeleteDialog
+        :visible="deleteDialogVisible"
+        :workflowId="deleteWorkflowId"
+        @update:visible="deleteDialogVisible = $event"
+        @deleted="fetchData"
+      />
+      <ShowDialog
+        :visible="showDialogVisible"
+        :data="previewData"
+        @update:visible="showDialogVisible = $event"
+      />
+      <UploadDialog
+        :visible="uploadDialogVisible"
+        :initialData="currentRowForUpload"
+        @update:visible="uploadDialogVisible = $event"
+        @data-updated="fetchData"
+      />
+    </div>
+  </el-card>
 </template>

@@ -8,6 +8,9 @@ import { addDialog } from "@/components/ReDialog"; // 引入对话框组件
 import type { FormItemProps } from "../utils/types"; // 引入表单项类型定义
 import type { PaginationProps } from "@pureadmin/table"; // 引入分页类型定义
 import { getKeyList, deviceDetection } from "@pureadmin/utils"; // 引入工具函数
+import passwordForm from "../passwordForm.vue";
+import { changePassword } from "../api/userApi";
+
 import {
   getRoleMenu, // 获取角色菜单的 API
   getRoleMenuIds // 获取角色菜单 ID 的 API
@@ -91,7 +94,7 @@ export function useUser(treeRef: Ref) {
     {
       label: "操作",
       fixed: "right",
-      width: 210,
+      width: 340,
       slot: "operation"
     }
   ];
@@ -141,65 +144,98 @@ export function useUser(treeRef: Ref) {
     onSearch(); // 重新搜索用户列表
   };
 
-  // 打开新增或编辑用户的对话框
-  function openDialog(title = "新增", row?: FormItemProps) {
+  // 1) 原 openDialog 改名为 openProfileDialog（个人设置）
+  function openProfileDialog(title = "新增", row?: FormItemProps) {
     addDialog({
-      title: `${title}用户`, // 对话框标题
+      title: `${title}用户`,
       props: {
         formInline: {
-          id: row?.id ?? null, // 用户 ID
-          username: row?.username ?? "", // 用户名
-          real_name: row?.real_name ?? "", // 真实姓名
-          code: row?.code ?? "", // 用户标识
-          password: row?.password ?? "", // 密码字段
-          remark: row?.remark ?? "" // 备注
+          id: row?.id ?? null,
+          username: row?.username ?? "",
+          real_name: row?.real_name ?? "",
+          code: row?.code ?? "",
+          password: row?.password ?? "",
+          phone_number: row?.phone_number ?? "",
+          remark: row?.remark ?? ""
         }
       },
-      width: "40%", // 对话框宽度
-      draggable: true, // 可拖动
-      fullscreen: deviceDetection(), // 根据设备检测全屏
-      fullscreenIcon: true, // 全屏图标
-      closeOnClickModal: false, // 点击遮罩不关闭对话框
-      contentRenderer: () => h(editForm, { ref: formRef }), // 渲染编辑表单
+      width: "40%",
+      draggable: true,
+      fullscreen: deviceDetection(),
+      fullscreenIcon: true,
+      closeOnClickModal: false,
+      contentRenderer: () =>
+        h(editForm, { ref: formRef, isEdit: title !== "新增" }),
       beforeSure: async (done, { options }) => {
-        // 确认前的处理
-        const FormRef = formRef.value.getRef(); // 获取表单引用
-        const curData = options.props.formInline as FormItemProps; // 当前表单数据
+        const FormRef = formRef.value.getRef();
+        const curData = options.props.formInline as FormItemProps;
 
-        // 调用 validatePassword 方法进行校验
-        const isPasswordValid = formRef.value.validatePassword();
-        if (!isPasswordValid) {
-          return; // 如果校验未通过，阻止表单提交
+        // 新增才校验密码；编辑不校验且不提交空密码
+        if (title === "新增") {
+          const ok = formRef.value.validatePassword();
+          if (!ok) return;
+        } else {
+          delete (curData as any).password;
+          delete (curData as any).confirmPassword;
         }
 
-        async function chores() {
+        // 如果 editForm 内部还暴露了 validatePassword，这里可选调用
+        // const ok = formRef.value.validatePassword?.();
+        // if (ok === false) return;
+
+        function afterSuccess() {
           message(`您${title}了用户名为${curData.username}的这条数据`, {
-            type: "success" // 提示成功信息
+            type: "success"
           });
-          done(); // 完成对话框操作
-          onSearch(); // 重新搜索用户列表
+          done();
+          onSearch();
         }
-        FormRef.validate(async valid => {
-          // 验证表单
-          if (valid) {
-            console.log("curData", curData);
+
+        FormRef.validate(async (valid: boolean) => {
+          if (!valid) return;
+
+          try {
             if (title === "新增") {
-              try {
-                const response = await addUser(curData); // 添加用户
-                console.log("Add Response:", response);
-                chores(); // 处理成功后的操作
-              } catch (error) {
-                console.error("Error adding user:", error);
-              }
+              await addUser(curData);
             } else {
-              try {
-                const response = await updateUser(curData); // 更新用户
-                console.log("Update Response:", response);
-                chores(); // 处理成功后的操作
-              } catch (error) {
-                console.error("Error updating user:", error);
-              }
+              await updateUser(curData);
             }
+            afterSuccess();
+          } catch (e) {
+            console.error(e);
+          }
+        });
+      }
+    });
+  }
+
+  // 2) 新增 openPasswordDialog（密码设置）
+  function openPasswordDialog(row: any) {
+    const pwdRef = ref();
+
+    addDialog({
+      title: `密码设置（${row.username}）`,
+      width: "32%",
+      draggable: true,
+      closeOnClickModal: false,
+      contentRenderer: () =>
+        h(passwordForm, {
+          ref: pwdRef,
+          userId: row.id,
+          username: row.username
+        }),
+      beforeSure: async done => {
+        const formInst = pwdRef.value.getRef();
+        formInst.validate(async (valid: boolean) => {
+          if (!valid) return;
+          const payload = pwdRef.value.getData();
+          try {
+            await changePassword(payload); // { id, old_password, new_password }
+            message("密码修改成功", { type: "success" });
+            done();
+          } catch (err: any) {
+            console.error(err);
+            message(err?.message || "密码修改失败", { type: "error" });
           }
         });
       }
@@ -310,7 +346,8 @@ export function useUser(treeRef: Ref) {
     treeSearchValue,
     onSearch,
     resetForm,
-    openDialog,
+    openProfileDialog,
+    openPasswordDialog,
     handleMenu,
     handleSave,
     handleDelete,

@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { getTopMenu } from "@/router/utils";
 import { useNav } from "@/layout/hooks/useNav";
+import { computed } from "vue";
 
 const props = defineProps({
   collapse: Boolean
 });
 
 const { title, getLogo } = useNav();
+
+// 拆分两行
+const lines = computed(() => title.value.split("\n"));
+const line1 = computed(() => lines.value[0] || "");
+const line2 = computed(() => lines.value[1] || "");
 </script>
 
 <template>
@@ -20,7 +26,11 @@ const { title, getLogo } = useNav();
         :to="getTopMenu()?.path ?? '/'"
       >
         <img :src="getLogo()" alt="logo" />
-        <span class="sidebar-title">{{ title }}</span>
+        <span class="sidebar-title">
+          <span class="first-line">{{ line1 }}</span
+          ><br />
+          <span class="second-line">{{ line2 }}</span>
+        </span>
       </router-link>
       <router-link
         v-else
@@ -30,7 +40,11 @@ const { title, getLogo } = useNav();
         :to="getTopMenu()?.path ?? '/'"
       >
         <img :src="getLogo()" alt="logo" />
-        <span class="sidebar-title">{{ title }}</span>
+        <span class="sidebar-title">
+          <span class="first-line">{{ line1 }}</span
+          ><br />
+          <span class="second-line">{{ line2 }}</span>
+        </span>
       </router-link>
     </transition>
   </div>
@@ -40,32 +54,40 @@ const { title, getLogo } = useNav();
 .sidebar-logo-container {
   position: relative;
   width: 100%;
-  height: 48px;
+  height: auto;
+  padding: 8px 0;
   overflow: hidden;
+}
 
-  .sidebar-logo-link {
+.sidebar-logo-link {
+  display: flex;
+  align-items: center;
+  padding-left: 18px;
+
+  img {
+    display: inline-block;
+    height: 32px;
+    margin-right: 22px;
+  }
+
+  .sidebar-title {
     display: flex;
-    flex-wrap: nowrap;
+    flex-direction: column;
     align-items: center;
-    height: 100%;
-    padding-left: 10px;
+    justify-content: center;
+    margin: 0;
+    line-height: 1.2;
 
-    img {
-      display: inline-block;
-      height: 32px;
+    .first-line {
+      font-size: 16px; /* 第一行小字体 */
+      font-weight: 600;
+      color: $subMenuActiveText;
     }
 
-    .sidebar-title {
-      display: inline-block;
-      height: 32px;
-      margin: 2px 0 0 12px;
-      overflow: hidden;
-      font-size: 18px;
+    .second-line {
+      font-size: 18px; /* 第二行原字体 */
       font-weight: 600;
-      line-height: 32px;
       color: $subMenuActiveText;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
   }
 }

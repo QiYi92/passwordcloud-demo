@@ -44,7 +44,8 @@ export function useColumns() {
     {
       label: "附件",
       prop: "attachment_files",
-      formatter: row => getFilesLabel(row.attachment_files)
+      formatter: row => getFilesLabel(row.attachment_files),
+      slot: "attachment_files"
     },
     { label: "操作", width: "150", fixed: "right", slot: "operation" }
   ];
